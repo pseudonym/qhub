@@ -3,3 +3,6 @@ qhub_SOURCES  = qhub.cpp qhub.h MyTime.h types.h
 qhub_SOURCES += TokenBucket.h TokenBucket.cpp Socket.h
 qhub_SOURCES += Socket.cpp ServerSocket.cpp ServerSocket.h
 qhub_SOURCES += DNSUser.h InterHub.cpp InterHub.h
+qhub_SOURCES += Hub.h Hub.cpp
+qhub_SOURCES += ADC.h ADC.cpp
+

@@ -4,6 +4,8 @@
 namespace qhub {
 
 class Hub {
+public:
+	Hub();
 };
 
 }

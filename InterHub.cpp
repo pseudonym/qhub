@@ -5,7 +5,6 @@
 #include <netinet/in.h>
 
 #define START_BUFFER 1024
-#define LEAST_ANTICIPATION 32
 #define READ_SIZE 1024
 
 using namespace qhub;
@@ -28,15 +27,18 @@ InterHub::InterHub(int fd) : state(NO_DATA), readBuffer(new unsigned char[START_
 void InterHub::growBuffer()
 {
 	unsigned char* tmp = new unsigned char[readBufferSize*2];
-	memcpy(tmp, readBuffer, readBufferSize);
+	memmove(tmp, readBuffer, readBufferSize);
 	readBufferSize *= 2;
+
+	readBuffer = tmp;
+	delete[] readBuffer;
 
 	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
 }
 
 void InterHub::on_read()
 {
-	if(rbCur+LEAST_ANTICIPATION >= readBufferSize){
+	if(rbCur+READ_SIZE >= readBufferSize){
 		growBuffer();
 	}
 	int r = read(fd, readBuffer+rbCur, READ_SIZE);
@@ -48,14 +50,12 @@ void InterHub::on_read()
 			l = htonl(l);
 			fprintf(stderr, "Got length %d\n", l);
 		}
-	} else if(r < 0){
+	} else if(r < 1){
 		cancel(fd, OOP_READ);
 		close(fd);
 		delete[] readBuffer;
 		//XXX someone (other than us?) also needs to deallocate us
 		delete this;
-	} else {
-		fprintf(stderr, "Zero bytes read?\n");
 	}
 }
 

@@ -6,6 +6,8 @@
 
 #include "ServerSocket.h"
 #include "DNSUser.h"
+#include "Hub.h"
+
 
 extern "C" {
 #include <oop.h>
@@ -49,7 +51,7 @@ static void *on_lookup(oop_adapter_adns *adns,adns_answer *reply,void *data)
 	return OOP_CONTINUE;
 }
 
-void *test2(oop_source *src, int fd, oop_event ev, void* usr)
+void *fd_demux(oop_source *src, int fd, oop_event ev, void* usr)
 {
 	Socket* s = (Socket*) usr;
 
@@ -69,11 +71,13 @@ static oop_source* src;
 
 void qhub::enable(int fd, oop_event ev, Socket* s)
 {
-	src->on_fd(src, fd, ev, test2, s);
+	fprintf(stderr, "Enabling fd %d\n", fd);
+	src->on_fd(src, fd, ev, fd_demux, s);
 }
 
 void qhub::cancel(int fd, oop_event ev)
 {
+	fprintf(stderr, "Cancellng fd %d\n", fd);
 	src->cancel_fd(src, fd, ev);
 }
 
@@ -111,13 +115,19 @@ int main()
 	//Set up ADNS
 	adns = oop_adns_new(src,(adns_initflags)0,NULL);
 
-	ServerSocket* tmp = new ServerSocket(9000, 0);
-	src->on_fd(src, tmp->getFd(), OOP_READ, test2, tmp);
+
+	Hub* tmp = new Hub();
+
+	//ServerSocket* tmp = new ServerSocket(9000, 0);
+	//src->on_fd(src, tmp->getFd(), OOP_READ, test2, tmp);
 
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);
+	oop_event_delete();
 #else
 	event_dispatch();
 #endif
+
+	delete tmp;
 	return 0;
 }

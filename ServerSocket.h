@@ -11,6 +11,7 @@ public:
 
 	enum socketTypes {
 		INTER_HUB,
+		LEAF_HANDLER,
 		LAST
 	};
 

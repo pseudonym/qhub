@@ -18,6 +18,7 @@
 //#include "Client.h"
 #include "ServerSocket.h"
 #include "InterHub.h"
+#include "ADC.h"
 //#include "ClientPool.h"
 
 using namespace qhub;
@@ -47,17 +48,20 @@ ServerSocket::ServerSocket(int port, int t) : Socket(AF_INET), type(t) {
 }
 
 void ServerSocket::on_read(){
-	//XXX loop until no more sockets
 	while(true){
 		int fd = Socket::accept();
 		if(fd != -1){
 			fprintf(stderr, "Accepted socket %d\n", fd);
-			InterHub* tmp;
+			Socket* tmp;
 			switch(type){
 				case INTER_HUB:
 					tmp = new InterHub(fd);
 					break;
+				case LEAF_HANDLER:
+					tmp = new ADC(fd);
+					break;
 				default:
+					fprintf(stderr, "Closing socket: unknown type for listening socket.\n");
 					close(fd);
 					break;
 			}
