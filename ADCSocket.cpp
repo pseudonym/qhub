@@ -42,6 +42,8 @@ void ADCSocket::onRead() throw()
 		} else {
 			disconnect(Util::errnoToString(errno)); // error
 		}
+		if(queue.empty())
+			realDisconnect();
 	} else {
 		unsigned char *p = readBuffer;	// cur
 		unsigned char *e = p + ret;		// end
@@ -55,6 +57,8 @@ void ADCSocket::onRead() throw()
 				// through the bad command to start at the next
 				doError("Max input of 1024 chars in command exceeded");
 				disconnect("Max input of 1024 chars in command exceeded");
+				if(queue.empty())
+					realDisconnect();
 				return;
 			}
 			
@@ -75,6 +79,8 @@ void ADCSocket::onRead() throw()
 							// through the bad command to start at the next
 							doError("Max arguments of 128 in command exceeded");
 							disconnect("Max arguments of 128 in command exceeded");
+							if(queue.empty())
+								realDisconnect();
 							return;
 						}
 					} else if(state == PARTIAL) {
@@ -91,6 +97,10 @@ void ADCSocket::onRead() throw()
 							onLine(data, string((char const*)f, p - f + 1));
 						else
 							onLine(data, raw + string((char const*)f, p - f + 1));
+						if(disconnected && queue.empty()) {
+							realDisconnect();
+							return;
+						}
 						data.clear();
 						raw.clear();
 						f = s;
@@ -137,10 +147,12 @@ void ADCSocket::disconnect(string const& msg)
 	assert(!disconnected);
 	Socket::disconnect();
 	onDisconnected(Util::emptyString);
-
-	// If there's nothing left to write, kill us immediately
-	if(queue.empty())
-		realDisconnect();
+	// this::onRead calls:
+	//   ADCClient::onLine -> this::disconnect -> this::realDisconnect
+	// this::onRead tries to read/modify variables... not good...
+	// so we can't have realDisconnect here. Test for queue.empty() after
+	// every call to ADCClient::onLine or this::disconnect and call a
+	// realDisconnect() (to avoid stalling disconnections).
 }
 
 void ADCSocket::realDisconnect()

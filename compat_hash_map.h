@@ -24,7 +24,7 @@ using __gnu_cxx::hash_map;
 #include <ext/hash_map>
 namespace std {
 using __gnu_cxx::hash_map;
-};
+}
 #endif
 
 

@@ -1,5 +1,5 @@
 bin_PROGRAMS = qhub
-#qhub_CXXFLAGS = -Wall -DDEBUG -D_GLIBCXX_DEBUG -g
+qhub_CXXFLAGS = -Wall -DDEBUG -g
 qhub_LDFLAGS = -export-dynamic
 qhub_SOURCES  = qhub.cpp qhub.h MyTime.h types.h 
 qhub_SOURCES += Util.h Util.cpp string8.h
@@ -9,7 +9,7 @@ qhub_SOURCES += Socket.cpp ServerSocket.cpp ServerSocket.h
 qhub_SOURCES += DNSUser.h InterHub.cpp InterHub.h
 qhub_SOURCES += Hub.h Hub.cpp
 qhub_SOURCES += ADCSocket.h ADCSocket.cpp ADCClient.h ADCClient.cpp
-qhub_SOURCES += UserInfo.h ADC.h
+qhub_SOURCES += UserInfo.h ADC.h ADC.cpp
 qhub_SOURCES += Buffer.h
 qhub_SOURCES += compat_hash_map.h
 qhub_SOURCES += Plugin.h Plugin.cpp
@@ -22,7 +22,7 @@ EXTRA_DIST += config.sub config.guess foo1.c
 
 
 lib_LTLIBRARIES = foo1.la accounts.la virtualfs.la loader.la
-CXXFLAGS = -Wall -DDEBUG -g -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -pedantic
+CXXFLAGS = -Wall -DDEBUG -g
 
 foo1_la_SOURCES = foo1.c
 foo1_la_LDFLAGS = -module

@@ -29,21 +29,21 @@ public: \
 			if(value != Util::empty##Type) \
 				 type##Map[key] = value; \
 		} \
-	}; \
+	} \
 	/* Return set value or emptyType when not found */ \
 	type const& get##Type(Key key) const throw() { \
 		Type##Map::const_iterator i = type##Map.find(key); \
 		if(i != type##Map.end()) \
 			return i->second; \
 		return Util::empty##Type; \
-	}; \
+	} \
 private: \
 	typedef map<Key, type> Type##Map; \
 	Type##Map type##Map;
 			 
-	GET_AND_SET(int, Int);
-	GET_AND_SET(string, String);
-	GET_AND_SET(voidPtr, VoidPtr);
+	GET_AND_SET(int, Int)
+	GET_AND_SET(string, String)
+	GET_AND_SET(voidPtr, VoidPtr)
 
 #undef GET_AND_SET
 	
