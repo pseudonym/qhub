@@ -14,27 +14,27 @@ using namespace qhub;
 
 #define CMD(a, b, c) (((u_int32_t)a<<8) | (((u_int32_t)b)<<16) | (((u_int32_t)c)<<24))
 u_int32_t ADCClient::Commands[] = {
-                                      CMD('C','T','M'),
-                                      CMD('D','S','C'),
-                                      CMD('G','E','T'),
-                                      CMD('G','F','I'),
-                                      CMD('G','P','A'),
-                                      CMD('I','N','F'),
-                                      CMD('M','S','G'),
-                                      CMD('N','T','D'),
-                                      CMD('P','A','S'),
-                                      CMD('Q','U','I'),
-                                      CMD('R','C','M'),
-                                      CMD('R','E','S'),
-                                      CMD('S','C','H'),
-                                      CMD('S','N','D'),
-                                      CMD('S','T','A'),
-                                      CMD('S','U','P')
-                                  };
+	CMD('C','T','M'),
+	CMD('D','S','C'),
+	CMD('G','E','T'),
+	CMD('G','F','I'),
+	CMD('G','P','A'),
+	CMD('I','N','F'),
+	CMD('M','S','G'),
+	CMD('N','T','D'),
+	CMD('P','A','S'),
+	CMD('Q','U','I'),
+	CMD('R','C','M'),
+	CMD('R','E','S'),
+	CMD('S','C','H'),
+	CMD('S','N','D'),
+	CMD('S','T','A'),
+	CMD('S','U','P')
+};
 #undef CMD
 
 ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-		: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), state(PROTOCOL), udpActive(false)
+		: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), state(PROTOCOL), active(false)
 {
 	onConnected();
 }
@@ -76,8 +76,8 @@ void ADCClient::login() throw()
 	// Send INFs
 	getHub()->getUserList(this);
 	// Add user
-	udpActive = userInfo->isUdpActive();
-	if(udpActive)
+	active = userInfo->isActive();
+	if(active)
 		getHub()->addActiveClient(getCID32(), this);
 	else
 		getHub()->addPassiveClient(getCID32(), this);
@@ -120,12 +120,12 @@ void ADCClient::doAskPassword(string const& pwd) throw()
 
 void ADCClient::doWarning(string const& msg) throw()
 {
-	send("ISTA " + getCID32() + " 100 " + ADC::ESC(msg) + '\n');
+	send("ISTA " + getHub()->getCID32() + " 100 " + ADC::ESC(msg) + '\n');
 }
 
 void ADCClient::doError(string const& msg) throw()
 {
-	send("ISTA " + getCID32() + " 200 " + ADC::ESC(msg) + '\n');
+	send("ISTA " + getHub()->getCID32() + " 200 " + ADC::ESC(msg) + '\n');
 }
 
 void ADCClient::doDisconnect(string const& msg) throw()
@@ -133,9 +133,10 @@ void ADCClient::doDisconnect(string const& msg) throw()
 	if(added) {
 		logout();
 		if(msg.empty())
-			getHub()->broadcast("IQUI " + getCID32() + " ND\n");
+			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ND\n");
 		else
-			getHub()->broadcast("IQUI " + getCID32() + " DI " + getHub()->getCID32() + ' ' + ADC::ESC(msg) + '\n');
+			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " DI " +
+					getHub()->getCID32() + ' ' + ADC::ESC(msg) + '\n');
 	}
 	disconnect();
 }
@@ -150,56 +151,11 @@ void ADCClient::doPrivateMessage(string const& msg) throw()
 	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + ADC::ESC(msg) + " PM\n");
 }
 
-void ADCClient::doDisconnectBy(string const& kicker, bool silent, string const& msg) throw()
+void ADCClient::doDisconnectBy(string const& kicker, string const& msg) throw()
 {
-	string full = "IQUI " + getCID32() + " DI " + kicker + ' ' + msg + '\n';
-	send(full);
+	getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " DI " + kicker +
+			' ' + ADC::ESC(msg) + '\n');
 	logout();
-	if(silent) {
-		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
-	} else {
-		getHub()->broadcast(full);
-	}
-	disconnect();
-}
-
-void ADCClient::doKickBy(string const& kicker, bool silent, string const& msg) throw()
-{
-	string full = "IQUI " + getCID32() + " KK " + kicker + ' ' + ADC::ESC(msg) + '\n';
-	send(full);
-	logout();
-	if(silent) {
-		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
-	} else {
-		getHub()->broadcast(full);
-	}
-	disconnect();
-}
-
-void ADCClient::doBanBy(string const& kicker, bool silent, u_int32_t seconds, string const& msg) throw()
-{
-	// TODO add bantime to somewhere
-	string full = "IQUI " + getCID32() + " BN " + kicker + ' ' + Util::toString(seconds) + ' ' + ADC::ESC(msg) + '\n';
-	send(full);
-	logout();
-	if(silent) {
-		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
-	} else {
-		getHub()->broadcast(full);
-	}
-	disconnect();
-}
-
-void ADCClient::doRedirectBy(string const& kicker, bool silent, string const& address, string const& msg) throw()
-{
-	string full = "IQUI " + getCID32() + " RD " + kicker + ' ' + ADC::ESC(address) + ' ' + ADC::ESC(msg) + '\n';
-	send(full);
-	logout();
-	if(silent) {
-		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
-	} else {
-		getHub()->broadcast(full);
-	}
 	disconnect();
 }
 
@@ -271,11 +227,8 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 		return;
 	}
 
-	// CID must come second (or third)
-	if(
-	    !((command & 0x000000FF) != 'D' && sl.size() >= 2 && sl[1] == getCID32()) &&
-	    !((command & 0x000000FF) == 'D' && sl.size() >= 3 && sl[2] == getCID32())
-	) {
+	// CID must come second
+	if(sl.size() < 2 || sl[1] != getCID32()) {
 		PROTOCOL_ERROR("CID mismatch: " + getCID32() + " expected");
 		return;
 	}
@@ -317,9 +270,10 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		fprintf(stderr, "onDisconnected %d %p GUID: %s\n", fd, this, getCID32().c_str());
 		logout();
 		if(clue.empty())
-			getHub()->broadcast(string("IQUI " + getCID32() + " ND\n"));
+			getHub()->broadcast(string("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ND\n"));
 		else
-			getHub()->broadcast(string("IQUI " + getCID32() + " DI " + getCID32() + ' ' + ADC::ESC(clue) + '\n'));
+			getHub()->broadcast(string("IQUI " + getHub()->getCID32() + ' ' + getCID32() +
+					" DI " + getCID32() + ' ' + ADC::ESC(clue) + '\n'));
 	}
 	Plugin::ClientDisconnected action;
 	Plugin::fire(action, this);
@@ -369,7 +323,7 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) 
 			getHub()->broadcast(*full); // do we ever want to stop anything to self?
 			break;
 		case 'D':
-			getHub()->direct(sl[1], *full, this);
+			getHub()->direct(sl[2], *full, this);
 			break;
 		case 'P':
 			getHub()->broadcastPassive(*full);
@@ -387,9 +341,10 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	guid = sl[1];
 
 	if(getHub()->hasClient(guid)) {
+		
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		// Ping other user, perhaps it's a ghost
-		getHub()->direct(guid, "INTD " + getCID32() + '\n');
+		getHub()->direct(guid, "\n");
 		// Note: Don't forget to check again at HPAS.. perhaps someone beat us to it.
 		return;
 	}
@@ -447,9 +402,9 @@ void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string const* fu
 	userInfo->update(newUserInfo);
 
 	// Did we become active/passive just now?
-	if(udpActive != userInfo->isUdpActive()) {
-		udpActive = !udpActive;
-		getHub()->switchClientMode(udpActive, getCID32(), this);
+	if(active != userInfo->isActive()) {
+		active = !active;
+		getHub()->switchClientMode(active, getCID32(), this);
 	}
 }
 
@@ -457,7 +412,7 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 {
 	char oneCC = cmd & 0x000000FF;
 	if(oneCC == 'D' && sl.size() >= 4) {
-		if(sl[1] == getHub()->getCID32()) {
+		if(sl[2] == getHub()->getCID32()) {
 			Plugin::UserCommand action;
 			Plugin::fire(action, this, sl[3]);
 			if(action.isSet(Plugin::DISCONNECTED))
@@ -477,7 +432,7 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 				if(!action.isSet(Plugin::STOPPED)) {
 					if(action.isSet(Plugin::MODIFIED))
 						full = &assemble(sl);
-					getHub()->direct(sl[1], *full, this);
+					getHub()->direct(sl[2], *full, this);
 				}
 			} else {
 				Plugin::UserPrivateMessage action;
@@ -487,7 +442,7 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 				if(!action.isSet(Plugin::STOPPED)) {
 					if(action.isSet(Plugin::MODIFIED))
 						full = &assemble(sl);
-					getHub()->direct(sl[1], *full, this);
+					getHub()->direct(sl[2], *full, this);
 				}
 			}
 		}
@@ -529,31 +484,17 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 void ADCClient::handleDisconnect(StringList& sl) throw()
 {
 	// HDSC myCID hisCID LL LL params
+	if(sl.size() != 4) {
+		PROTOCOL_ERROR("Disconnect command corrupt");
+		return;
+	}
 	if(!userInfo->getOp()) {
-		doWarning("Access denied");
-		return;
-	}
-	if(sl.size() < 6) {
-		doWarning("Disconnect command corrupt");
-		return;
-	}
-	bool silent = sl[4] == "ND";
-	if(!(silent || sl[3] == sl[4])) {
-		doWarning("Disconnect command corrupt");
+		send("ISTA " + getHub()->getCID32() + " 225 HDSC Access denied\n");
+		doDisconnect("Access denied");
 		return;
 	}
 	// TODO add plugin stuff
-	if(sl[3] == "DI" && sl.size() == 6) {
-		getHub()->userDisconnect(sl[1], sl[2], silent, sl[5]);
-	} else if(sl[3] == "KK" && sl.size() == 6) {
-		getHub()->userKick(sl[1], sl[2], silent, sl[5]);
-	} else if(sl[3] == "BN" && sl.size() == 7) {
-		getHub()->userBan(sl[1], sl[2], silent, Util::toInt(sl[5]), sl[6]);
-	} else if(sl[3] == "RD" && sl.size() == 7) {
-		getHub()->userRedirect(sl[1], sl[2], silent, sl[5], sl[6]);
-	} else {
-		doWarning("Disconnect command corrupt");
-	}
+	getHub()->userDisconnect(sl[1], sl[2], sl[3]);
 }
 
 void ADCClient::handlePassword(StringList& sl) throw()
@@ -570,7 +511,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	string8 hashed_pwd(h.getResult(), TigerHash::HASH_SIZE);
 	string hashed_pwd_b32 = Encoder::toBase32(hashed_pwd.data(), hashed_pwd.length());
 	if(hashed_pwd_b32 != sl[2]) {
-		send("ISTA " + sl[1] + " 223 Bad\\ username\\ or\\ password\n");
+		send("ISTA " + getHub()->getCID32() + " 223 Bad\\ username\\ or\\ password\n");
 		assert(!added);
 		disconnect();
 		return;
@@ -578,7 +519,9 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	salt.clear();
 	// Add user
 	if(getHub()->hasClient(getCID32())) {
-		PROTOCOL_ERROR("CID busy, change CID or wait");
+		send("ISTA " + getHub()->getCID32() + " 224 CID taken\n");
+		assert(!added);
+		disconnect();
 		return;
 	}
 	// Oki, do login

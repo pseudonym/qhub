@@ -82,11 +82,8 @@ public:
 	// Message types
 	virtual void doHubMessage(string const& msg) throw();
 	virtual void doPrivateMessage(string const& msg) throw();
-	// The four 'ban' types
-	virtual void doDisconnectBy(string const& kicker, bool silent, string const& msg) throw();
-	virtual void doKickBy(string const& kicker, bool silent, string const& msg) throw();
-	virtual void doBanBy(string const& kicker, bool silent, u_int32_t seconds, string const& msg) throw();
-	virtual void doRedirectBy(string const& kicker, bool silent, string const& address, string const& msg) throw();
+	// Disconnect
+	virtual void doDisconnectBy(string const& kicker, string const& msg) throw();
 
 protected:
 	/*
@@ -119,7 +116,7 @@ private:
 	string guid;
 	string password;
 	string8 salt;
-	bool udpActive;
+	bool active;
 
 	string const& assemble(StringList const& sl) throw();
 	string temp;

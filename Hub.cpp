@@ -111,7 +111,7 @@ void Hub::motd(ADCClient* c) throw()
 
 	int in = interConnects.size();
 	int out = interConnects2.size();
-	sprintf(t, "Hubconnections in/out/total: %d/%d/%d.\nWe have %d (of which %d are udp-passive) local users, and %d remote users.",
+	sprintf(t, "Hubconnections in/out/total: %d/%d/%d.\nWe have %d (of which %d are passive) local users, and %d remote users.",
 	        in, out, in+out, activeUsers.size()+passiveUsers.size(),passiveUsers.size(), 0);
 	c->doHubMessage(string(t));
 }
@@ -214,41 +214,13 @@ void Hub::removeClient(string const& guid) throw()
 		passiveUsers.erase(guid);
 }
 
-void Hub::userDisconnect(string const& actor, string const& victim, bool silent, string const& msg) throw()
+void Hub::userDisconnect(string const& actor, string const& victim, string const& msg) throw()
 {
 	Users::iterator i;
 	if((i = activeUsers.find(victim)) != activeUsers.end())
-		i->second->doDisconnectBy(actor, silent, msg);
+		i->second->doDisconnectBy(actor, msg);
 	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
-		i->second->doDisconnectBy(actor, silent, msg);
-}
-
-void Hub::userKick(string const& actor, string const& victim, bool silent, string const& msg) throw()
-{
-	Users::iterator i;
-	if((i = activeUsers.find(victim)) != activeUsers.end())
-		i->second->doKickBy(actor, silent, msg);
-	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
-		i->second->doKickBy(actor, silent, msg);
-}
-
-void Hub::userBan(string const& actor, string const& victim, bool silent, u_int32_t secs, string const& msg) throw()
-{
-	Users::iterator i;
-	if((i = activeUsers.find(victim)) != activeUsers.end())
-		i->second->doBanBy(actor, silent, secs, msg);
-	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
-		i->second->doBanBy(actor, silent, secs, msg);
-}
-
-void Hub::userRedirect(string const& actor, string const& victim, bool silent, string const& addr, string const& msg)
-throw()
-{
-	Users::iterator i;
-	if((i = activeUsers.find(victim)) != activeUsers.end())
-		i->second->doRedirectBy(actor, silent, addr, msg);
-	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
-		i->second->doRedirectBy(actor, silent, addr, msg);
+		i->second->doDisconnectBy(actor, msg);
 }
 
 void Hub::acceptInterHub(int fd, Socket::Domain d)

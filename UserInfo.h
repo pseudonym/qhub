@@ -153,7 +153,7 @@ public:
 	int const getOp() const throw() {
 		return Util::toInt(get(UIID('O','P')));
 	}
-	bool const isUdpActive() const throw() {
+	bool const isActive() const throw() {
 		return has(UIID('U','4')) || has(UIID('U','6'));
 	}
 		

@@ -57,11 +57,7 @@ public:
 
 	void getUserList(ADCClient* c) throw();
 
-	void userDisconnect(string const& actor, string const& victim, bool silent, string const& msg) throw();
-	void userKick(string const& actor, string const& victim, bool silent, string const& msg) throw();
-	void userBan(string const& actor, string const& victim, bool silent, u_int32_t secs, string const& msg) throw();
-	void userRedirect(string const& actor, string const& victim, bool silent, string const& addr,
-			string const& msg) throw();
+	void userDisconnect(string const& actor, string const& victim, string const& msg) throw();
 private:
 	static void add(Hub* h) throw();
 	static void remove(Hub* h) throw();
