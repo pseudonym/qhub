@@ -213,9 +213,6 @@ void ADC::realDisconnect()
 		//send a QUI aswell
 		hub->broadcast(this, string("IQUI " + guid + " ND\n"));
 	}
-	// send all queued data
-	while(!queue.empty())
-		partialWrite();
 	// done
 	close(fd);
 	cancel(fd, OOP_READ);
@@ -483,15 +480,12 @@ void ADC::on_read()
 		}
 	} else if(r < 1){
 		fprintf(stderr, "Got -1 from read\n");
-//#ifdef PROTO_DEBUG
-//		sendHubMsg("proto error: got -1 from read");
-//#endif
 		while(!queue.empty())
 			queue.pop();
 		disconnect();
 	}
 
-	if(disconnected){
+	if(disconnected && queue.empty()) {
 		realDisconnect();
 	}
 }
@@ -508,7 +502,7 @@ void ADC::on_write()
 		writeEnabled=false;
 	}
 
-	if(disconnected){
+	if(disconnected && queue.empty()){
 		realDisconnect();
 	}
 }

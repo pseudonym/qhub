@@ -1,3 +1,4 @@
+// vim:ts=4:sw=4:noet
 #include "Socket.h"
 #include "qhub.h"
 
@@ -110,6 +111,8 @@ void Socket::partialWrite()
 	if(w < 0){
 		switch(errno){
 		default:
+			while(!queue.empty())
+				queue.pop();
 			disconnect();
 			return;
 			break;
