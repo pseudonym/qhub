@@ -30,7 +30,7 @@ Required
 Liboop - liboop.org
 ADNS - www.chiark.greenend.org.uk/~ian/adns/
 Boost library - boost.org
-Xerces C++ - http://xml.apache.org/xerces-c/index.html
+Libxmltok
 Libtool (for building)
 
 Recommended
