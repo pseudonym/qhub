@@ -152,15 +152,8 @@ void ADCSocket::onWrite() throw()
 
 void ADCSocket::disconnect(string const& msg)
 {
-	assert(!disconnected);
 	Socket::disconnect();
 	onDisconnected(Util::emptyString);
-	// this::onRead calls:
-	//   ADCClient::onLine -> this::disconnect -> this::realDisconnect
-	// this::onRead tries to read/modify variables... not good...
-	// so we can't have realDisconnect here. Test for queue.empty() after
-	// every call to ADCClient::onLine or this::disconnect and call a
-	// realDisconnect() (to avoid stalling disconnections).
 }
 
 void ADCSocket::realDisconnect()
