@@ -6,7 +6,7 @@ using namespace std;
 using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent)
-: attributes(this), ADCSocket(fd), hub(parent), state(START), added(false)
+: ADCSocket(fd), attributes(this), hub(parent), state(START), added(false)
 {
 	onConnected();
 }
@@ -33,10 +33,9 @@ void ADC::sendHubMessage(string const& msg)
 }
 
 
-#define PROTO_DISCONNECT(errmsg) \
+#define PROTOCOL_ERROR(errmsg) \
 	do { \
-		state = PROTOCOL_ERROR; \
-		send("ISTA " + guid + " 00 " + esc(errmsg) + "\n"); \
+		doError(errmsg); \
 		if(added) { \
 			cancel(); \
 			hub->broadcastSelf("IQUI " + guid + " DI " + esc(errmsg) + '\n'); \
@@ -44,8 +43,17 @@ void ADC::sendHubMessage(string const& msg)
 		disconnect(); \
 	} while(0)
 
-void ADC::notify(string const& msg) {
-	send("ISTA " + guid + " 00 " + msg + '\n');
+
+/************************/
+/* Calls from ADCSocket */
+/************************/
+
+void ADC::doWarning(string const& msg) {
+	send("ISTA " + guid + " 10 " + esc(msg) + '\n');
+}
+
+void ADC::doError(string const& msg) {
+	send("ISTA " + guid + " 20 " + esc(msg) + '\n');
 }
 
 void ADC::onLine(StringList const& sl, string const& full)
@@ -56,50 +64,50 @@ void ADC::onLine(StringList const& sl, string const& full)
 	if(sl[0].length() == 4) {
 		switch(sl[0][0]) {
 		case 'A':
-			if(state == LOGGED_IN && sl.size() >= 2 && sl[1] == guid) {
+			if(state == NORMAL && sl.size() >= 2 && sl[1] == guid) {
 				handleA(sl, full);
 			} else {
-				PROTO_DISCONNECT("Wrong GUID or Not logged in");
+				PROTOCOL_ERROR("State, CID or parameter mismatch");
 			}
 			break;
 		case 'B':
-			if(sl.size() >= 2 && ((state == LOGGED_IN && sl[1] == guid) || state == GOT_SUP)) {
-				handleB(sl, full);
+			if(sl.size() >= 2 && ((state == NORMAL && sl[1] == guid) || state == IDENTIFY)) {
+				handleB(sl, full); // check state
 			} else {
-				PROTO_DISCONNECT("Wrong GUID or Not logged in");
+				PROTOCOL_ERROR("State, CID or parameter mismatch");
 			}
 			break;
 		case 'C': 
-			PROTO_DISCONNECT("C messages are supposed to go to clients");
+			PROTOCOL_ERROR("C type messages not supported");
 			return;
 		case 'D':
-			if(state == LOGGED_IN && sl.size() >= 3 && sl[2] == guid) {
+			if(state == NORMAL && sl.size() >= 3 && sl[2] == guid) {
 				handleD(sl, full);
 			} else {
-				PROTO_DISCONNECT("Wrong GUID or Not logged in");
+				PROTOCOL_ERROR("State, CID or parameter mismatch");
 			}
 			break;
 		case 'I':
-			PROTO_DISCONNECT("I messages originate from me, not from you");
+			PROTOCOL_ERROR("I type messages not supported");
 			return;
 		case 'H': // XXX do H messages have a CID or not? may affect BINF state checking
-			handleH(sl, full);
+			handleH(sl, full); // check state
 			break;
 		case 'P':
-			if(state == LOGGED_IN && sl.size() >= 2 && sl[1] == guid) {
+			if(state == NORMAL && sl.size() >= 2 && sl[1] == guid) {
 				handleD(sl, full);
 			} else {
-				PROTO_DISCONNECT("Wrong GUID or Not logged in");
+				PROTOCOL_ERROR("State, CID or parameter mismatch");
 			}
 			break;
 		case 'U':
-			PROTO_DISCONNECT("U messages are supposed to be sent over UDP");
+			PROTOCOL_ERROR("U type messages not supported");
 			break;
 		default:
-			PROTO_DISCONNECT("Message type unknown");
+			PROTOCOL_ERROR("Message type not supported");
 		}
 	} else {
-		PROTO_DISCONNECT("Illegal input");
+		PROTOCOL_ERROR("Illegal message");
 	}
 }
 
@@ -126,45 +134,53 @@ void ADC::onDisconnected(string const& clue)
 
 
 
+/*****************/
+/* Data handlers */
+/*****************/
 
 void ADC::handleA(StringList const& sl, string const& full)
 {
-	hub->broadcastSelf(full);
+	// todo: check parameters
+	if(sl[0] == "AMSG") {
+		hub->broadcastSelf(full);
+	} else {
+		PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
+	}
 }
 	
 void ADC::handleB(StringList const& sl, string const& full)
 {
-	if(sl[0] == "BINF") {
-		handleBINF(sl, full);
-	} else if(sl[0] == "BMSG") {
-		if(sl.size() == 3) {
-			if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
-				attributes.setInf(sl[2].substr(7, 2), sl[2].substr(9));
-				hub->broadcastSelf(string("BINF ") + guid + " " + sl[2].substr(7) +   + "\n");
-			}
-			// default
-			hub->broadcastSelf(full);
+	if(state == IDENTIFY) {
+		if(sl[0] == "BINF") {
+			handleBINF(sl, full);
 		} else {
-			PROTO_DISCONNECT("BMSG takes 2 parms only");
+			PROTOCOL_ERROR("State mismatch");
 		}
-	} else if(sl[0] == "BSCH") {
-		// searches do not go to self
-		hub->broadcast(this, full);	
+	} else if(state == NORMAL) {
+		if(sl[0] == "BINF") {
+			handleBINF(sl, full);
+		} else if(sl[0] == "BMSG" && (sl.size() == 3 || sl.size() == 4 /* flags */)) {
+			handleBMSG(sl, full);
+		} else if(sl[0] == "BSCH") {
+			hub->broadcast(this, full);
+		} else {
+			PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
+		}
 	} else {
-		hub->broadcastSelf(full);
+		PROTOCOL_ERROR("State mismatch");
 	}
 }
 
 void ADC::handleBINF(StringList const& sl, string const& full)
 {
 	if(!attributes.setInf(sl)) {
-		PROTO_DISCONNECT("setInf didn't like you very much");
+		PROTOCOL_ERROR("setInf didn't like you very much");
 		return;
 	}
-	if(state == GOT_SUP) {
+	if(state == IDENTIFY) {
 		guid = sl[1];
 		if(hub->hasClient(guid)) {
-			PROTO_DISCONNECT("proto error: User exists already");
+			PROTOCOL_ERROR("CID busy, change CID or wait");
 			return;
 		}
 		//send infs
@@ -173,28 +189,56 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 		enable();
 		//notify him that userlist is over and notify others of his presence
 		hub->broadcastSelf(attributes.getChangedInf());
-		state = LOGGED_IN;
+		state = NORMAL;
 		hub->motd(this);
 	} else {
 		hub->broadcastSelf(attributes.getChangedInf());
 	}
 }
 	
+void ADC::handleBMSG(StringList const& sl, string const& full)
+{
+	if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
+		attributes.setInf(sl[2].substr(7, 2), sl[2].substr(9));
+		hub->broadcastSelf(attributes.getChangedInf());
+	}
+	hub->broadcastSelf(full);
+	// FIXME add check for PM<guid> flag
+}
+
 void ADC::handleD(StringList const& sl, string const& full)
 {
-	hub->broadcastSelf(full);
+	// todo: check parameter count
+	if(
+			sl[0] == "DSTA" ||
+			sl[0] == "DMSG" ||
+			sl[0] == "DSCH" ||
+			sl[0] == "DRES" ||
+			sl[0] == "DCTM" ||
+			sl[0] == "DRCM"
+	) {
+		hub->broadcastSelf(full);
+	} else {
+		PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
+	}
 }
 	
 void ADC::handleH(StringList const& sl, string const& full)
 {
-	// todo: state checking
-	if(sl[0] == "HDSC") {
-		handleHDSC(sl, full);
-	} else if(sl[0] == "HSUP") {
-		handleHSUP(sl, full);
+	if(sl[0] == "HSUP") {
+		handleHSUP(sl, full); // valid in all states
+	} else if(state == VERIFY && sl[0] == "HPAS") {
+		// FIXME
+	} else if(state == NORMAL) {
+		if(sl[0] == "HDSC") {
+			handleHDSC(sl, full);
+		} else if(sl[0] == "HGET" || sl[0] == "HSND") {
+			doWarning("HGET/HSND unsupported");
+		} else {
+			PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
+		}
 	} else {
-		// do not broadcast H
-		sendHubMessage(full);
+		PROTOCOL_ERROR("State mismatch");
 	}
 }
 
@@ -202,75 +246,80 @@ void ADC::handleHDSC(StringList const& sl, string const& full)
 {
 	// H didn't have cid...
 	if(!attributes.isOp()) {
-		PROTO_DISCONNECT("You're not an operator");
+		doWarning("Access denied");
 		return;
 	}
 	if(sl.size() >= 5) {
 		bool hide = sl[2] == "ND";
-		string const& victim = sl[3];
+		string const& victim_guid = sl[3];
 		if(!hide && sl[1] != sl[2]) {
-			PROTO_DISCONNECT("DSC bc-reason must be ND or reason");
+			PROTOCOL_ERROR("HDSC corrupt"); // "ND" or sl[1] should be at sl[2]
 			return;
 		}
-		ADC* victimp = hub->getClient(victim);
-		if(!victimp)
+		ADC* victim = hub->getClient(victim_guid);
+		if(!victim)
 			return;
 		bool success = false;
-		string msg = string("IQUI ") + victim;
+		string msg = string("IQUI ") + victim_guid;
 		if(sl.size() == 5) {
 			if(sl[1] == "DI") {
 				msg += " DI " + guid + ' ' + esc(sl[4]) + '\n';
-				victimp->send(msg);
+				victim->send(msg);
 				success = true;
 			} else if(sl[1] == "KK") {
 				msg += " KK " + guid + ' ' + esc(sl[4]) + '\n';
-				victimp->send(msg);
+				victim->send(msg);
 				// todo: set bantime
 				success = true;
 			}
 		} else if(sl.size() == 6) {
 			if(sl[1] == "BN") {
 				msg += " BN " + guid + ' ' + esc(sl[4]) + ' ' + esc(sl[5]) + '\n';
-				victimp->send(msg);
+				victim->send(msg);
 				// todo: set bantime
 				success = true;
 			} else if(sl[1] == "RD") {
 				msg += " RD " + guid + ' ' + esc(sl[4]) + ' ' + esc(sl[5]) + '\n';
-				victimp->send(msg);
+				victim->send(msg);
 				success = true;
 			}
 		}
 		if(success) {
 			// remove victim
-			cancel();
-			victimp->disconnect();
+			victim->cancel();
+			victim->disconnect();
 			// notify everyone else
 			if(!hide) {
 				hub->broadcastSelf(msg);
 			} else {
-				if(this != victimp)
+				if(this != victim)
 					send(msg); // notify self
-				hub->broadcast(this, "IQUI " + victim + " ND\n");
+				hub->broadcast(this, "IQUI " + victim_guid + " ND\n");
 			}
 		} else {
-			// got garbage command
+			doWarning("HDSC corrupt");
 		}
 	}
 }
 	
 void ADC::handleHSUP(StringList const& sl, string const& full)
 {
-	if(state == START) {
-		send("ISUP " + hub->getCID32() + " +BASE\n"
-				"IINF " + hub->getCID32() + " NI" + esc(hub->getHubName()) +
-				" HU1 HI1 DEmajs VEqhub0.02\n");
-		state = GOT_SUP;
-	} else {
-		PROTO_DISCONNECT("HSUP unexpected");
-	}
+	send("ISUP " + hub->getCID32() + " +BASE\n"
+			"IINF " + hub->getCID32() + " NI" + esc(hub->getHubName()) +
+			" HU1 HI1 DEmajs VEqhub0.02\n");
+	state = IDENTIFY;
 }
 	
 void ADC::handleP(StringList const& sl, string const& full)
 {
-	hub->broadcastSelf(full);
+	// todo: check parameter count
+	if(
+			sl[0] == "PMSG" ||
+			sl[0] == "PSCH"
+	) {
+		// FIXME
+		hub->broadcastSelf(full);
+	} else {
+		PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
+	}	
 }

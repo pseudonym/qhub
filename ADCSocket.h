@@ -19,44 +19,48 @@ namespace qhub {
 
 class ADCSocket : public Socket {
 public:
+	/*
+	 * ADC escaping
+	 */
 	static string esc(string const& in);
 	static string cse(string const& in);
-	
-	typedef vector<string> StringList;
-	
+
+	/*
+	 * Normal
+	 */
 	ADCSocket(int fd);
 	virtual ~ADCSocket();
+	void send(string const& msg) { write(msg, 0); };
 
+	/*
+	 * fd_demux calls
+	 */
 	virtual void on_read();
 	virtual void on_write();
 
-	void send(string const& msg) { write(msg, 0); };
-	void disconnect(string const& msg) { Socket::disconnect(); onDisconnected(msg); };
-
 	/*
-	 * Send a readable message
+	 * Do protocol stuff / Handle events
 	 */
-	virtual void notify(string const& msg) = 0;
-	/*
-	 * Events to be handled
-	 */
+	virtual void doWarning(string const& msg) = 0;
+	virtual void doError(string const& msg) = 0; // send FatalError message
 	virtual void onLine(StringList const& sl, string const& full) = 0;
 	virtual void onConnected() = 0;
 	virtual void onDisconnected(string const& clue) = 0;
 
 protected:
 	void disconnect() { Socket::disconnect(); onDisconnected(Util::emptyString); };
+	void disconnect(string const& msg) { Socket::disconnect(); onDisconnected(msg); };
 
 private:
 	StringList data;
 	string raw;
-	bool escaped;
 
 	void realDisconnect();
 	
 	int readBufferSize;
 	unsigned char* readBuffer;
 	enum ReadState { NORMAL, PARTIAL } state;
+	bool escaped;
 
 	// Invalid
 	ADCSocket() {};

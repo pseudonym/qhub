@@ -82,7 +82,9 @@ void ADCSocket::on_read()
 		unsigned dataLen = data.size();
 		for(; p != e; ++p, ++lineLen) {
 			if(lineLen > MAX_LINELEN) {
-				notify("Max input of 1024 chars in command exceeded");
+				// disconnect is mandatory here, or we would need to seek
+				// through the bad command to start at the next
+				doError("Max input of 1024 chars in command exceeded");
 				disconnect("Max input of 1024 chars in command exceeded");
 				return;
 			}
@@ -100,7 +102,9 @@ void ADCSocket::on_read()
 						s = p + 1;
 						++dataLen;
 						if(dataLen > MAX_DATALEN) {
-							notify("Max arguments of 128 in command exceeded");
+							// disconnect is mandatory here, or we would need to seek
+							// through the bad command to start at the next
+							doError("Max arguments of 128 in command exceeded");
 							disconnect("Max arguments of 128 in command exceeded");
 							return;
 						}
@@ -179,7 +183,6 @@ void ADCSocket::realDisconnect()
 	
 	fprintf(stderr, "Real Disconnect %d %p\n", fd, this);
 	close(fd);
-	cancel(fd, OOP_READ);
 	if(writeEnabled){
 		cancel(fd, OOP_WRITE);
 	}

@@ -68,6 +68,10 @@ void *fd_demux(oop_source *src, int fd, oop_event ev, void* usr)
 	case OOP_WRITE:
 		s->on_write();
 		break;
+	case OOP_EXCEPTION:
+	case OOP_NUM_EVENTS:
+	default:
+		break;
 	}
 
 	return OOP_CONTINUE;

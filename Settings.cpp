@@ -90,7 +90,7 @@ int Settings::readFromXML()
 						cout << "\tInter-connecting to: " << XMLString::transcode(b->getFirstChild()->getNodeName()) << endl;
 						DOMNode*a = b->getFirstChild();
 						string host, password;
-						int port;
+						int port = 0;
 						while(a){
 							if(strcmp(XMLString::transcode(a->getNodeName()), "host") == 0 && a->getFirstChild() != NULL){
 								host = XMLString::transcode(a->getFirstChild()->getNodeValue());
@@ -117,5 +117,6 @@ int Settings::readFromXML()
 	}
 
 	XMLPlatformUtils::Terminate();
+	return 0;
 }
 

@@ -20,6 +20,7 @@ class ADC;
 class Hub : public DNSUser {
 public:
 	Hub();
+	virtual ~Hub() {};
 
 	void openADCPort(int port);
 	void openInterPort(int port);

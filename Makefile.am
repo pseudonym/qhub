@@ -1,4 +1,5 @@
 bin_PROGRAMS = qhub
+qhub_CXXFLAGS = -Wall
 qhub_SOURCES  = qhub.cpp qhub.h MyTime.h types.h 
 qhub_SOURCES += Util.h Util.cpp
 qhub_SOURCES += TokenBucket.h TokenBucket.cpp Socket.h

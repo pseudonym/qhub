@@ -33,18 +33,24 @@ public:
 	// Send-to functions
 	void sendHubMessage(string const& msg);
 
-	// Data handlers	
+	/*
+	 * Data handlers	
+	 */
 	void handleA(StringList const& sl, string const& full);
 	void handleB(StringList const& sl, string const& full);
 	void handleBINF(StringList const& sl, string const& full);
+	void handleBMSG(StringList const& sl, string const& full);
 	void handleD(StringList const& sl, string const& full);
 	void handleH(StringList const& sl, string const& full);
 	void handleHDSC(StringList const& sl, string const& full);
 	void handleHSUP(StringList const& sl, string const& full);
 	void handleP(StringList const& sl, string const& full);
 
-	// Calls from ADCSocket
-	virtual void notify(string const& msg);
+	/*
+	 * Calls from ADCSocket
+	 */
+	virtual void doWarning(string const& msg);
+	virtual void doError(string const& msg); // send FatalError message
 	virtual void onLine(StringList const& sl, string const& full);
 	virtual void onConnected();
 	virtual void onDisconnected(string const& clue);
@@ -73,17 +79,17 @@ private:
 	void cancel();
 
 	enum State {
-		START,
-		PROTOCOL_ERROR,
-		GOT_SUP,
-		LOGGED_IN
+		START,		// HSUP
+		IDENTIFY,	// BINF
+		VERIFY,		// HPAS
+		NORMAL
 	};
 	int state;
 	string guid;
 	bool added;
 	
 	// Invalid
-	ADC() : attributes(0), ADCSocket(-1) {};
+	ADC() : ADCSocket(-1), attributes(0) {};
 };
 
 }

@@ -5,7 +5,7 @@
 using namespace std;
 using namespace qhub;
 
-Socket::Socket(int d, int t, int p) : written(0), writeEnabled(false), disconnected(false)
+Socket::Socket(int d, int t, int p) : writeEnabled(false), written(0), disconnected(false)
 {
 	fd = ::socket(d, t, p);
 
@@ -79,6 +79,7 @@ int Socket::accept()
 
 void Socket::disconnect()
 {
+	cancel(fd, OOP_READ); // stop reading immediately
 	disconnected = true;
 }
 
@@ -108,7 +109,7 @@ void Socket::partialWrite()
 
 	Buffer::writeBuffer top = queue.front();
 
-	assert(written<top->getBuf().size() && "We have already written the entirety of this buffer");
+	assert(written < (int)top->getBuf().size() && "We have already written the entirety of this buffer");
 
 	const char* d = top->getBuf().c_str();
 
@@ -128,7 +129,7 @@ void Socket::partialWrite()
 	} else {
 		written += w;
 
-		if(written == top->getBuf().size()){
+		if(written == (int)top->getBuf().size()){
 			queue.pop();
 			written = 0;
 		}
