@@ -26,10 +26,10 @@ ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
 ADCSocket::~ADCSocket() throw()
 {
 	delete[] readBuffer;
-	realDisconnect();
 }
 
-void ADCSocket::onRead() throw()
+//this is an ugly way to "factor out" the check for disconnectedness
+void ADCSocket::handleOnRead() throw()
 {
 	//fprintf(stderr, "ADCSocket::onRead\n");
 	int ret = read(fd, readBuffer, readBufferSize);
@@ -42,8 +42,6 @@ void ADCSocket::onRead() throw()
 		} else {
 			disconnect(Util::errnoToString(errno)); // error
 		}
-		if(queue.empty())
-			realDisconnect();
 	} else {
 		unsigned char *p = readBuffer;	// cur
 		unsigned char *e = p + ret;		// end
@@ -57,9 +55,9 @@ void ADCSocket::onRead() throw()
 				// through the bad command to start at the next
 				doError("Max input of 1024 chars in command exceeded");
 				disconnect("Max input of 1024 chars in command exceeded");
-				if(queue.empty())
-					realDisconnect();
-				return;
+				if(queue.empty()){
+					return;
+				}
 			}
 
 			switch(*p) {
@@ -79,9 +77,9 @@ void ADCSocket::onRead() throw()
 							// through the bad command to start at the next
 							doError("Max arguments of 128 in command exceeded");
 							disconnect("Max arguments of 128 in command exceeded");
-							if(queue.empty())
-								realDisconnect();
-							return;
+							if(queue.empty()){
+								return;
+							}
 						}
 					} else if(state == PARTIAL) {
 						data.back().append((char const*)s, p - s);
@@ -99,8 +97,7 @@ void ADCSocket::onRead() throw()
 						} else {
 							onLine(data, raw + string((char const*)f, p - f + 1));
 						}
-						if(disconnected && queue.empty()) {
-							realDisconnect();
+						if(disconnected && queue.empty()){
 							return;
 						}
 						data.clear();
@@ -130,6 +127,14 @@ void ADCSocket::onRead() throw()
 	}
 }
 
+void ADCSocket::onRead() throw()
+{
+	handleOnRead();
+	//do this as the last thing before we return, see notes in realDisconnect
+	if(disconnected && queue.empty())
+		realDisconnect();
+}
+
 void ADCSocket::onWrite() throw()
 {
 	//fprintf(stderr, "ADCSocket::onWrite\n");
@@ -139,6 +144,7 @@ void ADCSocket::onWrite() throw()
 		writeEnabled = false;
 
 		// Nothing left to write.. kill us
+		//dont do anything after realDisconnect, see notes there
 		if(disconnected)
 			realDisconnect();
 	}
@@ -159,24 +165,18 @@ void ADCSocket::disconnect(string const& msg)
 
 void ADCSocket::realDisconnect()
 {
-	if(fd == -1) {
-		// if we're already disconnecting, we would loop trying to delete ourselves again
-		// as we're called from the destructor
-		return;
-	}
+	//this will "delete this", meaning: we CANNOT access anything via this-> anymore, and
+	//we cannot dispatch any more member calls, and we cannot even access "this" anymore
 
-	if(!disconnected) {
-		fprintf(stderr, "Real Disconnect %d %p !disconnected\n", fd, this);
-		disconnect(); // notify others that we're dying
-	}
+	//this should not be necessary: the assumptions above forbid it
+	assert(fd != -1 && "Assumptions of 'delete this' usage was probably broken!");
 
 	fprintf(stderr, "Real Disconnect %d %p\n", fd, this);
-	close(fd);
 	if(writeEnabled) {
 		cancel_fd(fd, OOP_WRITE);
 	}
-
+	close(fd);
 	fd = -1;
-	// deleting us
+
 	delete this;
 }

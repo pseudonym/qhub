@@ -41,6 +41,7 @@ ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
 
 ADCClient::~ADCClient() throw()
 {
+	alarm(0);
 	if(userInfo)
 		delete userInfo;
 	if(userData)
@@ -61,6 +62,7 @@ void ADCClient::onAlarm() throw()
 		//(we could try sending an NMDC-style message here)
 		disconnect();
 	} else {
+		//last thing before we return control to event-system: the right thing to do! :)
 		realDisconnect();
 	}
 }
