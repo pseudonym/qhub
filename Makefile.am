@@ -6,3 +6,4 @@ qhub_SOURCES += DNSUser.h InterHub.cpp InterHub.h
 qhub_SOURCES += Hub.h Hub.cpp
 qhub_SOURCES += ADC.h ADC.cpp
 qhub_SOURCES += Buffer.h
+EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO config.xml

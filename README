@@ -29,8 +29,8 @@ Required
 
 Liboop - liboop.org
 ADNS - www.chiark.greenend.org.uk/~ian/adns/
-Boost library (shared_ptr) - boost.org
-
+Boost library - boost.org
+Xerces C++ - http://xml.apache.org/xerces-c/index.html
 
 Recommended
 

@@ -4,3 +4,4 @@ Fix autoconf-macros: remove unused, and start using more of the existing ones.
 
 Escape hubname
 
+Rename config.xml to settings.xml, ./configure easier.

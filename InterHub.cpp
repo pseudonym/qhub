@@ -89,17 +89,32 @@ void InterHub::on_read()
 			}
 		}
 	} else if(r < 1){
-		cancel(fd, OOP_READ);
-		close(fd);
-		delete[] readBuffer;
-		//XXX someone (other than us?) also needs to deallocate us
-		delete this;
+		disconnect();
+	}
+
+	if(disconnected){
+		realDisconnect();
 	}
 }
 
 void InterHub::realDisconnect()
 {
+	if(fd == -1){
+		//already done
+		return;
+	}
+	fprintf(stderr, "Disconnecting Interhub %d %p\n", fd, this);
 
+	close(fd);
+	cancel(fd, OOP_READ);
+	if(writeEnabled){
+		cancel(fd, OOP_WRITE);
+	}
+
+	fd = -1;
+
+	//what about deleting us?
+	delete this;
 }
 
 void InterHub::on_write()
