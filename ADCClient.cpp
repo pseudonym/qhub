@@ -533,6 +533,6 @@ void ADCClient::handleSupports(StringList& sl) throw()
 {
 	send("ISUP " + getHub()->getCID32() + " +BASE\n" // <-- do we need CID?
 	     "IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
-	     " HU1 DEmajs VEqhub0.6 OP1\n");
+	     " HU1 DEmajs VEqhub" VERSION " OP1\n");
 	state = IDENTIFY;
 }
