@@ -66,7 +66,7 @@ void Plugin::removeAllModules() throw()
 	}
 }	
 
-void Plugin::fire(Message m, ADC* client, string const& msg) throw()
+void Plugin::fire(Message m, ADCClient* client, string const& msg) throw()
 {
 	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i) {
 		(*i)->on(m, client, msg);

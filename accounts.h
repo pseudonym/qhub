@@ -8,14 +8,16 @@ using namespace std;
 
 namespace qhub {
 
-class ADC;
+class ADCClient;
 
 class Accounts : public Plugin {
 public:
+	static u_int32_t idUserLevel;
+	
 	Accounts() throw() {};
 	virtual ~Accounts() throw() {};
 
-	virtual void on(Message m, ADC* client, string const& msg) throw() {
+	virtual void on(Message m, ADCClient* client, string const& msg) throw() {
 		switch(m) {
 		case STARTED: fprintf(stderr, "Plugin: accounts: started\n"); break;
 		case STOPPED: fprintf(stderr, "Plugin: accounts: stopped\n"); break;
@@ -31,10 +33,10 @@ private:
 	void load() throw();
 	void save() throw();
 	
-	void onLogin(ADC* client) throw();
-	void onInfo(ADC* client) throw();
-	void onAuth(ADC* client) throw();
-	void onCommand(ADC* client, string const& msg) throw();
+	void onLogin(ADCClient* client) throw();
+	void onInfo(ADCClient* client) throw();
+	void onAuth(ADCClient* client) throw();
+	void onCommand(ADCClient* client, string const& msg) throw();
 };
 
 } //namespace qhub

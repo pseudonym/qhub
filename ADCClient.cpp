@@ -1,26 +1,28 @@
 // vim:ts=4:sw=4:noet
-#include "ADC.h"
+#include "ADCClient.h"
 #include "Hub.h"
 #include "TigerHash.h"
 #include "Encoder.h"
 #include "Plugin.h"
 #include "ADCInf.h"
+#include "UserData.h"
 
 using namespace std;
 using namespace qhub;
 
-ADC::ADC(int fd, Hub* parent)
-: ADCSocket(fd), added(false), attributes(new ADCInf(this)), hub(parent), state(START)
+ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
+: ADCSocket(fd, domain), added(false), attributes(new ADCInf(this)), hub(parent), userData(new UserData), state(START)
 {
 	onConnected();
 }
 
-ADC::~ADC()
+ADCClient::~ADCClient() throw()
 {
 	delete attributes;
+	delete userData;
 }
 
-void ADC::login()
+void ADCClient::login()
 {
 	//send infs
 	hub->getUsersList(this);
@@ -31,25 +33,15 @@ void ADC::login()
 	hub->motd(this);
 }
 
-void ADC::logout()
+void ADCClient::logout()
 {
 	hub->removeClient(guid);
 	added = false;
 }
 
-string const& ADC::getInf() const
+string const& ADCClient::getInf() const
 {
 	return attributes->getFullInf();
-}
-
-void ADC::setInt(string const& key, int value) throw()
-{
-	intMap[key] = value;
-}
-
-int ADC::getInt(string const& key) throw()
-{
-	return intMap[key];
 }
 
 
@@ -63,7 +55,7 @@ int ADC::getInt(string const& key) throw()
 /* Calls from ADCSocket (and other places) */
 /*******************************************/
 
-void ADC::doAskPassword(string const& pwd) throw()
+void ADCClient::doAskPassword(string const& pwd) throw()
 {
 	assert(state == IDENTIFY); // OR added == false
 	password = pwd;
@@ -72,17 +64,17 @@ void ADC::doAskPassword(string const& pwd) throw()
 	state = VERIFY;
 }
 
-void ADC::doWarning(string const& msg) throw()
+void ADCClient::doWarning(string const& msg) throw()
 {
 	send("ISTA " + guid + " 10 " + esc(msg) + '\n');
 }
 
-void ADC::doError(string const& msg) throw()
+void ADCClient::doError(string const& msg) throw()
 {
 	send("ISTA " + guid + " 20 " + esc(msg) + '\n');
 }
 
-void ADC::doDisconnect(string const& msg) throw()
+void ADCClient::doDisconnect(string const& msg) throw()
 {
 	if(added) {
 		logout();
@@ -94,12 +86,12 @@ void ADC::doDisconnect(string const& msg) throw()
 	disconnect();
 }
 
-void ADC::doHubMessage(string const& msg) throw()
+void ADCClient::doHubMessage(string const& msg) throw()
 {
 	send("BMSG " + hub->getCID32() + ' ' + esc(msg) + '\n');
 }
 
-void ADC::onLine(StringList const& sl, string const& full) throw()
+void ADCClient::onLine(StringList const& sl, string const& full) throw()
 {		
 	assert(!sl.empty());
 	fprintf(stderr, "<< %s", full.c_str());
@@ -158,12 +150,12 @@ void ADC::onLine(StringList const& sl, string const& full) throw()
 	}
 }
 
-void ADC::onConnected() throw()
+void ADCClient::onConnected() throw()
 {
 	Plugin::fire(Plugin::CONNECTED, this);
 }
 
-void ADC::onDisconnected(string const& clue) throw()
+void ADCClient::onDisconnected(string const& clue) throw()
 {
 	if(added) {
 		// this is here so ADCSocket can safely destroy us.
@@ -185,7 +177,7 @@ void ADC::onDisconnected(string const& clue) throw()
 /* Data handlers */
 /*****************/
 
-void ADC::handleA(StringList const& sl, string const& full)
+void ADCClient::handleA(StringList const& sl, string const& full)
 {
 	// todo: check parameters
 	if(sl[0] == "AMSG") {
@@ -195,7 +187,7 @@ void ADC::handleA(StringList const& sl, string const& full)
 	}
 }
 	
-void ADC::handleB(StringList const& sl, string const& full)
+void ADCClient::handleB(StringList const& sl, string const& full)
 {
 	if(state == IDENTIFY) {
 		if(sl[0] == "BINF") {
@@ -218,7 +210,7 @@ void ADC::handleB(StringList const& sl, string const& full)
 	}
 }
 
-void ADC::handleBINF(StringList const& sl, string const& full)
+void ADCClient::handleBINF(StringList const& sl, string const& full)
 {
 	attributes->setInf(sl);
 
@@ -245,7 +237,7 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 	}
 }
 	
-void ADC::handleBMSG(StringList const& sl, string const& full)
+void ADCClient::handleBMSG(StringList const& sl, string const& full)
 {
 	if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
 		attributes->setInf(sl[2].substr(7, 2), sl[2].substr(9));
@@ -255,7 +247,7 @@ void ADC::handleBMSG(StringList const& sl, string const& full)
 	// FIXME add check for PM<guid> flag
 }
 
-void ADC::handleD(StringList const& sl, string const& full)
+void ADCClient::handleD(StringList const& sl, string const& full)
 {
 	// todo: check parameter count
 	if(sl.size() >= 3 && (
@@ -275,7 +267,7 @@ void ADC::handleD(StringList const& sl, string const& full)
 	}
 }
 	
-void ADC::handleH(StringList const& sl, string const& full)
+void ADCClient::handleH(StringList const& sl, string const& full)
 {
 	if(sl[0] == "HSUP") {
 		handleHSUP(sl, full); // valid in all states
@@ -298,7 +290,7 @@ void ADC::handleH(StringList const& sl, string const& full)
 	}
 }
 
-void ADC::handleHDSC(StringList const& sl, string const& full)
+void ADCClient::handleHDSC(StringList const& sl, string const& full)
 {
 	if(attributes->getOldInf("OP").empty()) {
 		doWarning("Access denied");
@@ -311,7 +303,7 @@ void ADC::handleHDSC(StringList const& sl, string const& full)
 			PROTOCOL_ERROR("HDSC corrupt"); // "ND" or sl[3] should be at sl[4]
 			return;
 		}
-		ADC* victim = hub->getClient(victim_guid);
+		ADCClient* victim = hub->getClient(victim_guid);
 		if(!victim)
 			return;
 		bool success = false;
@@ -357,7 +349,7 @@ void ADC::handleHDSC(StringList const& sl, string const& full)
 	}
 }
 	
-void ADC::handleHPAS(StringList const& sl, string const& full)
+void ADCClient::handleHPAS(StringList const& sl, string const& full)
 {
 	// Make CID from base32
 	u_int64_t cid;
@@ -390,7 +382,7 @@ void ADC::handleHPAS(StringList const& sl, string const& full)
 	state = NORMAL;
 }
 
-void ADC::handleHSUP(StringList const& sl, string const& full)
+void ADCClient::handleHSUP(StringList const& sl, string const& full)
 {
 	send("ISUP " + hub->getCID32() + " +BASE\n" // <-- do we need CID?
 			"IINF " + hub->getCID32() + " NI" + esc(hub->getHubName()) +
@@ -398,7 +390,7 @@ void ADC::handleHSUP(StringList const& sl, string const& full)
 	state = IDENTIFY;
 }
 	
-void ADC::handleP(StringList const& sl, string const& full)
+void ADCClient::handleP(StringList const& sl, string const& full)
 {
 	// todo: check parameter count
 	if(

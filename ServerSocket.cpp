@@ -17,16 +17,15 @@
 
 #include "ServerSocket.h"
 #include "InterHub.h"
-#include "ADC.h"
 #include "Hub.h"
 
 using namespace qhub;
 
-ServerSocket::ServerSocket(int port, int t, Hub* h) : Socket(AF_INET), type(t), hub(h) {
-	int yes=1;
+ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(domain), type(t), hub(h) {
+	int yes = 1;
 
-	if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
-		printf("Error setting reuse address.\n");
+	if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+		perror("warning: setsockopt:SO_REUSEADDR");
 	}
 
 	//just let the kernel handle this for us...
@@ -41,23 +40,25 @@ ServerSocket::ServerSocket(int port, int t, Hub* h) : Socket(AF_INET), type(t), 
 	   }*/
 
 	setPort(port);
-	set_bound_address(0);
+	setBindAddress(); // empty = use INADDR_ANY
 	bind();
 	listen();
 }
 
 void ServerSocket::on_read(){
 	while(true){
-		int fd = Socket::accept();
+		int fd;
+		Domain d;
+		Socket::accept(fd, d);
 		if(fd != -1){
 			fprintf(stderr, "Accepted socket %d\n", fd);
 			Socket* tmp;
 			switch(type){
 			case INTER_HUB:
-				hub->acceptInterHub(fd);
+				hub->acceptInterHub(fd, d);
 				break;
 			case LEAF_HANDLER:
-				hub->acceptLeaf(fd);
+				hub->acceptLeaf(fd, d);
 				break;
 			default:
 				fprintf(stderr, "Closing socket: unknown type for listening socket.\n");

@@ -5,4 +5,5 @@
 using namespace std;
 using namespace qhub;
 
-string Util::emptyString;
+string const Util::emptyString;
+int const Util::emptyInt = 0;

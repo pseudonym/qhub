@@ -2,7 +2,7 @@
 
 #include "qhub.h"
 #include "ServerSocket.h"
-#include "ADC.h"
+#include "ADCClient.h"
 #include "InterHub.h"
 #include "Buffer.h"
 
@@ -63,23 +63,23 @@ void Hub::openInterConnection(string host, int port, string password)
 void Hub::openADCPort(int port)
 {
 	//Leaf-handler
-	ServerSocket* tmp = new ServerSocket(port, ServerSocket::LEAF_HANDLER, this);
+	ServerSocket* tmp = new ServerSocket(Socket::IP6, port, ServerSocket::LEAF_HANDLER, this);
 	enable(tmp->getFd(), OOP_READ, tmp);
 }
 
 void Hub::openInterPort(int port)
 {
 	//Inter-hub
-	ServerSocket* tmp = new ServerSocket(port, ServerSocket::INTER_HUB, this);
+	ServerSocket* tmp = new ServerSocket(Socket::IP6, port, ServerSocket::INTER_HUB, this);
 	enable(tmp->getFd(), OOP_READ, tmp);
 }
 
-void Hub::acceptLeaf(int fd)
+void Hub::acceptLeaf(int fd, Socket::Domain d)
 {
-	Socket* tmp = new ADC(fd, this);
+	Socket* tmp = new ADCClient(fd, d, this);
 }
 
-void Hub::getUsersList(ADC* c)
+void Hub::getUsersList(ADCClient* c)
 {
 	string tmp;
 	for(userIter i=users.begin(); i!=users.end(); i++){
@@ -90,7 +90,7 @@ void Hub::getUsersList(ADC* c)
 	c->writeb(t);
 }
 
-void Hub::motd(ADC* c)
+void Hub::motd(ADCClient* c)
 {
 	char t[1024];
 	sprintf(t, "%d", interConnects.size());
@@ -113,7 +113,7 @@ void Hub::direct(string guid, string data)
 	}
 }
 
-void Hub::broadcast(ADC* c, string data)
+void Hub::broadcast(ADCClient* c, string data)
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	for(userIter i=users.begin(); i!=users.end(); i++){
@@ -143,7 +143,7 @@ bool Hub::hasClient(string const& guid) const
 	return true;
 }
 
-void Hub::addClient(string const& guid, ADC* client)
+void Hub::addClient(string const& guid, ADCClient* client)
 {
 	assert(!hasClient(guid));
 	users[guid] = client;
@@ -157,17 +157,17 @@ void Hub::removeClient(string const& guid)
 	users.erase(guid);
 }
 
-ADC* Hub::getClient(string const& guid)
+ADCClient* Hub::getClient(string const& guid)
 {
 	userIter i = users.find(guid);
 	if(i != users.end())
 		return i->second;
-	return (ADC*)0;
+	return (ADCClient*)0;
 }
 
-void Hub::acceptInterHub(int fd)
+void Hub::acceptInterHub(int fd, Socket::Domain d)
 {
-	InterHub* tmp = new InterHub(fd);
+	InterHub* tmp = new InterHub(fd, d);
 	interConnects2.push_back(tmp);
 }
 

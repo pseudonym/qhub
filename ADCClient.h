@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_ADC_H_
-#define _INCLUDED_ADC_H_
+#ifndef _INCLUDED_ADCCLIENT_H_
+#define _INCLUDED_ADCCLIENT_H_
 
 #include "ADCSocket.h"
 #include "compat_hash_map.h"
@@ -19,8 +19,9 @@ using namespace std;
 
 class Hub;
 class ADCInf;
+class UserData;
 
-class ADC : public ADCSocket {
+class ADCClient : public ADCSocket {
 public:
 	enum State {
 		START,		// HSUP
@@ -30,24 +31,24 @@ public:
 		DISCONNECTED	// signals that one shouldn't use this anymore
 	};
 	
-	ADC(int fd, Hub* parent);
-	virtual ~ADC();
+	ADCClient(int fd, Domain fd, Hub* parent) throw();
+	virtual ~ADCClient() throw();
 
 	virtual void on_read() { ADCSocket::on_read(); };
 	virtual void on_write() { ADCSocket::on_write(); };
 
-	// Other stuff
+	/*
+	 * ADC protocol
+	 */
 	string const& getInf() const;
-	string const& getCID32() const { return guid; };
-	ADCInf* getAttr() { return attributes; };
 
 	/*
 	 * Object information
 	 */
 	State getState() const throw() { return state; };
-	void setInt(string const& key, int value) throw();
-	int getInt(string const& key) throw();
-	// add setVoid/setInt64/setString..
+	UserData* getData() throw() { return userData; };
+	string const& getCID32() const { return guid; };
+	ADCInf* getAttr() { return attributes; };
 
 	/*
 	 * Various calls (don't send in bad states!)
@@ -87,19 +88,17 @@ private:
 
 	ADCInf* attributes;	
 	Hub* hub;
+	UserData* userData;
 
 	State state;
 	string guid;
 	string password;
 	string8 salt;
 
-	typedef hash_map<string, int> IntMap; // string is probably _way_ too slow, fixme..
-	IntMap intMap;
-	
 	// Invalid
-	ADC() : ADCSocket(-1), attributes(0) {};
+	ADCClient() : ADCSocket(-1, Socket::IP4), attributes(0) {};
 };
 
 }
 
-#endif //_INCLUDED_ADC_H_
+#endif //_INCLUDED_ADCCLIENT_H_

@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
 #include "ADCInf.h"
-#include "ADC.h"
+#include "ADCClient.h"
 
 using namespace std;
 using namespace qhub;
@@ -16,10 +16,19 @@ void ADCInf::setInf(StringList const& sl) throw()
 
 void ADCInf::setInf(string const& key, string const& val) throw()
 {
-	// set to changes buffer first
-	// move to current buffer only on send (getInfs)
+	// set to changes buffer first, move to current buffer only on send (getChanged..)
+	// only modify protocol forced stuff, not hubs/slots/etc.. those should be in plugins
+	// perhaps add a plugin that checks if the I4/I6 values are correct
 	if(key == "I4" && val == "0.0.0.0") {
-		changes[key] = parent->getPeerName();
+		if(parent->getDomain() == PF_INET)
+			changes[key] = parent->getPeerName();
+		else
+			changes[key] = Util::emptyString;
+	} else if(key == "I6" && (val == "[::]" || val == "[0:0:0:0:0:0:0:0]")) {
+		if(parent->getDomain() == PF_INET6)
+			changes[key] = parent->getPeerName();
+		else
+			changes[key] = Util::emptyString;
 	} else {
 		changes[key] = val;
 	}

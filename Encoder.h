@@ -1,5 +1,10 @@
 /* 
+ * Base32 Encoder stolen from GPL'd DC++:
  * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ *
+ * CRC32 Encoder stolen from GPL'd cksfv:
+ * Copyright (C) 2000 Bryan Call <bc@fodder.org>
+ * 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +40,12 @@ public:
 		return toBase32(src, len, tmp);
 	}
 	static void fromBase32(const char* src, u_int8_t* dst, size_t len);
+	static u_int32_t toCrc32(const char* p, size_t len);
+	static u_int32_t toCrc32(string const& str) { return toCrc32(str.c_str(), str.length()); };
 private:
 	static const int8_t base32Table[];
 	static const char base32Alphabet[];
+	static const u_int32_t crc32Table[256];
 };
 
 #endif // _ENCODER

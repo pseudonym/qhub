@@ -70,6 +70,7 @@ fi
 
 AC_CHECK_FUNCS([gethostname strtol gettimeofday gethostbyname inet_ntoa memmove memset socket getaddrinfo_a])
 AC_CHECK_FUNCS([nanosleep])
+AC_CHECK_FUNCS([inet_pton inet_ntop])
 
 
 AC_CHECK_HEADERS([xercesc/dom/DOM.hpp])

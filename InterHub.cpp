@@ -9,9 +9,9 @@
 
 using namespace qhub;
 
-InterHub::InterHub(int fd) : state(NO_DATA), readBuffer(new unsigned char[START_BUFFER]), readBufferSize(START_BUFFER), rbCur(0)
+InterHub::InterHub(int fd, Domain d) throw()
+: Socket(fd, d), state(NO_DATA), readBuffer(new unsigned char[START_BUFFER]), readBufferSize(START_BUFFER), rbCur(0)
 {
-	this->fd = fd;
 	struct linger       so_linger;
 	// Set linger to false
 	so_linger.l_onoff = false;
@@ -85,11 +85,11 @@ void InterHub::on_read()
 	if(r > 0){
 		fprintf(stderr, "Got data\n");
 		rbCur += r;
-		while(rbCur>3){
+		while(rbCur > 3) {
 			unsigned int l = *((int*)readBuffer);
 			l = ntohl(l);
 			fprintf(stderr, "Got length %d out of %d\n", l, rbCur);
-			if(rbCur>=l){
+			if(rbCur >= l) {
 				fprintf(stderr, "Got all data in packet\n");
 				//handle packet
 				handlePacket();

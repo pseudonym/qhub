@@ -22,6 +22,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -35,32 +36,44 @@ namespace qhub {
 
 class Socket {
 public:
-	Socket(int d=AF_INET, int t = SOCK_STREAM, int p = 0);
-	virtual ~Socket() {};
-
-	int accept();
-
-	// socket options
-	bool setNoLinger();
+	enum Domain { IP4 = PF_INET, IP6 = PF_INET6 };
+	Socket(Domain d = IP4, int t = SOCK_STREAM, int p = 0) throw(); // new sockets
+	Socket(int fd, Domain d) throw(); // existing sockets
+	virtual ~Socket() throw();
 
 	virtual void on_read() = 0;
 	virtual void on_write() = 0;
 
-	void setPort(int p);
-	void set_bound_address(int a);
-	void bind();
-	void listen(int backlog = 8192);
+	// socket options
+	bool setNoLinger() throw();
+	bool setNonBlocking() throw();
+	bool setSendTimeout(size_t seconds) throw();
+
+	void setPort(int p) throw();
+	void setBindAddress(string const& a = Util::emptyString) throw();
+	void bind() throw();
+	void listen(int backlog = 8192) throw();
+	void accept(int& fd, Domain& d) throw();
 
 	//beware: this will copy string. Limit use.
-	void write(string const& s, int prio=PRIO_NORM);
+	void write(string const& s, int prio = PRIO_NORM);
 	void writeb(Buffer::writeBuffer b);
 
 	int getFd() { return fd; };
-	string getSockName() const;
-	string getPeerName() const;
+	Domain getDomain() const throw() { return ip4OverIp6 ? IP4 : domain; };
+	string const& getSockName() const throw() { return sockName; };
+	string const& getPeerName() const throw() { return peerName; };
+
 protected:
 	int fd;
-	struct sockaddr_in saddr_in;
+	Domain domain;
+	int af;
+	struct sockaddr* saddrp;
+	socklen_t saddrl;
+	void* inaddrp;
+
+	string sockName, peerName;
+	bool ip4OverIp6;
 
 	//output queue
 	//priority_queue<Buffer::writeBuffer> queue;
@@ -74,6 +87,11 @@ protected:
 	//signals that we should die
 	bool disconnected;
 	void disconnect();
+
+private:
+	void create() throw();
+	void destroy() throw();
+	void initSocketNames() throw();
 };
 
 }

@@ -7,9 +7,9 @@ namespace qhub {
 
 class Hub;
 
-class ServerSocket : public Socket{
+class ServerSocket : public Socket {
 public:
-	ServerSocket(int port, int type, Hub* h);
+	ServerSocket(Domain domain, int port, int type, Hub* h);
 
 	enum socketTypes {
 	    INTER_HUB,

@@ -10,12 +10,13 @@
 #include "Buffer.h"
 #include "DNSUser.h"
 #include "InterHub.h"
+#include "Socket.h"
 
 using namespace std;
 
 namespace qhub {
 
-class ADC;
+class ADCClient;
 
 class Hub : public DNSUser {
 public:
@@ -37,21 +38,21 @@ public:
 	void setMaxPacketSize(int s);
 	int getMaxPacketSize() const { return maxPacketSize; };
 
-	void acceptLeaf(int fd);
-	void acceptInterHub(int fd);
+	void acceptLeaf(int fd, Socket::Domain d);
+	void acceptInterHub(int fd, Socket::Domain d);
 
 	bool hasClient(string const& guid) const;
-	void addClient(string const& guid, ADC* client);
+	void addClient(string const& guid, ADCClient* client);
 	void removeClient(string const& guid);
-	ADC* getClient(string const& guid);
+	ADCClient* getClient(string const& guid);
 
-	void broadcast(ADC* c, string data);
+	void broadcast(ADCClient* c, string data);
 	void broadcastSelf(string data);
 	void direct(string guid, string data);
 
-	void motd(ADC* c);
+	void motd(ADCClient* c);
 
-	void getUsersList(ADC* c);
+	void getUsersList(ADCClient* c);
 private:
 	static void add(Hub* h) throw();
 	static void remove(Hub* h) throw();
@@ -65,8 +66,8 @@ private:
 	//this is for external users
 
 	//this is for physical users
-	hash_map<string, ADC*> users;
-	typedef hash_map<string, ADC*>::iterator userIter;
+	hash_map<string, ADCClient*> users;
+	typedef hash_map<string, ADCClient*>::iterator userIter;
 
 	//opened connections
 	hash_map<string, InterHub*> interConnects;

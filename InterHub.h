@@ -14,8 +14,9 @@ class Hub;
 
 class InterHub : public Socket {
 public:
-	InterHub(Hub* h) { hub = h; };
-	InterHub(int fd);
+	InterHub(Hub* h) throw() { hub = h; };
+	InterHub(int fd, Domain d) throw();
+	virtual ~InterHub() throw() {};
 
 	void on_read();
 	void on_write();

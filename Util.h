@@ -17,7 +17,8 @@ typedef int ERRNO;
 
 class Util {
 public:
-	static string emptyString;
+	static string const emptyString;
+	static int const emptyInt;
 		
 	static string toString(ERRNO err) { return strerror(err); };
 

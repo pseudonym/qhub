@@ -45,17 +45,15 @@ string ADCSocket::cse(string const& in)
 	return tmp;
 }
 
-
-
-ADCSocket::ADCSocket(int fd)
-: readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]), state(NORMAL), escaped(false)
+ADCSocket::ADCSocket(int fd, Domain domain) throw()
+: Socket(fd, domain), readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]),
+		state(NORMAL), escaped(false)
 {
-	this->Socket::fd = fd;
 	enable(fd, OOP_READ, this);
 	setNoLinger();
 }
 
-ADCSocket::~ADCSocket()
+ADCSocket::~ADCSocket() throw()
 {
 	delete[] readBuffer;
 	realDisconnect();

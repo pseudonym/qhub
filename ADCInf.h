@@ -8,11 +8,11 @@
 
 namespace qhub {
 
-class ADC;
+class ADCClient;
 
 class ADCInf {
 public:
-	ADCInf(ADC* p) throw() : parent(p) {};
+	ADCInf(ADCClient* p) throw() : parent(p) {};
 	void setInf(StringList const& sl) throw();
 	void setInf(string const& key, string const& val) throw();
 	string const& getNewInf(string const& key) const throw();
@@ -26,7 +26,7 @@ private:
 	Inf current;
 	Inf changes;
 	string full;
-	ADC* parent;
+	ADCClient* parent;
 };
 
 } //namespace qhub

@@ -28,8 +28,8 @@ public:
 	/*
 	 * Normal
 	 */
-	ADCSocket(int fd);
-	virtual ~ADCSocket();
+	ADCSocket(int fd, Domain domain) throw();
+	virtual ~ADCSocket() throw();
 	void send(string const& msg) { write(msg, 0); };
 
 	/*

@@ -1,8 +1,10 @@
 // vim:ts=4:sw=4:noet
 #include "accounts.h"
 
-#include "ADC.h"
+#include "ADCClient.h"
 #include "ADCInf.h"
+#include "Encoder.h"
+#include "UserData.h"
 
 using namespace qhub;
 
@@ -20,7 +22,9 @@ void* getPlugin() { return new Accounts(); }
  * Plugin details
  */
 
-void Accounts::onLogin(ADC* client) throw()
+u_int32_t Accounts::idUserLevel = UserData::toKey("userlevel");
+
+void Accounts::onLogin(ADCClient* client) throw()
 {
 	ADCInf* attr = client->getAttr();
 	if(attr->getNewInf("NI").find("sed") != string::npos) {
@@ -30,12 +34,13 @@ void Accounts::onLogin(ADC* client) throw()
 	}
 }
 
-void Accounts::onInfo(ADC* client) throw()
+void Accounts::onInfo(ADCClient* client) throw()
 {
 	ADCInf* attr = client->getAttr();
+	UserData* data = client->getData();
 	if(attr->newInf("NI")) {
 		// don't allow registered users to change nick
-		if(client->getInt("userlevel"))
+		if(data->getInt(idUserLevel))
 			attr->setInf("NI", attr->getOldInf("NI")); // reset nick
 		// don't allow users to change to a registered nick
 		else if(attr->getNewInf("NI").find("sed") != string::npos ||
@@ -44,13 +49,14 @@ void Accounts::onInfo(ADC* client) throw()
 	}
 }
 
-void Accounts::onAuth(ADC* client) throw()
+void Accounts::onAuth(ADCClient* client) throw()
 {
-	client->setInt("userlevel", 1);
+	UserData* data = client->getData();
+	data->setInt(idUserLevel, 1);
 	ADCInf* attr = client->getAttr();
 	attr->setInf("OP", "1");
 }
 
-void Accounts::onCommand(ADC* client, string const& msg) throw()
+void Accounts::onCommand(ADCClient* client, string const& msg) throw()
 {
 }

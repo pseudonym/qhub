@@ -8,10 +8,11 @@ qhub_SOURCES += TokenBucket.h TokenBucket.cpp Socket.h
 qhub_SOURCES += Socket.cpp ServerSocket.cpp ServerSocket.h
 qhub_SOURCES += DNSUser.h InterHub.cpp InterHub.h
 qhub_SOURCES += Hub.h Hub.cpp
-qhub_SOURCES += ADCSocket.h ADCSocket.cpp ADCInf.h ADCInf.cpp ADC.h ADC.cpp
+qhub_SOURCES += ADCSocket.h ADCSocket.cpp ADCInf.h ADCInf.cpp ADCClient.h ADCClient.cpp
 qhub_SOURCES += Buffer.h
 qhub_SOURCES += compat_hash_map.h
 qhub_SOURCES += Plugin.h Plugin.cpp
+qhub_SOURCES += UserData.h UserData.cpp
 qhub_SOURCES += Settings.h Settings.cpp
 
 EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO Settings.xml
