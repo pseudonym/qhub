@@ -38,6 +38,12 @@ public:
 	 */
 	bool load(string const& filename) throw();
 	bool save(string const& filename) const throw();
+	/*
+	 * Iterators
+	 */
+	typedef vector<XmlTok*>::iterator iterator;
+	iterator begin() { return children.begin(); };
+	iterator end() { return children.end(); };
 private:
 	string data;
 	XmlTok* parent;

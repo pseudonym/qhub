@@ -43,6 +43,7 @@ private: \
 			 
 	GET_AND_SET(int, Int);
 	GET_AND_SET(string, String);
+	GET_AND_SET(voidPtr, VoidPtr);
 
 #undef GET_AND_SET
 	

@@ -46,8 +46,9 @@ public:
 	void removeClient(string const& guid);
 	ADCClient* getClient(string const& guid);
 
-	void broadcast(ADCClient* c, string data);
-	void broadcastSelf(string data);
+	void broadcast(string data, ADCClient* = NULL);
+	void broadcastActive(string data, ADCClient* = NULL);
+	void broadcastPassive(string data, ADCClient* = NULL);
 	void direct(string guid, string data);
 
 	void motd(ADCClient* c);

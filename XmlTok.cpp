@@ -166,7 +166,7 @@ bool XmlTok::load(string const& filename) throw()
 			fclose(fp);
 			return false;
 		}
-    } while(!done);
+	} while(!done);
 	XML_ParserFree(parser);
 	fclose(fp);
 	return true;

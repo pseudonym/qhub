@@ -11,7 +11,8 @@ using namespace std;
 using namespace qhub;
 
 ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-: ADCSocket(fd, domain), added(false), attributes(new ADCInf(this)), hub(parent), userData(new UserData), state(START)
+: ADCSocket(fd, domain), added(false), attributes(new ADCInf(this)), hub(parent), userData(new UserData), state(START),
+		action(PROCEED), lastLine(NULL), lastParsed(NULL)
 {
 	onConnected();
 }
@@ -22,26 +23,31 @@ ADCClient::~ADCClient() throw()
 	delete userData;
 }
 
-void ADCClient::login()
+void ADCClient::login() throw()
 {
 	//send infs
 	hub->getUsersList(this);
 	hub->addClient(guid, this);
 	added = true;
 	//notify him that userlist is over and notify others of his presence
-	hub->broadcastSelf(attributes->getChangedInf());
+	hub->broadcast(attributes->getChangedInf());
 	hub->motd(this);
 }
 
-void ADCClient::logout()
+void ADCClient::logout() throw()
 {
 	hub->removeClient(guid);
 	added = false;
 }
 
-string const& ADCClient::getInf() const
+string const& ADCClient::getInf() const throw()
 {
 	return attributes->getFullInf();
+}
+
+bool ADCClient::isActive() const throw()
+{
+	return !(attributes->getSetInf("U4").empty() && attributes->getSetInf("U6").empty());
 }
 
 
@@ -79,9 +85,9 @@ void ADCClient::doDisconnect(string const& msg) throw()
 	if(added) {
 		logout();
 		if(msg.empty())
-			hub->broadcastSelf("IQUI " + guid + " ND\n");
+			hub->broadcast("IQUI " + guid + " ND\n");
 		else
-			hub->broadcastSelf("IQUI " + guid + " DI " + hub->getCID32() + ' ' + esc(msg) + '\n');
+			hub->broadcast("IQUI " + guid + " DI " + hub->getCID32() + ' ' + esc(msg) + '\n');
 	}
 	disconnect();
 }
@@ -96,10 +102,18 @@ void ADCClient::doPrivateMessage(string const& msg) throw()
 	send("DMSG " + guid + ' ' + hub->getCID32() + ' ' + esc(msg) + " PM\n");
 }
 
-void ADCClient::onLine(StringList const& sl, string const& full) throw()
+void ADCClient::onLine(StringList& sl, string const& full) throw()
 {		
 	assert(!sl.empty());
+	lastLine = &full;
+	lastParsed = &sl;
 	fprintf(stderr, "<< %s", full.c_str());
+	// fire the all seeing plugin message
+	initAction();
+	Plugin::fire(Plugin::ClientLine(), this);
+	if(getAction(STOP))
+		return;
+	assert(!getAction(MODIFIED));
 	// Do basic input checking, state and guid
 	if(sl[0].length() == 4) {
 		switch(sl[0][0]) {
@@ -157,8 +171,8 @@ void ADCClient::onLine(StringList const& sl, string const& full) throw()
 
 void ADCClient::onConnected() throw()
 {
-	int a = Plugin::NONE; // action is ignored
-	Plugin::fire(Plugin::CONNECTED, a, this);
+	initAction(NONE);
+	Plugin::fire(Plugin::ClientConnected(), this);
 }
 
 void ADCClient::onDisconnected(string const& clue) throw()
@@ -170,12 +184,12 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		fprintf(stderr, "onDisconnected %d %p GUID: %s\n", fd, this, guid.c_str());
 		logout();
 		if(clue.empty())
-			hub->broadcast(this, string("IQUI " + guid + " ND\n"));
+			hub->broadcast(string("IQUI " + guid + " ND\n"), this);
 		else
-			hub->broadcast(this, string("IQUI " + guid + " DI " + guid + ' ' + esc(clue) + '\n'));
+			hub->broadcast(string("IQUI " + guid + " DI " + guid + ' ' + esc(clue) + '\n'), this);
 	}
-	int a = Plugin::NONE; // action is ignore
-	Plugin::fire(Plugin::DISCONNECTED, a, this);
+	initAction(NONE);
+	Plugin::fire(Plugin::ClientDisconnected(), this);
 }
 
 
@@ -184,17 +198,17 @@ void ADCClient::onDisconnected(string const& clue) throw()
 /* Data handlers */
 /*****************/
 
-void ADCClient::handleA(StringList const& sl, string const& full)
+void ADCClient::handleA(StringList& sl, string const& full) throw()
 {
-	// todo: check parameters
+	// todo: check parameters, fix sending to active only
 	if(sl[0] == "AMSG") {
-		hub->broadcastSelf(full);
+		hub->broadcastActive(full);
 	} else {
 		PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
 	}
 }
 	
-void ADCClient::handleB(StringList const& sl, string const& full)
+void ADCClient::handleB(StringList& sl, string const& full) throw()
 {
 	if(state == IDENTIFY) {
 		if(sl[0] == "BINF") {
@@ -208,7 +222,7 @@ void ADCClient::handleB(StringList const& sl, string const& full)
 		} else if(sl[0] == "BMSG" && (sl.size() == 3 || sl.size() == 4 /* flags */)) {
 			handleBMSG(sl, full);
 		} else if(sl[0] == "BSCH") {
-			hub->broadcast(this, full);
+			hub->broadcast(full, this);
 		} else {
 			PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
 		}
@@ -217,7 +231,7 @@ void ADCClient::handleB(StringList const& sl, string const& full)
 	}
 }
 
-void ADCClient::handleBINF(StringList const& sl, string const& full)
+void ADCClient::handleBINF(StringList& sl, string const& full) throw()
 {
 	attributes->setInf(sl);
 
@@ -233,33 +247,40 @@ void ADCClient::handleBINF(StringList const& sl, string const& full)
 			return;
 		}
 
-		int a = Plugin::NONE;
-		Plugin::fire(Plugin::LOGIN, a, this);
-		if(a != Plugin::STOP && password.empty()) { // major breakage on STOP
+		initAction(NONE);
+		Plugin::fire(Plugin::ClientLogin(), this);
+		if(password.empty()) {
 			login();
 			state = NORMAL;
 		}
 	} else {
-		int a = Plugin::NONE;
-		Plugin::fire(Plugin::INFO, a, this);
-		if(a != Plugin::STOP)
-			hub->broadcastSelf(attributes->getChangedInf());
+		initAction();
+		Plugin::fire(Plugin::ClientInfo(), this);
+		if(!getAction(STOP))
+			hub->broadcast(attributes->getChangedInf());
 	}
 }
 	
-void ADCClient::handleBMSG(StringList const& sl, string const& full)
+void ADCClient::handleBMSG(StringList& sl, string const& full) throw()
 {
-	if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
-		attributes->setInf(sl[2].substr(7, 2), sl[2].substr(9));
-		hub->broadcastSelf(attributes->getChangedInf());
-	}
-	hub->broadcastSelf(full);
-	// FIXME add check for PM<guid> flag
+	if(sl.size() == 3) {
+		initAction();
+		Plugin::fire(Plugin::ClientMessage(), this, sl[2]);
+		if(getAction(STOP)) {
+			// do nada
+		} else if(getAction(MODIFIED)) {
+			hub->broadcast(esc(sl[0]) + ' ' + esc(sl[1]) + ' ' + esc(sl[2]));
+		} else {
+			hub->broadcast(full);
+		}
+	}	
 }
 
-void ADCClient::handleD(StringList const& sl, string const& full)
+void ADCClient::handleD(StringList& sl, string const& full) throw()
 {
 	// todo: check parameter count
+	// "Apart from sending the message to the target, an exact copy must always be sent to the source
+	//  to confirm that the hub has correctly processed the message."
 	if(sl.size() >= 3 && (
 			sl[0] == "DSTA" ||
 			sl[0] == "DMSG" ||
@@ -268,23 +289,20 @@ void ADCClient::handleD(StringList const& sl, string const& full)
 			sl[0] == "DCTM" ||
 			sl[0] == "DRCM"
 	)) {
-		// This will be classified as COMMAND (replied to through doPrivateMessage)
-		if(sl[0] == "DMSG" && sl[1] == hub->getCID32() && sl[4] == "PM") {
+		if(sl[0] == "DMSG" && sl[1] == hub->getCID32() && sl.size() == 5 && sl[4] == "PM") {
 			send(full); 
-			int a = Plugin::NONE;
-			Plugin::fire(Plugin::COMMAND, a, this, sl[3]);
+			initAction(NONE);
+			Plugin::fire(Plugin::ClientCommand(), this, sl[3]);
 		} else {
-			hub->direct(sl[1], full);
-			// "Apart from sending the message to the target, an exact copy must always be sent to the source
-			//  to confirm that the hub has correctly processed the message."
 			send(full); 
+			hub->direct(sl[1], full);
 		}
 	} else {
 		PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
 	}
 }
 	
-void ADCClient::handleH(StringList const& sl, string const& full)
+void ADCClient::handleH(StringList& sl, string const& full) throw()
 {
 	if(sl[0] == "HSUP") {
 		handleHSUP(sl, full); // valid in all states
@@ -307,9 +325,9 @@ void ADCClient::handleH(StringList const& sl, string const& full)
 	}
 }
 
-void ADCClient::handleHDSC(StringList const& sl, string const& full)
+void ADCClient::handleHDSC(StringList& sl, string const& full) throw()
 {
-	if(attributes->getOldInf("OP").empty()) {
+	if(attributes->getSetInf("OP").empty()) {
 		doWarning("Access denied");
 		return;
 	}
@@ -354,11 +372,11 @@ void ADCClient::handleHDSC(StringList const& sl, string const& full)
 			victim->disconnect();
 			// notify everyone else
 			if(!hide) {
-				hub->broadcastSelf(msg);
+				hub->broadcast(msg);
 			} else {
 				if(this != victim)
 					send(msg); // notify self
-				hub->broadcast(this, "IQUI " + victim_guid + " ND\n");
+				hub->broadcast("IQUI " + victim_guid + " ND\n", this);
 			}
 		} else {
 			PROTOCOL_ERROR("HDSC corrupt");
@@ -366,7 +384,7 @@ void ADCClient::handleHDSC(StringList const& sl, string const& full)
 	}
 }
 	
-void ADCClient::handleHPAS(StringList const& sl, string const& full)
+void ADCClient::handleHPAS(StringList& sl, string const& full) throw()
 {
 	// Make CID from base32
 	u_int64_t cid;
@@ -380,29 +398,27 @@ void ADCClient::handleHPAS(StringList const& sl, string const& full)
 	string8 hashed_pwd(h.getResult(), TigerHash::HASH_SIZE);
 	string hashed_pwd_b32 = Encoder::toBase32(hashed_pwd.data(), hashed_pwd.length());
 	if(hashed_pwd_b32 != sl[2]) {
+		initAction(NONE);
+		Plugin::fire(Plugin::ClientAuthFailed(), this, password);
 		send("ISTA " + sl[1] + " 23 Bad\\ username\\ or\\ password\n");
-		if(added) {
-			assert(0);
-		}
+		assert(!added);
 		disconnect();
 		return;
 	}
 	salt.clear();
-	password.clear();
 	// Add user
 	if(hub->hasClient(guid)) {
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		return;
 	}
-	int a = Plugin::NONE;
-	Plugin::fire(Plugin::AUTHENTICATED, a, this);
-	if(a != Plugin::STOP) { // major breakage on STOP
-		login();
-		state = NORMAL;
-	}
+	initAction(NONE);
+	Plugin::fire(Plugin::ClientAuthenticated(), this, password);
+	password.clear();
+	login();
+	state = NORMAL;
 }
 
-void ADCClient::handleHSUP(StringList const& sl, string const& full)
+void ADCClient::handleHSUP(StringList& sl, string const& full) throw()
 {
 	send("ISUP " + hub->getCID32() + " +BASE\n" // <-- do we need CID?
 			"IINF " + hub->getCID32() + " NI" + esc(hub->getHubName()) +
@@ -410,15 +426,14 @@ void ADCClient::handleHSUP(StringList const& sl, string const& full)
 	state = IDENTIFY;
 }
 	
-void ADCClient::handleP(StringList const& sl, string const& full)
+void ADCClient::handleP(StringList& sl, string const& full) throw()
 {
 	// todo: check parameter count
 	if(
 			sl[0] == "PMSG" ||
 			sl[0] == "PSCH"
 	) {
-		// FIXME
-		hub->broadcastSelf(full);
+		hub->broadcastPassive(full);
 	} else {
 		PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
 	}	

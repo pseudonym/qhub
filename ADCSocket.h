@@ -47,7 +47,7 @@ protected:
 	/*
 	 * Do protocol stuff / Handle events
 	 */
-	virtual void onLine(StringList const& sl, string const& full) throw() = 0;
+	virtual void onLine(StringList& sl, string const& full) throw() = 0;
 	virtual void onConnected() throw() = 0;
 	virtual void onDisconnected(string const& clue) throw() = 0;
 

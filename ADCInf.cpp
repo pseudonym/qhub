@@ -78,7 +78,7 @@ string const& ADCInf::getNewInf(string const& key) const throw()
 	return Util::emptyString;
 }
 
-string const& ADCInf::getOldInf(string const& key) const throw()
+string const& ADCInf::getSetInf(string const& key) const throw()
 {
 	Inf::const_iterator i = current.find(key);
 	if(i != current.end())

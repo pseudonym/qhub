@@ -1,8 +1,10 @@
+// vim:ts=4:sw=4:noet
 #include <Plugin.h>
 
 using namespace qhub;
 
-Plugin::Plugins Plugin::modules;
+UserData Plugin::data;
+Plugin::Plugins Plugin::plugins;
 
 void Plugin::init() throw()
 {
@@ -17,10 +19,9 @@ void Plugin::deinit() throw()
 	lt_dlexit();
 }
 
-void Plugin::openModule(const char* filename) throw()
+bool Plugin::openModule(string const& filename, string const& insertBefore) throw()
 {
-	fprintf(stderr, "Loading plugin %s ... ", filename);
-	lt_dlhandle h = lt_dlopenext(filename);
+	lt_dlhandle h = lt_dlopenext(filename.c_str());
 
 	if(h != NULL) {
 		lt_ptr ptr;
@@ -28,50 +29,70 @@ void Plugin::openModule(const char* filename) throw()
 			get_plugin_t getPlugin = (get_plugin_t)ptr;
 			Plugin* p = (Plugin*)getPlugin();
 			if(p) {
-				fprintf(stderr, "success\n");
 				p->name = filename;
 				p->handle = h;
-				int a = Plugin::NONE;
-				p->on(STARTED, a, NULL, Util::emptyString);
-				modules.push_back(p);
-				return;
+				p->on(PluginStarted(), p); // init self before others
+				fire(PluginStarted(), p);
+				if(insertBefore.empty()) {
+					plugins.push_back(p);
+				} else {
+					iterator j = begin();
+					for(iterator i = begin(); i != end(); j = ++i) {
+						if((*i)->getId() == insertBefore)
+							break;
+					}
+					plugins.insert(j, 1, p);
+				}
+				fprintf(stderr, "Loading plugin \"%s\" SUCCESS!\n", filename.c_str());
+				return true;
 			}	
 		}
 	}
-	fprintf(stderr, "failed\n");
+	fprintf(stderr, "Loading plugin \"%s\" FAILED!\n", filename.c_str());
+	return false;
 }
 
-void Plugin::removeModule(const char* filename) throw()
+bool Plugin::removeModule(string const& filename) throw()
 {
-	string tmp = filename;
-	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i){
-		if((*i)->name == tmp) {
-			int a = Plugin::NONE;
-			(*i)->on(STOPPED, a, NULL, Util::emptyString);
+	for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i){
+		if((*i)->name == filename) {
+			// deinit self before others
+			(*i)->on(PluginStopped(), *i);
 			lt_dlhandle h = (*i)->handle;
 			delete *i;
 			lt_dlclose(h); // close AFTER deleting, not while
-			modules.erase(i);
+			plugins.erase(i);
+			// fire in reverse order
+			for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
+				(*j)->on(PluginStopped(), *i);
+			return true;
 		}
 	}
+	return false;
 }
 
 void Plugin::removeAllModules() throw()
 {
-	while(!modules.empty()) {
-		Plugins::iterator i = modules.begin();
-		int a = Plugin::NONE;
-		(*i)->on(STOPPED, a, NULL, Util::emptyString);
+	while(!plugins.empty()) {
+		// Call in reverse order (ugly hack to get iterator to work with erase)
+		Plugins::iterator i = plugins.begin();
+		for(unsigned j = 1; j < plugins.size(); ++j)
+			++i;
+		// Fire in reverse order
+		for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
+			(*j)->on(PluginStopped(), *i);
 		lt_dlhandle h = (*i)->handle;
 		delete *i;
 		lt_dlclose(h); // close AFTER deleting, not while
-		modules.erase(i);
+		plugins.erase(i);
 	}
-}	
+}
 
-void Plugin::fire(Message m, int& a, ADCClient* client, string const& msg) throw()
+bool Plugin::hasModule(string const& filename) throw()
 {
-	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i) {
-		(*i)->on(m, a, client, msg);
+	for(iterator i = begin(); i != end(); ++i) {
+		if((*i)->getId() == filename)
+			return true;
 	}
+	return false;
 }

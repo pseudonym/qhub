@@ -1,3 +1,4 @@
+// vim:ts=4:sw=4:noet
 #include "Hub.h"
 
 #include "qhub.h"
@@ -113,21 +114,50 @@ void Hub::direct(string guid, string data)
 	}
 }
 
-void Hub::broadcast(ADCClient* c, string data)
+void Hub::broadcast(string data, ADCClient* c)
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-	for(userIter i=users.begin(); i!=users.end(); i++){
-		if(i->second != c){
+	if(c == NULL) {
+		for(userIter i=users.begin(); i!=users.end(); i++) {
 			i->second->writeb(tmp);
+		}
+	} else {
+		for(userIter i=users.begin(); i!=users.end(); i++) {
+			if(i->second != c)
+				i->second->writeb(tmp);
 		}
 	}
 }
 
-void Hub::broadcastSelf(string data)
+void Hub::broadcastActive(string data, ADCClient* c)
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-	for(userIter i=users.begin(); i!=users.end(); i++){
-		i->second->writeb(tmp);
+	if(c == NULL) {
+		for(userIter i=users.begin(); i!=users.end(); i++) {
+			if(i->second->isActive())
+				i->second->writeb(tmp);
+		}
+	} else {
+		for(userIter i=users.begin(); i!=users.end(); i++) {
+			if(i->second->isActive() && i->second != c)
+				i->second->writeb(tmp);
+		}
+	}
+}
+
+void Hub::broadcastPassive(string data, ADCClient* c)
+{
+	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
+	if(c == NULL) {
+		for(userIter i=users.begin(); i!=users.end(); i++){
+			if(!i->second->isActive())
+				i->second->writeb(tmp);
+		}
+	} else {
+		for(userIter i=users.begin(); i!=users.end(); i++){
+			if(!i->second->isActive() && i->second != c)
+				i->second->writeb(tmp);
+		}
 	}
 }
 

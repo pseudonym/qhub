@@ -16,7 +16,7 @@ public:
 	void setInf(StringList const& sl) throw();
 	void setInf(string const& key, string const& val) throw();
 	string const& getNewInf(string const& key) const throw();
-	string const& getOldInf(string const& key) const throw();
+	string const& getSetInf(string const& key) const throw();
 	bool newInf(string const& key) const throw();
 	string const& getFullInf() const throw() { return full; }
 	string getChangedInf() throw();

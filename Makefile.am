@@ -1,5 +1,5 @@
 bin_PROGRAMS = qhub
-qhub_CXXFLAGS = -Wall
+qhub_CXXFLAGS = -Wall -DDEBUG
 qhub_LDFLAGS = -export-dynamic
 qhub_SOURCES  = qhub.cpp qhub.h MyTime.h types.h 
 qhub_SOURCES += Util.h Util.cpp string8.h
@@ -16,13 +16,20 @@ qhub_SOURCES += UserData.h UserData.cpp XmlTok.h XmlTok.cpp
 qhub_SOURCES += Settings.h Settings.cpp
 
 EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO Settings.xml
-EXTRA_DIST += config.sub config.guess foo1.c accounts.h accounts.cpp
+EXTRA_DIST += config.sub config.guess foo1.c
 
 
-lib_LTLIBRARIES = foo1.la accounts.la
+lib_LTLIBRARIES = foo1.la accounts.la virtualfs.la loader.la
+CXXFLAGS = -Wall -DDEBUG -g
 
 foo1_la_SOURCES = foo1.c
 foo1_la_LDFLAGS = -module
 
-accounts_la_SOURCES = accounts.h accounts.cpp
+accounts_la_SOURCES = PluginAccounts.h PluginAccounts.cpp
 accounts_la_LDFLAGS = -module
+
+virtualfs_la_SOURCES = PluginVirtualFsDir.h PluginVirtualFs.h PluginVirtualFs.cpp
+virtualfs_la_LDFLAGS = -module
+
+loader_la_SOURCES = PluginLoader.h PluginLoader.cpp
+loader_la_LDFLAGS = -module

@@ -187,7 +187,7 @@ int main()
 
 	//try loading
 	Plugin::init();
-	Plugin::openModule("accounts");
+	Plugin::openModule("loader");
 
 	Settings::readFromXML();
 

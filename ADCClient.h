@@ -27,9 +27,18 @@ public:
 		START,		// HSUP
 		IDENTIFY,	// BINF
 		VERIFY,		// HPAS
-		NORMAL,
-		DISCONNECTED	// signals that one shouldn't use this anymore
+		NORMAL		// everything except HPAS
 	};
+
+	enum Action {
+		PROCEED = 0,	// proceed as normal
+		NONE = 1,		// there is no action to be taken, modifying state or lastParsed will not help
+		STOP = 2,		// don't do the usual stuff
+		MODIFIED = 4	// data has been modified, use sl, not full
+	};
+	void initAction(Action a = PROCEED) throw() { action = PROCEED | a; };
+	void setAction(Action c) throw() { assert(!getAction(NONE)); action |= c; };
+	bool getAction(Action c) const throw() { return action & c == c; };
 	
 	ADCClient(int fd, Domain fd, Hub* parent) throw();
 	virtual ~ADCClient() throw();
@@ -40,15 +49,18 @@ public:
 	/*
 	 * ADC protocol
 	 */
-	string const& getInf() const;
+	string const& getInf() const throw();
+	string const& getFullLine() const throw() { return *lastLine; };
+	StringList& getFullInput() throw() { return *lastParsed; };
+	bool isActive() const throw();
 
 	/*
 	 * Object information
 	 */
 	State getState() const throw() { return state; };
 	UserData* getData() throw() { return userData; };
-	string const& getCID32() const { return guid; };
-	ADCInf* getAttr() { return attributes; };
+	string const& getCID32() const throw() { return guid; };
+	ADCInf* getAttr() throw() { return attributes; };
 
 	/*
 	 * Various calls (don't send in bad states!)
@@ -64,7 +76,7 @@ protected:
 	/*
 	 * Calls from ADCSocket
 	 */
-	virtual void onLine(StringList const& sl, string const& full) throw();
+	virtual void onLine(StringList& sl, string const& full) throw();
 	virtual void onConnected() throw();
 	virtual void onDisconnected(string const& clue) throw();
 	
@@ -72,19 +84,19 @@ private:
 	/*
 	 * Data handlers	
 	 */
-	void handleA(StringList const& sl, string const& full);
-	void handleB(StringList const& sl, string const& full);
-	void handleBINF(StringList const& sl, string const& full);
-	void handleBMSG(StringList const& sl, string const& full);
-	void handleD(StringList const& sl, string const& full);
-	void handleH(StringList const& sl, string const& full);
-	void handleHDSC(StringList const& sl, string const& full);
-	void handleHPAS(StringList const& sl, string const& full);
-	void handleHSUP(StringList const& sl, string const& full);
-	void handleP(StringList const& sl, string const& full);
+	void handleA(StringList& sl, string const& full) throw();
+	void handleB(StringList& sl, string const& full) throw();
+	void handleBINF(StringList& sl, string const& full) throw();
+	void handleBMSG(StringList& sl, string const& full) throw();
+	void handleD(StringList& sl, string const& full) throw();
+	void handleH(StringList& sl, string const& full) throw();
+	void handleHDSC(StringList& sl, string const& full) throw();
+	void handleHPAS(StringList& sl, string const& full) throw();
+	void handleHSUP(StringList& sl, string const& full) throw();
+	void handleP(StringList& sl, string const& full) throw();
 
-	void login();
-	void logout();
+	void login() throw();
+	void logout() throw();
 	bool added;
 
 	ADCInf* attributes;	
@@ -95,6 +107,10 @@ private:
 	string guid;
 	string password;
 	string8 salt;
+	int action;
+
+	string const* lastLine;
+	StringList* lastParsed;
 
 	// Invalid
 	ADCClient() : ADCSocket(-1, Socket::IP4), attributes(0) {};

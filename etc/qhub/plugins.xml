@@ -1,0 +1,5 @@
+<plugins>
+	<plugin>virtualfs</plugin>
+	<plugin>loader</plugin>
+	<plugin>accounts</plugin>
+</plugins>
