@@ -81,7 +81,7 @@ void ADCSocket::on_read()
 			if(lineLen > MAX_LINELEN) {
 				onLineError("max input of 1024 chars in command exceeded"); // will disconnect if appropriate
 				// note that onLine will still be called, do we want this?
-				lineLen = 0;
+				lineLen = 0; // don't send error on every char now
 			}
 			
 			switch(*p) {
@@ -93,12 +93,13 @@ void ADCSocket::on_read()
 				if(!escaped) {
 					if(state == NORMAL) {
 						data.push_back(cse(string((char const*)s, p - s)));
+						// huh? how come "/raw \n" doesn't work the first time, unless we add an fprintf here??
 						s = p + 1;
 						++dataLen;
 						if(dataLen > MAX_DATALEN) {
 							onLineError("max arguments of 128 in command exceeded"); // will disconnect if appropriate
 							// note that onLine will still be called, do we want this?
-							dataLen = 0;
+							dataLen = 0; // don't send error on every data overflow now
 						}
 					} else if(state == PARTIAL) {
 						data.back().append((char const*)s, p - s);

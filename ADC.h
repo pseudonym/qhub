@@ -28,10 +28,21 @@ public:
 
 	// Other stuff
 	void sendFullInf();
-	string getFullInf();
+	string getFullInf() const;
+	string const& getCID32() const { return guid; };
+	bool setInf(StringList const& sl);
 
 	// Send-to functions
 	void sendHubMessage(string const& msg);
+
+	// Data handlers	
+	void handleA(StringList const& sl, string const& full);
+	void handleB(StringList const& sl, string const& full);
+	void handleBINF(StringList const& sl, string const& full);
+	void handleD(StringList const& sl, string const& full);
+	void handleH(StringList const& sl, string const& full);
+	void handleHSUP(StringList const& sl, string const& full);
+	void handleP(StringList const& sl, string const& full);
 
 	// Calls from ADCSocket
 	virtual void onLine(StringList const& sl, string const& full);
@@ -42,21 +53,20 @@ private:
 
 	enum State {
 		START,
-		PROTOCOL_ERROR, //has sent message to client, at next data, disconnect
+		PROTOCOL_ERROR,
 		GOT_SUP,
 		LOGGED_IN
 	};
 	int state;
-
 	string guid;
 	bool added;
-	hash_map<string, string> INF;
-	typedef hash_map<string, string>::iterator INFIterator;
+	
+	typedef hash_map<string, string> Inf;
+	Inf inf;
 
 	// Invalid
 	ADC() : ADCSocket(-1) {};
 };
-
 
 }
 
