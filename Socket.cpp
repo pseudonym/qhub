@@ -40,6 +40,7 @@ void Socket::create() throw()
 	if(domain == Socket::IP4) {
 		saddrp = (struct sockaddr*)new sockaddr_in;
 		saddrl = sizeof(sockaddr_in);
+		memset(saddrp, '\0', saddrl);
 		inaddrp = &((struct sockaddr_in*)saddrp)->sin_addr;
 		af = AF_INET;
 		((struct sockaddr_in*)saddrp)->sin_family = af;
@@ -48,6 +49,7 @@ void Socket::create() throw()
 	else if(domain == Socket::IP6) {
 		saddrp = (struct sockaddr*)new sockaddr_in6;
 		saddrl = sizeof(sockaddr_in6);
+		memset(saddrp, '\0', saddrl);
 		inaddrp = &((struct sockaddr_in6*)saddrp)->sin6_addr;
 		af = AF_INET6;
 		((struct sockaddr_in6*)saddrp)->sin6_family = af;
@@ -56,7 +58,6 @@ void Socket::create() throw()
 	else {
 		assert(0);
 	}
-	memset(saddrp, '\0', saddrl);
 }
 
 void Socket::destroy() throw()
