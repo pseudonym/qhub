@@ -412,7 +412,8 @@ void ADC::on_read()
 
 		//look through data until no more left?
 		//XXX: could be optimised, start from rbCur instead
-		while(rbCur>0){
+		bool done=false;
+		while(rbCur>0 && !done){
 			for(int i=0; i<rbCur; i++){
 				if(i>hub->getMaxPacketSize()){
 					state = PROTOCOL_ERROR;
@@ -425,10 +426,9 @@ void ADC::on_read()
 					handleCommand(i+1);
 					break;
 				}
-			}
-			//rbCur -> 0 on handleCommand
-			if(rbCur == 0){
-				break;
+				if(i>=rbCur-1){
+					done=true;
+				}
 			}
 		}
 	} else if(r < 1){
