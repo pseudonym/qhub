@@ -316,6 +316,16 @@ void ADC::handleDCommand(int length)
 	//only care about guid
 	getParms(length, 2);
 
+	//check that the client isnt trying to spoof source GUID
+	if(posParms[0] != guid){
+#ifdef PROTO_DEBUG
+		sendHubMsg("proto error: Source GUID not correct. (Cant change this during a session)");
+#endif
+		//this should be enabled once DC++ matures a bit?
+		//disconnect();
+		//return;
+	}
+
 	string tmp((char*)readBuffer, length);
 	fprintf(stderr, "%d\n", posParms.size());
 	fprintf(stderr, "%s vs. %s and %s\n", posParms[1].c_str(), tmp.c_str(), posParms[0].c_str());
