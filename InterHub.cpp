@@ -30,8 +30,8 @@ void InterHub::growBuffer()
 	memmove(tmp, readBuffer, readBufferSize);
 	readBufferSize *= 2;
 
-	readBuffer = tmp;
 	delete[] readBuffer;
+	readBuffer = tmp;
 
 	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
 }
