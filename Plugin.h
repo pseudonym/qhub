@@ -16,6 +16,7 @@ using namespace std;
 namespace qhub {
 
 class ADCClient;
+class UserInfo;
 
 class Plugin {
 public:
@@ -60,23 +61,20 @@ public:
 		NOTHING = 0x0,
 		MODIFY = 0x1,
 		MODIFIED = MODIFY, // plugin has modified the input
-		REPLY = 0x2,
-		REPLIED = REPLY, // plugin has made a reply
-		HANDLE = 0x4,
+		HANDLE = 0x2,
 		HANDLED = HANDLE, // plugin has done something (other plugins may choose to do nothing now)
-		STOP = 0x8,
+		STOP = 0x4,
 		STOPPED = STOP, // plugin requests that hub does not process the command/message
-		DISCONNECT = 0x16,
+		DISCONNECT = 0x8,
 		DISCONNECTED = DISCONNECT // client has been removed, do as little as possible
 	};
 
 	template<int I, int C> struct ActionType {
 		enum { actionType = I };
-		ActionType() throw() : reply(NULL), can(C), does(0) { };
-		~ActionType() throw() { if(reply) delete reply; };
+		ActionType() throw() : can(C), does(0) { };
+		~ActionType() throw() { };
 		void setState(Action d) throw() { assert((can & d) == d); does |= d; };
 		bool isSet(Action d) const throw() { return (does & d) == d; }
-		StringList* reply;
 	private:
 		int can;
 		int does;
@@ -97,18 +95,18 @@ public:
 			ClientLine;
 	typedef ActionType<CLIENT_LOGIN, HANDLE | DISCONNECT>
 			ClientLogin;
-	typedef ActionType<CLIENT_INFO, HANDLE | DISCONNECT>
+	typedef ActionType<CLIENT_INFO, HANDLE | DISCONNECT | MODIFY>
 			ClientInfo;
 	
 	typedef ActionType<USER_CONNECTED, HANDLE | DISCONNECT>
 			UserConnected;
 	typedef ActionType<USER_DISCONNECTED, HANDLE>
 			UserDisconnected;
-	typedef ActionType<USER_COMMAND, REPLY | HANDLE | STOP | DISCONNECT>
+	typedef ActionType<USER_COMMAND, HANDLE | STOP | DISCONNECT>
 			UserCommand;
-	typedef ActionType<USER_MESSAGE, REPLY | HANDLE | STOP | DISCONNECT>
+	typedef ActionType<USER_MESSAGE, HANDLE | STOP | DISCONNECT>
 			UserMessage;
-	typedef ActionType<USER_PRIVATEMESSAGE, REPLY | HANDLE | STOP | DISCONNECT>
+	typedef ActionType<USER_PRIVATEMESSAGE, HANDLE | STOP | DISCONNECT>
 			UserPrivateMessage;
 
 	
@@ -170,12 +168,18 @@ public:
 	// Called on every client input
 	// parm: ADCClient* = the client
 	virtual void on(ClientLine&, ADCClient*, u_int32_t const, StringList) throw() {};
-	// Called when a client sends first INF (modify INF's through attributes)
+	// Called when a client sends first BINF
 	// parm: ADCClient* = the client
 	virtual void on(ClientLogin&, ADCClient*) throw() {};
-	// Called when a client sends INFs
-	virtual void on(ClientInfo&, ADCClient*) throw() {};
+	// Called when a client sends BINF
+	// parm: ADCClient* = the client
+	// parm: UserInfo = the new userinfo
+	virtual void on(ClientInfo&, ADCClient*, UserInfo&) throw() {};
+	// Called when client succesfully logs in
+	// parm: ADCClient* = the client
 	virtual void on(UserConnected&, ADCClient*) throw() {};
+	// Called when a logged in client logs off
+	// parm: ADCClient* = the client
 	virtual void on(UserDisconnected&, ADCClient*) throw() {};
 	// Called when a client sends a direct PM to the hub CID
 	// parm: ADCClient* = the client

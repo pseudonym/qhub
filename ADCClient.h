@@ -13,17 +13,19 @@
 #include "Buffer.h"
 #include "string8.h"
 #include "Timer.h"
+#include "Util.h"
 
 namespace qhub {
 
 using namespace std;
 
 class Hub;
-class ADCInf;
 class UserData;
+class UserInfo;
 
 class ADCClient : public ADCSocket {
 public:
+	
 	/*
 	 * Pseudo-FOURCC stuff
 	 */
@@ -58,25 +60,33 @@ public:
 	/*
 	 * ADC protocol
 	 */
-	string const& getInf() const throw();
+	string const& getAdcInf() throw();
 
 	/*
 	 * Object information
 	 */
 	State getState() const throw() { return state; };
-	UserData* getData() throw() { return userData; };
+	UserData* getUserData() throw() { return userData; };
+	UserInfo* getUserInfo() throw() { return userInfo; };
 	string const& getCID32() const throw() { return guid; };
-	ADCInf* getAttr() throw() { return attributes; };
 
 	/*
 	 * Various calls (don't send in bad states!)
 	 */
+	// Special login call
 	virtual void doAskPassword(string const& pwd) throw(); // send at LOGIN only!
+	// Error types
 	virtual void doWarning(string const& msg) throw();
 	virtual void doError(string const& msg) throw();
 	virtual void doDisconnect(string const& msg = Util::emptyString) throw();
+	// Message types
 	virtual void doHubMessage(string const& msg) throw();
 	virtual void doPrivateMessage(string const& msg) throw();
+	// The four 'ban' types
+	virtual void doDisconnect(string const& kicker, string const& msg, bool silent) throw();
+	virtual void doKick(string const& kicker, string const& msg, bool silent) throw();
+	virtual void doBan(string const& kicker, u_int32_t seconds, string const& msg, bool silent) throw();
+	virtual void doRedirect(string const& kicker, string const& address, string const& msg, bool silent) throw();
 
 protected:
 	/*
@@ -95,36 +105,27 @@ private:
 	void handleLogin(StringList& sl) throw();
 	void handlePassword(StringList& sl) throw();
 	void handleDisconnect(StringList& sl) throw();
-	void handleInfo(StringList& sl) throw();
+	void handleInfo(StringList& sl, u_int32_t const cmd, string const* full) throw();
 	void handleMessage(StringList& sl, u_int32_t const cmd, string const* full) throw();
 
 	void login() throw();
 	void logout() throw();
 	bool added;
 
-	bool isUdpActive() const throw();
-
-	ADCInf* attributes;	
 	UserData* userData;
+	UserInfo* userInfo;
 
 	State state;
 	string guid;
 	string password;
 	string8 salt;
+	bool udpActive;
 
-	string const& assemble(StringList const& sl) throw() {
-		StringList::const_iterator i = sl.begin();
-		full = esc(*i);
-		for(++i; i != sl.end(); ++i) {
-			full += ' ' + esc(*i);
-		}
-		full += '\n';
-		return full;
-	}	
-	string full;
+	string const& assemble(StringList const& sl) throw();
+	string temp;
 
 	// Invalid
-	ADCClient() : ADCSocket(-1, Socket::IP4, NULL), attributes(0) {};
+	ADCClient() : ADCSocket(-1, Socket::IP4, NULL) {};
 };
 
 }

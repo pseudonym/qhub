@@ -2,7 +2,7 @@
 #include "PluginAccounts.h"
 
 #include "ADCClient.h"
-#include "ADCInf.h"
+#include "UserInfo.h"
 #include "UserData.h"
 #include "XmlTok.h"
 #include "PluginVirtualFs.h"
@@ -114,35 +114,45 @@ void Accounts::on(PluginStopped&, Plugin* p) throw()
 	
 void Accounts::on(ClientLogin&, ADCClient* client) throw()
 {
-	ADCInf* attr = client->getAttr();
-	Users::const_iterator i = users.find(attr->getNewInf("NI"));
+	UserInfo* inf = client->getUserInfo();
+	Users::const_iterator i = users.find(inf->getNick());
 	if(i != users.end()) {
-		UserData* data = client->getData();
+		UserData* data = client->getUserData();
 		data->setInt(idUserLevel, 1);
 		client->doAskPassword(i->second);
 	}
+
+	// Remove the OP flag
+	inf->del(UIID('O','P'));
 }
 
-void Accounts::on(ClientInfo&, ADCClient* client) throw()
+void Accounts::on(ClientInfo& a, ADCClient* client, UserInfo& inf) throw()
 {
-	ADCInf* attr = client->getAttr();
-	UserData* data = client->getData();
-	if(attr->newInf("NI")) {
+	UserData* data = client->getUserData();
+
+	// Check user nick
+	if(inf.has(UIID('N','I'))) {
 		// don't allow registered users to change nick
-		if(data->getInt(idUserLevel))
-			attr->setInf("NI", attr->getSetInf("NI")); // reset nick
+		if(data->getInt(idUserLevel)) {
+			inf.del(UIID('N','I'));
+			a.setState(Plugin::MODIFIED);
 		// don't allow users to change to a registered nick
-		else if(users.find(attr->getNewInf("NI")) != users.end())
-			attr->setInf("NI", attr->getSetInf("NI")); // reset nick
+		} else if(users.find(inf.getNick()) != users.end()) {
+			inf.del(UIID('N','I'));
+			a.setState(Plugin::MODIFIED);
+		}
 	}
+	
+	// Remove the OP flag
+	if(inf.del(UIID('O','P')))
+		a.setState(Plugin::MODIFIED);
 }
 
 void Accounts::on(UserConnected&, ADCClient* client) throw()
 {
-	UserData* data = client->getData();
+	UserData* data = client->getUserData();
 	if(data->getInt(idUserLevel) >= 1) {
-		ADCInf* attr = client->getAttr();
-		attr->setInf("OP", "1");
+		client->getUserInfo()->set(UIID('O','P'), "1");
 	}
 }
 

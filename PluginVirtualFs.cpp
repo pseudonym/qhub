@@ -65,7 +65,7 @@ void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
 		Message* m = (Message*)d;
 		assert(d);
 		if(m->cwd == "" && m->type == Message::HELP) {
-			m->client->doPrivateMessage("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");
+			m->reply("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");
 		}
 	}
 }
@@ -96,12 +96,15 @@ bool VirtualFs::rmnod(string const& path) throw()
 	return root->rmNode(path);
 }
 
-void VirtualFs::on(UserCommand&, ADCClient* client, string& msg) throw()
+void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
 {
-	UserData* data = client->getData();
+	UserData* data = client->getUserData();
 	StringList sl = Util::lazyQuotedStringTokenize(msg);
 	if(sl.empty())
 		return;
+	
+	a.setState(Plugin::STOP);
+	
 	string const& pwd = data->getString(idVirtualPath);
 	size_t siz = sl.size();
 	if(siz == 1 && sl[0] == "pwd") {
@@ -169,5 +172,5 @@ void VirtualFs::on(UserCommand&, ADCClient* client, string& msg) throw()
 		} else {
 			client->doPrivateMessage("NAK: Path not found.");
 		}
-	}		
+	}
 }

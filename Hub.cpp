@@ -80,14 +80,14 @@ void Hub::acceptLeaf(int fd, Socket::Domain d)
 	Socket* tmp = new ADCClient(fd, d, this);
 }
 
-void Hub::getUsersList(ADCClient* c) throw()
+void Hub::getUserList(ADCClient* c) throw()
 {
 	string tmp;
 	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); i++) {
-		tmp += i->second->getInf();
+		tmp += i->second->getAdcInf();
 	}
 	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); i++) {
-		tmp += i->second->getInf();
+		tmp += i->second->getAdcInf();
 	}
 	Buffer::writeBuffer t(new Buffer(tmp));
 	c->writeb(t);
@@ -111,7 +111,8 @@ void Hub::direct(string const& guid, string const& data, ADCClient* from) throw(
 	Users::iterator i;
 	if((i = activeUsers.find(guid)) != activeUsers.end() || (i = passiveUsers.find(guid)) != passiveUsers.end()) {
 		Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-		from->writeb(tmp);
+		if(from)
+			from->writeb(tmp);
 		i->second->writeb(tmp);
 	} else {
 		fprintf(stderr, "Send to non-existing user.\n");

@@ -4,7 +4,7 @@
 #include "TigerHash.h"
 #include "Encoder.h"
 #include "Plugin.h"
-#include "ADCInf.h"
+#include "UserInfo.h"
 #include "UserData.h"
 #include "qhub.h"
 
@@ -33,22 +33,22 @@ u_int32_t ADCClient::Commands[] = {
 #undef CMD
 
 ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-: ADCSocket(fd, domain, parent), added(false), attributes(new ADCInf(this)), userData(new UserData), state(PROTOCOL)
+: ADCSocket(fd, domain, parent), added(false), userData(new UserData), userInfo(new UserInfo(this)), state(PROTOCOL),
+		udpActive(false)
 {
 	onConnected();
 }
 
 ADCClient::~ADCClient() throw()
 {
-	delete attributes;
+	delete userInfo;
 	delete userData;
 }
 
 void ADCClient::onAlarm() throw()
 {
 	if(!disconnected) {
-		// do a silent disconnect. we don't want to show our protocol
-		// to an unknown peer.
+		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
 		disconnect();
 	} else {
 		realDisconnect();
@@ -57,7 +57,7 @@ void ADCClient::onAlarm() throw()
 
 void ADCClient::login() throw()
 {
-	alarm(0);
+	alarm(0); // Stop alarm. Else we'd get booted.
 	added = true;
 	state = NORMAL;
 	Plugin::UserConnected action;
@@ -65,15 +65,15 @@ void ADCClient::login() throw()
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
 	// Send INFs
-	getHub()->getUsersList(this);
-	string tmp = attributes->getChangedInf();
+	getHub()->getUserList(this);
 	// Add user
-	if(isUdpActive())
+	udpActive = userInfo->isUdpActive();
+	if(udpActive)
 		getHub()->addActiveClient(getCID32(), this);
 	else
 		getHub()->addPassiveClient(getCID32(), this);
 	// Notify him that userlist is over and notify others of his presence
-	getHub()->broadcast(tmp);
+	getHub()->broadcast(getAdcInf());
 	getHub()->motd(this);
 }
 
@@ -85,14 +85,20 @@ void ADCClient::logout() throw()
 	Plugin::fire(action, this);
 }
 
-string const& ADCClient::getInf() const throw()
+string const& ADCClient::assemble(StringList const& sl) throw()
 {
-	return attributes->getFullInf();
+	StringList::const_iterator i = sl.begin();
+	temp = esc(*i);
+	for(++i; i != sl.end(); ++i) {
+		temp += ' ' + esc(*i);
+	}
+	temp += '\n';
+	return temp;
 }
 
-bool ADCClient::isUdpActive() const throw()
+string const& ADCClient::getAdcInf() throw()
 {
-	return !(attributes->getSetInf("U4").empty() && attributes->getSetInf("U6").empty());
+	return userInfo->toADC(getCID32());
 }
 
 
@@ -140,6 +146,11 @@ void ADCClient::doPrivateMessage(string const& msg) throw()
 {
 	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + esc(msg) + " PM\n");
 }
+
+void ADCClient::doDisconnect(string const& kicker, string const& msg, bool silent) throw() {}
+void ADCClient::doKick(string const& kicker, string const& msg, bool silent) throw() {}
+void ADCClient::doBan(string const& kicker, u_int32_t seconds, string const& msg, bool silent) throw() {}
+void ADCClient::doRedirect(string const& kicker, string const& address, string const& msg, bool silent) throw() {}
 
 #define PROTOCOL_ERROR(errmsg) \
 	do { \
@@ -281,7 +292,7 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) 
 	// * BINF *
 	} else if(threeCC == Commands[INF]) {
 		if(oneCC == 'B') {
-			handleInfo(sl);
+			handleInfo(sl, cmd, full);
 			return;
 		} else {
 			doWarning("INF message type invalid");
@@ -320,13 +331,22 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	
 	if(getHub()->hasClient(guid)) {
 		PROTOCOL_ERROR("CID busy, change CID or wait");
-		// FIXME: Send a ping see if we have a dangling connection (ghost)?
-		// NOTE: Don't forget to check again at HPAS.. perhaps someone beat us to it.
+		// Ping other user, perhaps it's a ghost
+		getHub()->direct(guid, "INTD " + getCID32() + '\n');
+		// Note: Don't forget to check again at HPAS.. perhaps someone beat us to it.
 		return;
 	}
 
-	attributes->setInf(sl);
-	
+	// Load info
+	userInfo->fromADC(sl);
+
+	// Guarantee NI and (I4 or I6)
+	if(!userInfo->has(UIID('N','I'))) {
+		PROTOCOL_ERROR("Missing parameters in INF");
+		return;
+	}
+
+	// Broadcast	
 	Plugin::ClientLogin action;
 	Plugin::fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED))
@@ -336,22 +356,37 @@ void ADCClient::handleLogin(StringList& sl) throw()
 		login();
 }
 
-void ADCClient::handleInfo(StringList& sl) throw()
+void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string const* full) throw()
 {
 	assert(state == NORMAL);
-	attributes->setInf(sl);
+
+	UserInfo newUserInfo(this);
+	newUserInfo.fromADC(sl);
 
 	Plugin::ClientInfo action;
-	Plugin::fire(action, this);
-	if(action.isSet(Plugin::DISCONNECTED))
+	Plugin::fire(action, this, newUserInfo);
+	if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 		return;
-	
-	bool isActive = isUdpActive();
-	getHub()->broadcast(attributes->getChangedInf());
-	if(isUdpActive() != isActive)
-		getHub()->switchClientMode(isUdpActive(), getCID32(), this);
+
+	// Broadcast
+	if(action.isSet(Plugin::MODIFIED)) {
+		getHub()->broadcast(newUserInfo.toADC(getCID32()));
+	} else if(!full) {
+		getHub()->broadcast(assemble(sl));
+	} else {
+		getHub()->broadcast(*full);
+	}
+
+	// Merge new data
+	userInfo->update(newUserInfo);	
+
+	// Did we become active/passive just now?
+	if(udpActive != userInfo->isUdpActive()) {
+		udpActive = !udpActive;
+		getHub()->switchClientMode(udpActive, getCID32(), this);
+	}	
 }
-	
+
 void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const* full) throw()
 {
 	char oneCC = cmd & 0x000000FF;
@@ -359,48 +394,54 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 		if(sl[1] == getHub()->getCID32()) {
 			Plugin::UserCommand action;
 			Plugin::fire(action, this, sl[3]);
-			// FIXME, add 'reply'
-			return;
+			if(action.isSet(Plugin::DISCONNECTED))
+				return;
+			if(!action.isSet(Plugin::STOPPED)) {
+				if(full)
+					send(*full);
+				else
+					send(assemble(sl));
+			}
 		} else {
 			if(sl.size() == 4) {
 				Plugin::UserMessage action;
 				Plugin::fire(action, this, cmd, sl[3]);
-				if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED)) {
+				if(action.isSet(Plugin::DISCONNECTED))
 					return;
-				} else if(action.isSet(Plugin::MODIFIED)) {
-					full = &assemble(sl);
+				if(!action.isSet(Plugin::STOPPED)) {
+					if(action.isSet(Plugin::MODIFIED))
+						full = &assemble(sl);
+					getHub()->direct(sl[1], *full, this);
 				}
 			} else {
 				Plugin::UserPrivateMessage action;
 				Plugin::fire(action, this, cmd, sl[3], sl[4]);
-				if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED)) {
+				if(action.isSet(Plugin::DISCONNECTED))
 					return;
-				} else if(action.isSet(Plugin::MODIFIED)) {
-					full = &assemble(sl);
+				if(!action.isSet(Plugin::STOPPED)) {
+					if(action.isSet(Plugin::MODIFIED))
+						full = &assemble(sl);
+					getHub()->direct(sl[1], *full, this);
 				}
 			}
-			getHub()->direct(sl[1], *full, this);
-			// FIXME, add 'reply'
 		}
 	} else if(sl.size() >= 3) {
 		if(sl.size() == 3) {
 			Plugin::UserMessage action;
 			Plugin::fire(action, this, cmd, sl[2]);
-			if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED)) {
+			if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 				return;
-			} else if(action.isSet(Plugin::MODIFIED)) {
+			if(action.isSet(Plugin::MODIFIED))
 				full = &assemble(sl);
-			}
 		} else {
 			Plugin::UserPrivateMessage action;
 			Plugin::fire(action, this, cmd, sl[2], sl[3]);
-			if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED)) {
+			if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 				return;
-			} else if(action.isSet(Plugin::MODIFIED)) {
+			if(action.isSet(Plugin::MODIFIED))
 				full = &assemble(sl);
-			}
 		}
-			
+
 		switch(oneCC) {
 		case 'A':
 			getHub()->broadcastActive(*full);
@@ -414,7 +455,6 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 		default:
 			assert(0);
 		}
-		// FIXME, add 'reply'
 	} else {
 		doWarning("Message parameters corrupt");
 	}
@@ -422,10 +462,15 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 
 void ADCClient::handleDisconnect(StringList& sl) throw()
 {
-	if(attributes->getSetInf("OP").empty()) {
+	if(!userInfo->getOp()) {
 		doWarning("Access denied");
 		return;
 	}
+	if(sl.size() < 5) {
+		PROTOCOL_ERROR("HDSC corrupt");
+		return;
+	}
+	bool silent = sl[3] == "ND";
 	if(sl.size() >= 5) {
 		bool hide = sl[4] == "ND";
 		string const& victim_guid = sl[2];

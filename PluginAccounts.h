@@ -24,7 +24,7 @@ public:
 	virtual void on(PluginStopped&, Plugin*) throw();
 	virtual void on(PluginMessage&, Plugin*, void*) throw();
 	virtual void on(ClientLogin&, ADCClient*) throw();
-	virtual void on(ClientInfo&, ADCClient*) throw();
+	virtual void on(ClientInfo&, ADCClient*, UserInfo&) throw();
 	virtual void on(UserConnected&, ADCClient*) throw();
 
 private:

@@ -12,11 +12,4 @@ Send delta-INFs
 
 Add customizable flood protection in ADC or ADCSocket
 
-Fix that the hub can be DoS'ed by opening hundreds of connections and just
-letting them idle.
-
 Move HDSC stuff to Hub, partially
-
-Fix INFs stoppability
-
-Add Plugin::VALIDATED for e.g. odd BINF

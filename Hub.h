@@ -51,11 +51,11 @@ public:
 	void broadcast(string const& data, ADCClient* except = NULL) throw();
 	void broadcastActive(string const& data) throw();
 	void broadcastPassive(string const& data) throw();
-	void direct(string const& data, string const& guid, ADCClient* from) throw();
+	void direct(string const& data, string const& guid, ADCClient* from = NULL) throw();
 
 	void motd(ADCClient* c) throw();
 
-	void getUsersList(ADCClient* c) throw();
+	void getUserList(ADCClient* c) throw();
 private:
 	static void add(Hub* h) throw();
 	static void remove(Hub* h) throw();
