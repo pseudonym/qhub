@@ -4,6 +4,6 @@ Fix autoconf-macros: remove unused, and start using more of the existing ones.
 
 LO1 handling
 
-Make ADC core simpler and more robust
+Make ADC core simpler and more robust, always verify source GUID
 
 Queue broadcast messages
