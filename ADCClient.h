@@ -12,6 +12,7 @@
 
 #include "Buffer.h"
 #include "string8.h"
+#include "Timer.h"
 
 namespace qhub {
 
@@ -38,7 +39,7 @@ public:
 	 * Client states
 	 */
 	enum State {
-		START,		// HSUP
+		PROTOCOL,	// HSUP
 		IDENTIFY,	// BINF
 		VERIFY,		// HPAS
 		NORMAL		// everything except HPAS
@@ -50,14 +51,14 @@ public:
 	ADCClient(int fd, Domain fd, Hub* parent) throw();
 	virtual ~ADCClient() throw();
 
-	virtual void on_read() { ADCSocket::on_read(); };
-	virtual void on_write() { ADCSocket::on_write(); };
+	virtual void onRead() throw() { ADCSocket::onRead(); };
+	virtual void onWrite() throw() { ADCSocket::onWrite(); };
+	virtual void onAlarm() throw();
 
 	/*
 	 * ADC protocol
 	 */
 	string const& getInf() const throw();
-	bool isUdpActive() const throw();
 
 	/*
 	 * Object information
@@ -84,7 +85,7 @@ protected:
 	virtual void onLine(StringList& sl, string const& full) throw();
 	virtual void onConnected() throw();
 	virtual void onDisconnected(string const& clue) throw();
-	
+
 private:
 	/*
 	 * Data handlers	
@@ -100,6 +101,8 @@ private:
 	void login() throw();
 	void logout() throw();
 	bool added;
+
+	bool isUdpActive() const throw();
 
 	ADCInf* attributes;	
 	UserData* userData;

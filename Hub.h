@@ -45,7 +45,7 @@ public:
 	void addActiveClient(string const& guid, ADCClient* client) throw();
 	void addPassiveClient(string const& guid, ADCClient* client) throw();
 	void removeClient(string const& guid) throw();
-	void setClientMode(bool passive, string const& guid, ADCClient* client) throw();
+	void switchClientMode(bool toActive, string const& guid, ADCClient* client) throw();
 	ADCClient* getClient(string const& guid) throw();
 
 	void broadcast(string const& data, ADCClient* except = NULL) throw();

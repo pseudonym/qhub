@@ -23,6 +23,7 @@
 
 #include "Buffer.h"
 #include "Util.h"
+#include "Timer.h"
 
 using namespace std;
 
@@ -34,15 +35,15 @@ using namespace std;
 
 namespace qhub {
 
-class Socket {
+class Socket : public Timer {
 public:
 	enum Domain { IP4 = PF_INET, IP6 = PF_INET6 };
 	Socket(Domain d = IP4, int t = SOCK_STREAM, int p = 0) throw(); // new sockets
 	Socket(int fd, Domain d) throw(); // existing sockets
 	virtual ~Socket() throw();
 
-	virtual void on_read() = 0;
-	virtual void on_write() = 0;
+	virtual void onRead() throw() = 0;
+	virtual void onWrite() throw() = 0;
 
 	// socket options
 	bool setNoLinger() throw();

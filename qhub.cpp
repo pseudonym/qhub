@@ -5,6 +5,7 @@
 
 #include "DNSUser.h"
 #include "Hub.h"
+#include "Timer.h"
 
 #include "Plugin.h"
 #include "Settings.h"
@@ -31,8 +32,14 @@ extern "C" {
 using namespace qhub;
 
 static oop_adapter_adns *adns;
+static oop_source* src;
 
-static void *on_lookup(oop_adapter_adns *adns,adns_answer *reply,void *data)
+struct timer {
+        struct timeval tv;
+        int delay;
+};
+
+static void *on_lookup(oop_adapter_adns *adns, adns_answer *reply, void *data)
 {
 	//fprintf(stdout, "%s =>",reply->owner);
 	//fflush(stdout);
@@ -57,16 +64,29 @@ static void *on_lookup(oop_adapter_adns *adns,adns_answer *reply,void *data)
 	return OOP_CONTINUE;
 }
 
+static void *on_timer(oop_source *source, struct timeval tv, void *data) {
+        struct timer *timer = (struct timer*)data;
+        timer->tv = tv;
+        timer->tv.tv_usec += timer->delay;
+	while(timer->tv.tv_usec >= 1000000) {
+		timer->tv.tv_sec++;
+		timer->tv.tv_usec -= 1000000;
+	}
+	source->on_time(source, timer->tv, on_timer, data);
+	Timer::tick();
+	return OOP_CONTINUE;
+}
+
 void *fd_demux(oop_source *src, int fd, oop_event ev, void* usr)
 {
 	Socket* s = (Socket*) usr;
 
 	switch(ev){
 	case OOP_READ:
-		s->on_read();
+		s->onRead();
 		break;
 	case OOP_WRITE:
-		s->on_write();
+		s->onWrite();
 		break;
 	case OOP_EXCEPTION:
 	case OOP_NUM_EVENTS:
@@ -77,17 +97,13 @@ void *fd_demux(oop_source *src, int fd, oop_event ev, void* usr)
 	return OOP_CONTINUE;
 }
 
-static oop_source* src;
-
-void qhub::enable(int fd, oop_event ev, Socket* s)
+void qhub::enable_fd(int fd, oop_event ev, Socket* s)
 {
-	//fprintf(stderr, "Enabling fd %d %d\n", fd, ev);
 	src->on_fd(src, fd, ev, fd_demux, s);
 }
 
-void qhub::cancel(int fd, oop_event ev)
+void qhub::cancel_fd(int fd, oop_event ev)
 {
-	//fprintf(stderr, "Cancellng fd %d %d\n", fd, ev);
 	src->cancel_fd(src, fd, ev);
 }
 
@@ -136,24 +152,6 @@ void end(int)
 	exit(0);
 }
 
-struct timer {
-        struct timeval tv;
-        int delay;
-};
-
-static void *on_timer(oop_source *source,struct timeval tv,void *data) {
-        struct timer *timer = (struct timer *) data;
-        timer->tv = tv;
-        timer->tv.tv_usec += timer->delay;
-	while(timer->tv.tv_usec>=1000000){
-		timer->tv.tv_sec++;
-		timer->tv.tv_usec -= 1000000;
-	}
-        source->on_time(source,timer->tv,on_timer,data);
-        //fprintf(stderr, "timer: once every %d microseconds\n", timer->delay);
-        return OOP_CONTINUE;
-}
-
 int main()
 {
 	signal(SIGINT, &end);
@@ -183,7 +181,7 @@ int main()
 	fprintf(stderr, "Using libevent source adapter\n", src);
 #endif
 	//Set up ADNS
-	adns = oop_adns_new(src,(adns_initflags)0,NULL);
+	adns = oop_adns_new(src, (adns_initflags)0, NULL);
 
 	//try loading
 	Plugin::init();
@@ -195,9 +193,9 @@ int main()
 	srand(time(NULL));
 
         struct timer *timer = (struct timer*) malloc(sizeof(struct timer));
-        gettimeofday(&timer->tv,NULL);
+        gettimeofday(&timer->tv, NULL);
         timer->delay = 1000000;
-        on_timer(src,timer->tv,timer);
+        on_timer(src, timer->tv, timer);
 
 
 #ifndef HAVE_LIBOOP_EVENT

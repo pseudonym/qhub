@@ -21,7 +21,7 @@ InterHub::InterHub(int fd, Domain d) throw()
 		fprintf(stderr, "Error setting SO_LINGER\n");
 	}
 
-	enable(fd, OOP_READ, this);
+	enable_fd(fd, OOP_READ, this);
 }
 
 void InterHub::connect()
@@ -75,7 +75,7 @@ void InterHub::handlePacket()
 	}
 }
 
-void InterHub::on_read()
+void InterHub::onRead() throw()
 {
 	fprintf(stderr, "Got data\n");
 	if(rbCur+READ_SIZE >= readBufferSize){
@@ -118,9 +118,9 @@ void InterHub::realDisconnect()
 	fprintf(stderr, "Disconnecting Interhub %d %p\n", fd, this);
 
 	close(fd);
-	cancel(fd, OOP_READ);
+	cancel_fd(fd, OOP_READ);
 	if(writeEnabled){
-		cancel(fd, OOP_WRITE);
+		cancel_fd(fd, OOP_WRITE);
 	}
 
 	fd = -1;
@@ -129,7 +129,7 @@ void InterHub::realDisconnect()
 	delete this;
 }
 
-void InterHub::on_write()
+void InterHub::onWrite() throw()
 {
 	fprintf(stderr, "On_write\n");
 
@@ -137,7 +137,7 @@ void InterHub::on_write()
 	partialWrite();
 
 	if(queue.empty()){
-		cancel(fd, OOP_WRITE);
+		cancel_fd(fd, OOP_WRITE);
 		writeEnabled=false;
 	}
 

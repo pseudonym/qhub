@@ -38,8 +38,8 @@ public:
 	/*
 	 * fd_demux calls
 	 */
-	virtual void on_read();
-	virtual void on_write();
+	virtual void onRead() throw();
+	virtual void onWrite() throw();
 
 	/*
 	 * Do protocol stuff / Handle events
@@ -54,15 +54,14 @@ protected:
 	virtual void onConnected() throw() = 0;
 	virtual void onDisconnected(string const& clue) throw() = 0;
 
-	void disconnect() { Socket::disconnect(); onDisconnected(Util::emptyString); };
+	void disconnect();
 	void disconnect(string const& msg) { Socket::disconnect(); onDisconnected(msg); };
+	void realDisconnect();
 
 private:
 	StringList data;
 	string raw;
 
-	void realDisconnect();
-	
 	int readBufferSize;
 	unsigned char* readBuffer;
 	enum ReadState { NORMAL, PARTIAL } state;

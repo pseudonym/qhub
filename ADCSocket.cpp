@@ -49,7 +49,7 @@ ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
 : Socket(fd, domain), readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]),
 		state(NORMAL), escaped(false), hub(parent)
 {
-	enable(fd, OOP_READ, this);
+	enable_fd(fd, OOP_READ, this);
 	setNoLinger();
 }
 
@@ -59,7 +59,7 @@ ADCSocket::~ADCSocket() throw()
 	realDisconnect();
 }
 
-void ADCSocket::on_read()
+void ADCSocket::onRead() throw()
 {
 	int ret = read(fd, readBuffer, readBufferSize);
 	if(ret <= 0) {
@@ -152,12 +152,12 @@ void ADCSocket::on_read()
 	}
 }
 
-void ADCSocket::on_write()
+void ADCSocket::onWrite() throw()
 {
 	//fprintf(stderr, "On_write\n");
 	partialWrite();
 	if(queue.empty()){
-		cancel(fd, OOP_WRITE);
+		cancel_fd(fd, OOP_WRITE);
 		writeEnabled = false;
 	}
 
@@ -165,6 +165,13 @@ void ADCSocket::on_write()
 	if(disconnected && queue.empty()) {
 		realDisconnect();
 	}
+}
+
+void ADCSocket::disconnect()
+{
+	assert(!disconnected);
+	Socket::disconnect();
+	onDisconnected(Util::emptyString);
 }
 
 void ADCSocket::realDisconnect()
@@ -178,11 +185,11 @@ void ADCSocket::realDisconnect()
 	if(!disconnected) {
 		disconnect(); // notify others that we're dying
 	}
-		
+	
 	fprintf(stderr, "Real Disconnect %d %p\n", fd, this);
 	close(fd);
-	if(writeEnabled){
-		cancel(fd, OOP_WRITE);
+	if(writeEnabled) {
+		cancel_fd(fd, OOP_WRITE);
 	}
 
 	fd = -1;

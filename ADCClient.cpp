@@ -6,6 +6,7 @@
 #include "Plugin.h"
 #include "ADCInf.h"
 #include "UserData.h"
+#include "qhub.h"
 
 using namespace std;
 using namespace qhub;
@@ -32,7 +33,7 @@ u_int32_t ADCClient::Commands[] = {
 #undef CMD
 
 ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-: ADCSocket(fd, domain, parent), added(false), attributes(new ADCInf(this)), userData(new UserData), state(START)	
+: ADCSocket(fd, domain, parent), added(false), attributes(new ADCInf(this)), userData(new UserData), state(PROTOCOL)
 {
 	onConnected();
 }
@@ -43,22 +44,36 @@ ADCClient::~ADCClient() throw()
 	delete userData;
 }
 
+void ADCClient::onAlarm() throw()
+{
+	if(!disconnected) {
+		// do a silent disconnect. we don't want to show our protocol
+		// to an unknown peer.
+		disconnect();
+	} else {
+		realDisconnect();
+	}
+}
+
 void ADCClient::login() throw()
 {
+	alarm(0);
+	added = true;
 	state = NORMAL;
 	Plugin::UserConnected action;
 	Plugin::fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
-	//send infs
+	// Send INFs
 	getHub()->getUsersList(this);
+	string tmp = attributes->getChangedInf();
+	// Add user
 	if(isUdpActive())
 		getHub()->addActiveClient(getCID32(), this);
 	else
 		getHub()->addPassiveClient(getCID32(), this);
-	added = true;
-	//notify him that userlist is over and notify others of his presence
-	getHub()->broadcast(attributes->getChangedInf());
+	// Notify him that userlist is over and notify others of his presence
+	getHub()->broadcast(tmp);
 	getHub()->motd(this);
 }
 
@@ -96,12 +111,12 @@ void ADCClient::doAskPassword(string const& pwd) throw()
 
 void ADCClient::doWarning(string const& msg) throw()
 {
-	send("ISTA " + getCID32() + " 10 " + esc(msg) + '\n');
+	send("ISTA " + getCID32() + " 100 " + esc(msg) + '\n');
 }
 
 void ADCClient::doError(string const& msg) throw()
 {
-	send("ISTA " + getCID32() + " 20 " + esc(msg) + '\n');
+	send("ISTA " + getCID32() + " 200 " + esc(msg) + '\n');
 }
 
 void ADCClient::doDisconnect(string const& msg) throw()
@@ -162,8 +177,8 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 	// Do specialized input checking
 	switch(command & 0x000000FF) {
 	case 'H':
-		// ? do we wish supports to happen just whenever or at START only ?
-		if(state == START && (command & 0xFFFFFF00) == Commands[SUP]) {
+		// ? do we wish supports to happen just whenever or at PROTOCOL only ?
+		if(state == PROTOCOL && (command & 0xFFFFFF00) == Commands[SUP]) {
 			handleSupports(sl);
 			return;
 		// ? same with HPAS ?
@@ -219,12 +234,14 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 
 void ADCClient::onConnected() throw()
 {
+	alarm(15);
 	Plugin::ClientConnected action;
 	Plugin::fire(action, this);
 }
 
 void ADCClient::onDisconnected(string const& clue) throw()
 {
+	alarm(15);
 	if(added) {
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
@@ -322,19 +339,17 @@ void ADCClient::handleLogin(StringList& sl) throw()
 void ADCClient::handleInfo(StringList& sl) throw()
 {
 	assert(state == NORMAL);
-	bool isActive = isUdpActive();
 	attributes->setInf(sl);
 
 	Plugin::ClientInfo action;
 	Plugin::fire(action, this);
-	if(action.isSet(Plugin::STOP) || action.isSet(Plugin::DISCONNECTED))
+	if(action.isSet(Plugin::DISCONNECTED))
 		return;
-	// FIXME STOP doesn't stop setInf from working
 	
-	if(isUdpActive() != isActive)
-		getHub()->setClientMode(!isUdpActive(), getCID32(), this);
-	
+	bool isActive = isUdpActive();
 	getHub()->broadcast(attributes->getChangedInf());
+	if(isUdpActive() != isActive)
+		getHub()->switchClientMode(isUdpActive(), getCID32(), this);
 }
 	
 void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const* full) throw()

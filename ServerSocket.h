@@ -18,8 +18,8 @@ public:
 	};
 
 protected:
-	void on_read();
-	void on_write();
+	virtual void onRead() throw();
+	virtual void onWrite() throw();
 
 	int type;
 	Hub* hub;

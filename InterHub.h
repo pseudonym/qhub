@@ -18,8 +18,8 @@ public:
 	InterHub(int fd, Domain d) throw();
 	virtual ~InterHub() throw() {};
 
-	void on_read();
-	void on_write();
+	virtual void onRead() throw();
+	virtual void onWrite() throw();
 
 	void setHostName(string h) { hostname = h; }
 	void setPassword(string p) { password = p; }

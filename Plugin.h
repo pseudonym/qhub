@@ -97,7 +97,7 @@ public:
 			ClientLine;
 	typedef ActionType<CLIENT_LOGIN, HANDLE | DISCONNECT>
 			ClientLogin;
-	typedef ActionType<CLIENT_INFO, HANDLE | STOP | DISCONNECT>
+	typedef ActionType<CLIENT_INFO, HANDLE | DISCONNECT>
 			ClientInfo;
 	
 	typedef ActionType<USER_CONNECTED, HANDLE | DISCONNECT>

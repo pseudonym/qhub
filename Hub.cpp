@@ -43,7 +43,7 @@ void Hub::onLookup(adns_answer *reply) const
 			memset(&(dest_addr.sin_zero), '\0', 8);
 
 			::connect(ih->getFd(), (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
-			enable(ih->getFd(), OOP_READ, ih);
+			enable_fd(ih->getFd(), OOP_READ, ih);
 			ih->connect();
 		}
 	}
@@ -65,14 +65,14 @@ void Hub::openADCPort(int port)
 {
 	//Leaf-handler
 	ServerSocket* tmp = new ServerSocket(Socket::IP6, port, ServerSocket::LEAF_HANDLER, this);
-	enable(tmp->getFd(), OOP_READ, tmp);
+	enable_fd(tmp->getFd(), OOP_READ, tmp);
 }
 
 void Hub::openInterPort(int port)
 {
 	//Inter-hub
 	ServerSocket* tmp = new ServerSocket(Socket::IP6, port, ServerSocket::INTER_HUB, this);
-	enable(tmp->getFd(), OOP_READ, tmp);
+	enable_fd(tmp->getFd(), OOP_READ, tmp);
 }
 
 void Hub::acceptLeaf(int fd, Socket::Domain d)
@@ -180,11 +180,11 @@ void Hub::addPassiveClient(string const& guid, ADCClient* client) throw()
 	passiveUsers[guid] = client;
 }
 
-void Hub::setClientMode(bool passive, string const& guid, ADCClient* client) throw()
+void Hub::switchClientMode(bool toActive, string const& guid, ADCClient* client) throw()
 {
-	assert((!passive && activeUsers.find(guid) != activeUsers.end()) ||
-			(passive && passiveUsers.find(guid) != passiveUsers.end()));
-	if(!passive) {
+	assert((!toActive && activeUsers.find(guid) != activeUsers.end()) ||
+			(toActive && passiveUsers.find(guid) != passiveUsers.end()));
+	if(!toActive) {
 		activeUsers.erase(guid);
 		passiveUsers[guid] = client;
 	} else {

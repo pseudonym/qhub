@@ -45,7 +45,8 @@ ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(doma
 	listen();
 }
 
-void ServerSocket::on_read(){
+void ServerSocket::onRead() throw()
+{
 	while(true){
 		int fd;
 		Domain d;
@@ -71,7 +72,8 @@ void ServerSocket::on_read(){
 	}
 }
 
-void ServerSocket::on_write(){
+void ServerSocket::onWrite() throw()
+{
 	printf("Serversocket received a write.\n");
 	exit(1);
 }

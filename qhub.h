@@ -30,8 +30,9 @@ extern "C" {
 
 namespace qhub {
 
-void enable(int fd, oop_event ev, Socket* s);
-void cancel(int fd, oop_event ev);
+void enable_fd(int fd, oop_event ev, Socket* s);
+void cancel_fd(int fd, oop_event ev);
+
 void lookup(const char* hostname, DNSUser* d);
 
 }

@@ -5,7 +5,7 @@ namespace qhub {
 
 class Settings {
 public:
-	static int readFromXML();
+	static int readFromXML() throw();
 };
 
 }

@@ -119,7 +119,7 @@ void Socket::accept(int& f, Domain& d) throw()
 
 void Socket::disconnect()
 {
-	cancel(fd, OOP_READ); // stop reading immediately
+	cancel_fd(fd, OOP_READ); // stop reading immediately
 	disconnected = true;
 }
 
@@ -137,7 +137,7 @@ void Socket::writeb(Buffer::writeBuffer b)
 	}
 	queue.push(b);
 	if(!writeEnabled){
-		enable(fd, OOP_WRITE, this);
+		enable_fd(fd, OOP_WRITE, this);
 		writeEnabled = true;
 	}
 }
