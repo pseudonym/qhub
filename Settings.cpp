@@ -1,122 +1,71 @@
+// vim:ts=4:sw=4:noet
 #include "Settings.h"
 #include "Hub.h"
+#include "XmlTok.h"
 
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/sax/HandlerBase.hpp>
-#include <xercesc/util/XMLString.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
-#include <iostream>
-
-using namespace xercesc;
 using namespace qhub;
 using namespace std;
 
-int Settings::readFromXML()
+int Settings::readFromXML() throw()
 {
-	try {
-		XMLPlatformUtils::Initialize();
-	}
-	catch (const XMLException& toCatch) {
-		char* message = XMLString::transcode(toCatch.getMessage());
-		cout << "Error during initialization! :\n"
-		<< message << "\n";
-		XMLString::release(&message);
+	XmlTok root;
+	if(!root.load("Settings.xml"))
 		return 1;
-	}
 
-	XercesDOMParser* parser = new XercesDOMParser();
-	if(parser){
-		ErrorHandler* errHandler = (ErrorHandler*) new HandlerBase();
-		parser->setErrorHandler(errHandler);
-		char* xmlFile = "Settings.xml";
-
-		try {
-			parser->parse(xmlFile);
-		}
-		catch (const XMLException& toCatch) {
-			char* message = XMLString::transcode(toCatch.getMessage());
-			cout << "Exception message is: \n"
-			<< message << "\n";
-			XMLString::release(&message);
-			return -1;
-		}
-		catch (const DOMException& toCatch) {
-			char* message = XMLString::transcode(toCatch.msg);
-			cout << "Exception message is: \n"
-			<< message << "\n";
-			XMLString::release(&message);
-			return -1;
-		}
-		catch (...) {
-			cout << "Unexpected Exception \n" ;
-			return -1;
-		}
-
-		DOMNode *pDoc = parser->getDocument();
-		pDoc = pDoc->getFirstChild();
-		if(pDoc->getNextSibling() != NULL){
-			pDoc = pDoc->getNextSibling();
-		}
-		DOMNode* c = pDoc->getFirstChild();
-		while(c){
-			//this should be a hub
-			if(c->getFirstChild() != NULL){
-				DOMNode* b = c->getFirstChild();
-				Hub* tmp = new Hub();
-				while(b){
-					if(strcmp(XMLString::transcode(b->getNodeName()), "name") == 0 && b->getFirstChild() != NULL){
-						cout << "Hubname: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
-						tmp->setHubName(string(XMLString::transcode(b->getFirstChild()->getNodeValue())));
-					} else if(strcmp(XMLString::transcode(b->getNodeName()), "port") == 0 && b->getFirstChild() != NULL){
-						cout << "\tADC port: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
-						int port = atoi(XMLString::transcode(b->getFirstChild()->getNodeValue()));
-						if(port > 0 && port<65536){
-							tmp->openADCPort(port);
-						}
-					} else if(strcmp(XMLString::transcode(b->getNodeName()), "maxpacketsize") == 0 && b->getFirstChild() != NULL){
-						cout << "\tMaximum packet size: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
-						int size = atoi(XMLString::transcode(b->getFirstChild()->getNodeValue()));
-						if(size > 0){
-							tmp->setMaxPacketSize(size);
-						}
-					} else if(strcmp(XMLString::transcode(b->getNodeName()), "interport") == 0 && b->getFirstChild() != NULL){
-						cout << "\tInter-hub port: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
-						int port = atoi(XMLString::transcode(b->getFirstChild()->getNodeValue()));
-						if(port > 0 && port<65536){
-							tmp->openInterPort(port);
-						}
-					} else if(strcmp(XMLString::transcode(b->getNodeName()), "interconnect") == 0 && b->getFirstChild() != NULL){
-						cout << "\tInter-connecting to: " << XMLString::transcode(b->getFirstChild()->getNodeName()) << endl;
-						DOMNode*a = b->getFirstChild();
-						string host, password;
-						int port = 0;
-						while(a){
-							if(strcmp(XMLString::transcode(a->getNodeName()), "host") == 0 && a->getFirstChild() != NULL){
-								host = XMLString::transcode(a->getFirstChild()->getNodeValue());
-							} else if(strcmp(XMLString::transcode(a->getNodeName()), "port") == 0 && a->getFirstChild() != NULL){
-								port = atoi(XMLString::transcode(a->getFirstChild()->getNodeValue()));
-							} else if(strcmp(XMLString::transcode(a->getNodeName()), "password") == 0 && a->getFirstChild() != NULL){
-								password = XMLString::transcode(a->getFirstChild()->getNodeValue());
-							}
-							a = a->getNextSibling();
-						}
-						cout << "\tConnecting to " << host << ":" << port << " pass: " << password << endl;
-						tmp->openInterConnection(host, port, password);
-					}
-
-					b = b->getNextSibling();
-				}
+	XmlTok* p = &root;
+	if(p->findChild("config")) {
+		p = p->getNextChild();
+		
+		// list all hubs
+		XmlTok* hubp;
+		p->findChild("hub");
+		while((hubp = p->getNextChild())) {
+			Hub* hub = new Hub();
+			
+			if(hubp->findChild("name")) {
+				string name = hubp->getNextChild()->getData();
+				fprintf(stderr, "Hubname: %s\n", name.c_str());
+				hub->setHubName(name);
 			}
-			c = c->getNextSibling();
+			if(hubp->findChild("port")) {
+				int port = Util::toInt(hubp->getNextChild()->getData());
+				fprintf(stderr, "\tADC Port: %i\n", port);
+				if(port > 0 && port <= 65535)
+					hub->openADCPort(port);
+			}	
+			if(hubp->findChild("maxpacketsize")) {
+				int size = Util::toInt(hubp->getNextChild()->getData());
+				fprintf(stderr, "\tMax Packet Size: %i\n", size);
+				if(size > 0)
+					hub->setMaxPacketSize(size);
+			}
+			if(hubp->findChild("interport")) {
+				int port = Util::toInt(hubp->getNextChild()->getData());
+				fprintf(stderr, "\tInter-hub Port: %i\n", port);
+				if(port > 0 && port <= 65535)
+					hub->openInterPort(port);
+			}
+
+			XmlTok* ichubp;
+			hubp->findChild("interconnect");
+			while((ichubp = hubp->getNextChild())) {
+				string host, password;
+				int port;
+				
+				if(ichubp->findChild("host"))
+					host = ichubp->getNextChild()->getData();
+				if(ichubp->findChild("port"))
+					port = Util::toInt(ichubp->getNextChild()->getData());
+				if(ichubp->findChild("password"))
+					password = ichubp->getNextChild()->getData();
+					
+				fprintf(stderr, "\tConnecting to %s:%i pass:%s\n", host.c_str(), port, password.c_str());
+				hub->openInterConnection(host, port, password);
+			}
 		}
-
-		delete parser;
-		delete errHandler;
-
 	}
-
-	XMLPlatformUtils::Terminate();
 	return 0;
 }
-
+			
+			
+						

@@ -26,13 +26,6 @@ AC_CHECK_LIB(adns, adns_init)
 AC_CHECK_LIB(oop-adns, oop_adns_new)
 AC_CHECK_LIB(oop-event, oop_event_new)
 
-LIBS="-lxerces-c $LIBS"
-AC_TRY_LINK(
-	[#include <xercesc/util/PlatformUtils.hpp>],
-        [xercesc::XMLPlatformUtils::Initialize();],
-	[AC_DEFINE(HAVE_LIBXERCESC,1,[Define if Xerces-C library was found])],
-	[AC_MSG_ERROR([unable to link with Xerces])])
-
 
 # We need to find one working header file out of a bunch.
 # CHECK_HEADERS is not good enough, because it includes all headers
@@ -76,7 +69,6 @@ AC_CHECK_FUNCS([nanosleep])
 AC_CHECK_FUNCS([inet_pton inet_ntop])
 
 
-AC_CHECK_HEADERS([xercesc/dom/DOM.hpp])
 AC_CHECK_HEADERS([xmltok/xmlparse.h],,[AC_MSG_ERROR([libxmltok required.])])
 AC_CHECK_HEADERS([arpa/inet.h])
 AC_CHECK_HEADERS([fcntl.h]) 
