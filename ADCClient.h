@@ -66,7 +66,7 @@ public:
 	 * Object information
 	 */
 	State getState() const throw() { return state; };
-	UserData* getUserData() throw() { return userData; };
+	UserData* getUserData() throw();
 	UserInfo* getUserInfo() throw() { return userInfo; };
 	string const& getCID32() const throw() { return guid; };
 

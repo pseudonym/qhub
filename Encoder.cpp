@@ -150,25 +150,10 @@ const u_int32_t Encoder::crc32Table[256] = {
 };
 
 u_int32_t Encoder::toCrc32(char const* p, size_t len) {
-//		unsigned long *main_val, unsigned long *main_len) {
-
-//	char                  buf[BUFFERSIZE], *p;
-//	int                   len = 0, nr;
-//	unsigned long         crc = ~0, crc32_total = ~0;
-	
-//	while ((nr = read(fd, buf, sizeof(buf))) > 0)
 	char const* endp = p + len;
 	u_int32_t crc = ~0;
-	u_int32_t crc32_total = ~0;
 	for(; p != endp; ++p) {
-//	  for (len += nr, p = buf; nr--; ++p) {
 		crc = (crc >> 8) ^ crc32Table[(crc ^ *p) & 0xff];
-//	    crc32_total = (crc >> 8) ^ crctable[(crc32_total ^ *p) & 0xff];
 	}
-//	if (nr < 0)
-//	  return 1;
-
-//	*main_len = len;
-//	*main_val = ~crc;
 	return ~crc;
 }

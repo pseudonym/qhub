@@ -4,6 +4,7 @@
 
 #include "Util.h"
 #include "Socket.h"
+#include "ADC.h"
 
 namespace qhub {
 
@@ -37,7 +38,7 @@ public:
 				temp += (char)(i->first >> 8);
 				temp += (char)(i->first & 0xFF);
 				temp += i->second;
-				adcString += ' ' + /*ADCClient::esc(*/temp;//);
+				adcString += ' ' + ADC::ESC(temp);
 			}
 			adcString += '\n';
 			modified = false;
@@ -156,7 +157,6 @@ private:
 	InfMap infMap;
 	bool modified;
 	string adcString;
-	
 };
 
 } //namespace qhub

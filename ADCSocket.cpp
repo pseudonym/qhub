@@ -2,6 +2,7 @@
 #include "ADCSocket.h"
 #include "qhub.h"
 #include "Util.h"
+#include "ADC.h"
 
 // fixme, do we need a start_buffer? we're not 'growing' it
 #define START_BUFFER 512
@@ -13,37 +14,6 @@
 
 using namespace std;
 using namespace qhub;
-
-string ADCSocket::esc(string const& in)
-{
-	string tmp;
-	tmp.reserve(255);
-	for(string::const_iterator i = in.begin(); i != in.end(); ++i) {
-		switch(*i) {
-		case ' ':
-		case '\n':
-		case '\\':
-			tmp += '\\';
-		default:
-			tmp += *i;
-		}
-	}
-	return tmp;
-}
-
-string ADCSocket::cse(string const& in)
-{
-	string tmp;
-	tmp.reserve(in.length());
-	for(string::const_iterator i = in.begin(); i != in.end(); ++i) {
-		if(*i == '\\') {
-			++i;
-			assert(i != in.end()); // shouldn't happen if we parsed input correctly earlier
-		}
-		tmp += *i;
-	}
-	return tmp;
-}
 
 ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
 : Socket(fd, domain), readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]),
@@ -96,7 +66,7 @@ void ADCSocket::onRead() throw()
 			case ' ':
 				if(!escaped) {
 					if(state == NORMAL) {
-						data.push_back(cse(string((char const*)s, p - s)));
+						data.push_back(ADC::CSE(string((char const*)s, p - s)));
 						// huh? how come "/raw \n" doesn't work the first time, unless we add an fprintf here??
 						s = p + 1;
 						++dataLen;
@@ -109,7 +79,7 @@ void ADCSocket::onRead() throw()
 						}
 					} else if(state == PARTIAL) {
 						data.back().append((char const*)s, p - s);
-						data.back() = cse(data.back()); // don't forget to unescape
+						data.back() = ADC::CSE(data.back()); // don't forget to unescape
 						state = NORMAL;
 						s = p + 1;
 					} else {

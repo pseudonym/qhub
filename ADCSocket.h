@@ -22,12 +22,6 @@ class Hub;
 class ADCSocket : public Socket {
 public:
 	/*
-	 * ADC escaping
-	 */
-	static string esc(string const& in);
-	static string cse(string const& in);
-
-	/*
 	 * Normal
 	 */
 	ADCSocket(int fd, Domain domain, Hub* parent) throw();

@@ -7,6 +7,7 @@
 #include "UserInfo.h"
 #include "UserData.h"
 #include "qhub.h"
+#include "ADC.h"
 
 using namespace std;
 using namespace qhub;
@@ -33,16 +34,24 @@ u_int32_t ADCClient::Commands[] = {
 #undef CMD
 
 ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-: ADCSocket(fd, domain, parent), added(false), userData(new UserData), userInfo(new UserInfo(this)), state(PROTOCOL),
-		udpActive(false)
+: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), state(PROTOCOL), udpActive(false)
 {
 	onConnected();
 }
 
 ADCClient::~ADCClient() throw()
 {
-	delete userInfo;
-	delete userData;
+	if(userInfo)
+		delete userInfo;
+	if(userData)
+		delete userData;
+}
+
+UserData* ADCClient::getUserData() throw()
+{
+	if(!userData)
+		userData = new UserData;
+	return userData;
 }
 
 void ADCClient::onAlarm() throw()
@@ -87,13 +96,7 @@ void ADCClient::logout() throw()
 
 string const& ADCClient::assemble(StringList const& sl) throw()
 {
-	StringList::const_iterator i = sl.begin();
-	temp = esc(*i);
-	for(++i; i != sl.end(); ++i) {
-		temp += ' ' + esc(*i);
-	}
-	temp += '\n';
-	return temp;
+	return ADC::toString(sl, temp);
 }
 
 string const& ADCClient::getAdcInf() throw()
@@ -117,12 +120,12 @@ void ADCClient::doAskPassword(string const& pwd) throw()
 
 void ADCClient::doWarning(string const& msg) throw()
 {
-	send("ISTA " + getCID32() + " 100 " + esc(msg) + '\n');
+	send("ISTA " + getCID32() + " 100 " + ADC::ESC(msg) + '\n');
 }
 
 void ADCClient::doError(string const& msg) throw()
 {
-	send("ISTA " + getCID32() + " 200 " + esc(msg) + '\n');
+	send("ISTA " + getCID32() + " 200 " + ADC::ESC(msg) + '\n');
 }
 
 void ADCClient::doDisconnect(string const& msg) throw()
@@ -132,19 +135,19 @@ void ADCClient::doDisconnect(string const& msg) throw()
 		if(msg.empty())
 			getHub()->broadcast("IQUI " + getCID32() + " ND\n");
 		else
-			getHub()->broadcast("IQUI " + getCID32() + " DI " + getHub()->getCID32() + ' ' + esc(msg) + '\n');
+			getHub()->broadcast("IQUI " + getCID32() + " DI " + getHub()->getCID32() + ' ' + ADC::ESC(msg) + '\n');
 	}
 	disconnect();
 }
 
 void ADCClient::doHubMessage(string const& msg) throw()
 {
-	send("BMSG " + getHub()->getCID32() + ' ' + esc(msg) + '\n');
+	send("BMSG " + getHub()->getCID32() + ' ' + ADC::ESC(msg) + '\n');
 }
 
 void ADCClient::doPrivateMessage(string const& msg) throw()
 {
-	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + esc(msg) + " PM\n");
+	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + ADC::ESC(msg) + " PM\n");
 }
 
 void ADCClient::doDisconnect(string const& kicker, string const& msg, bool silent) throw() {}
@@ -262,7 +265,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		if(clue.empty())
 			getHub()->broadcast(string("IQUI " + getCID32() + " ND\n"));
 		else
-			getHub()->broadcast(string("IQUI " + getCID32() + " DI " + getCID32() + ' ' + esc(clue) + '\n'));
+			getHub()->broadcast(string("IQUI " + getCID32() + " DI " + getCID32() + ' ' + ADC::ESC(clue) + '\n'));
 	}
 	Plugin::ClientDisconnected action;
 	Plugin::fire(action, this);
@@ -338,6 +341,7 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	}
 
 	// Load info
+	userInfo = new UserInfo(this);
 	userInfo->fromADC(sl);
 
 	// Guarantee NI and (I4 or I6)
@@ -485,23 +489,23 @@ void ADCClient::handleDisconnect(StringList& sl) throw()
 		string msg = string("IQUI ") + victim_guid;
 		if(sl.size() == 6) {
 			if(sl[3] == "DI") {
-				msg += " DI " + sl[1] + ' ' + esc(sl[5]) + '\n';
+				msg += " DI " + sl[1] + ' ' + ADC::ESC(sl[5]) + '\n';
 				victim->send(msg);
 				success = true;
 			} else if(sl[3] == "KK") {
-				msg += " KK " + sl[1] + ' ' + esc(sl[5]) + '\n';
+				msg += " KK " + sl[1] + ' ' + ADC::ESC(sl[5]) + '\n';
 				victim->send(msg);
 				// todo: set bantime
 				success = true;
 			}
 		} else if(sl.size() == 7) {
 			if(sl[3] == "BN") {
-				msg += " BN " + sl[1] + ' ' + esc(sl[5]) + ' ' + esc(sl[6]) + '\n';
+				msg += " BN " + sl[1] + ' ' + ADC::ESC(sl[5]) + ' ' + ADC::ESC(sl[6]) + '\n';
 				victim->send(msg);
 				// todo: set bantime
 				success = true;
 			} else if(sl[3] == "RD") {
-				msg += " RD " + sl[1] + ' ' + esc(sl[5]) + ' ' + esc(sl[6]) + '\n';
+				msg += " RD " + sl[1] + ' ' + ADC::ESC(sl[5]) + ' ' + ADC::ESC(sl[6]) + '\n';
 				victim->send(msg);
 				success = true;
 			}
@@ -557,7 +561,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 void ADCClient::handleSupports(StringList& sl) throw()
 {
 	send("ISUP " + getHub()->getCID32() + " +BASE\n" // <-- do we need CID?
-			"IINF " + getHub()->getCID32() + " NI" + esc(getHub()->getHubName()) +
+			"IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
 			" HU1 DEmajs VEqhub0.5 OP1\n");
 	state = IDENTIFY;
 }
