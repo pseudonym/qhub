@@ -8,6 +8,18 @@
 #include "Hub.h"
 
 
+#ifdef HAVE_XERCESC_DOM_DOM_HPP
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOM.hpp>
+#include <xercesc/sax/HandlerBase.hpp>
+#include <xercesc/util/XMLString.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <iostream>
+#endif
+
+using namespace std;
+using namespace xercesc;
+
 extern "C" {
 #include <oop.h>
 #include <oop-read.h>
@@ -114,7 +126,84 @@ int main()
 	//Set up ADNS
 	adns = oop_adns_new(src,(adns_initflags)0,NULL);
 
-	Hub* tmp = new Hub();
+	Hub* tmp = new Hub();	
+
+#ifdef HAVE_XERCESC_DOM_DOM_HPP
+	fprintf(stderr, "Using Xerces XML library.\n");
+
+	try {
+		XMLPlatformUtils::Initialize();
+	}
+	catch (const XMLException& toCatch) {
+		char* message = XMLString::transcode(toCatch.getMessage());
+		cout << "Error during initialization! :\n"
+		<< message << "\n";
+		XMLString::release(&message);
+		return 1;
+	}
+
+	XercesDOMParser* parser = new XercesDOMParser();	
+	if(parser){
+		ErrorHandler* errHandler = (ErrorHandler*) new HandlerBase();
+		parser->setErrorHandler(errHandler);
+		char* xmlFile = "config.xml";
+
+		try {
+			parser->parse(xmlFile);
+		}
+		catch (const XMLException& toCatch) {
+			char* message = XMLString::transcode(toCatch.getMessage());
+			cout << "Exception message is: \n"
+			<< message << "\n";
+			XMLString::release(&message);
+			return -1;
+		}
+		catch (const DOMException& toCatch) {
+			char* message = XMLString::transcode(toCatch.msg);
+			cout << "Exception message is: \n"
+			<< message << "\n";
+			XMLString::release(&message);
+			return -1;
+		}
+		catch (...) {
+			cout << "Unexpected Exception \n" ;
+			return -1;
+		}
+		
+		DOMNode *pDoc = parser->getDocument();
+		pDoc = pDoc->getFirstChild();
+		if(pDoc->getNextSibling() != NULL){
+			pDoc = pDoc->getNextSibling();
+		}
+		DOMNode* c = pDoc->getFirstChild();
+		while(c){
+			//this should be a hub
+			if(c->getFirstChild() != NULL){
+				DOMNode* b = c->getFirstChild();
+				while(b){
+					if(strcmp(XMLString::transcode(b->getNodeName()), "name") == 0 && b->getFirstChild() != NULL){
+						cout << "Hubname: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
+					} else if(strcmp(XMLString::transcode(b->getNodeName()), "port") == 0 && b->getFirstChild() != NULL){
+						cout << "\tADC port: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
+					} else if(strcmp(XMLString::transcode(b->getNodeName()), "interport") == 0 && b->getFirstChild() != NULL){
+						cout << "\tInter-hub port: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
+					}
+
+					b = b->getNextSibling();
+				}
+			}
+			c = c->getNextSibling();
+		}
+
+		delete parser;
+		delete errHandler;
+
+	}
+
+	XMLPlatformUtils::Terminate();
+#else
+	fprintf(stderr, "Warning: Xerces XML parser not used, no XML config file will be loaded.\n");
+#endif
 
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);
