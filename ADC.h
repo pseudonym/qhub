@@ -18,6 +18,9 @@ public:
 
 	void on_read();
 	void on_write();
+
+	void sendFullInf();
+	string getFullInf();
 private:
 	ADC(){};
 
@@ -39,10 +42,21 @@ private:
     void handleCommand(int length);
 	void handleHCommand(int length);
 	void handleBCommand(int length);
+	void handleDCommand(int length);
 
 	void getParms(int length, int positionalParms);
 	std::vector<string> posParms;
-	std::hash_map<char*, string> namedParms;
+	
+	typedef std::hash_map<string, string> parmMap;
+	parmMap namedParms;
+	
+	typedef parmMap::iterator parmMapIterator;
+
+
+	
+	string guid;
+	std::hash_map<string, string> INF;
+	typedef std::hash_map<string, string>::iterator INFIterator;
 };
 
 

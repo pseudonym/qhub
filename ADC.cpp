@@ -1,5 +1,6 @@
 #include "ADC.h"
 #include "qhub.h"
+#include "Hub.h"
 
 #define START_BUFFER 1024
 #define READ_SIZE 512
@@ -68,6 +69,7 @@ void ADC::getParms(int length, int positionalParms)
 							fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
 							posParms.push_back(current);
 							if(positionalParms==0){
+								fprintf(stderr, "Aborting posparms %d\n", index);
 								done=true;
 							}
 							break;
@@ -94,20 +96,22 @@ void ADC::getParms(int length, int positionalParms)
 	}
 
 	//Named parameters
-	while(index<length && readBuffer[index] && readBuffer[index++]!=' ');
+	//while(index<length && readBuffer[index] && readBuffer[index++]!=' ');
 
 	state = 0;//0==space, 1==parm-name1, 2==parm-name2, 3==parm-value
 
 	//unsigned isnt liked by hash_map
-	char name[3];
-	name[2] = 0;
+	string name = "";
+
+	fprintf(stderr, "index %d\n", index);
 
 	while(index<length-1){
 		switch(state){
 			case 0:
 				if(readBuffer[index] != ' '){
 					state = 1;
-					name[0] = readBuffer[index];
+					name.clear();
+					name += readBuffer[index];
 				} else {
 					//parse error
 				}
@@ -115,7 +119,7 @@ void ADC::getParms(int length, int positionalParms)
 			case 1:
 				if(readBuffer[index] != ' '){
 					state = 2;
-					name[1] = readBuffer[index];
+					name += readBuffer[index];
 				} else {
 					//parse error
 				}
@@ -134,7 +138,7 @@ void ADC::getParms(int length, int positionalParms)
 				switch(readBuffer[index]){
 					case ' ':
 						state = 0;
-						fprintf(stderr, "Adding named parm %c%c %s\n", name[0], name[1], current.c_str());
+						fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
 						namedParms[name] = current;
 						break;
 					case '\\':
@@ -153,10 +157,26 @@ void ADC::getParms(int length, int positionalParms)
 		index++;
 	}
 	if(state == 3){
-		fprintf(stderr, "Adding named parm %c%c %s\n", name[0], name[1], current.c_str());
+		fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
 		namedParms[name] = current;
 	}
 }
+
+string ADC::getFullInf()
+{
+	string parms = "";
+	for(INFIterator i = INF.begin(); i!=INF.end(); i++){
+		parms += " " + i->first + i->second;
+	}
+	return "BINF " + guid + parms + "\n";
+}
+
+void ADC::sendFullInf()
+{
+	write(getFullInf());
+	hub->broadcast(this, getFullInf());
+}
+
 
 void ADC::handleBCommand(int length)
 {
@@ -173,20 +193,61 @@ void ADC::handleBCommand(int length)
 						cancel(fd, OOP_READ);
 						close(fd);
 					} else {
-						write((string)"BINF " + posParms[0] + "\n");
+						for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
+							fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
+							INF[string(i->first)] = i->second;
+						}
+						guid = posParms[0];
+						//we know the guid, now register us in the hub.
+						fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
+						if(!hub->addClient(this, guid)){
+							/*close(fd);
+							cancel(fd, OOP_READ);
+							delete this;
+							return;*/
+							//XXX do real kill-of-self
+						}
+						sendFullInf();
 						state = LOGGED_IN;
 					}
 				}
 			}
 			break;
 		case 'M':
-			getParms(length, 2);
+			if(readBuffer[2] == 'S' && readBuffer[3] == 'G'){
+                getParms(length, 2);
+				string tmp((char*)readBuffer, length);
+				hub->broadcastSelf(this, tmp);
+			}
+
+			break;
+		case 'S':
+			if(readBuffer[2] == 'C' && readBuffer[3] == 'H'){
+                getParms(length, 1);
+				string tmp((char*)readBuffer, length);
+				hub->broadcast(this, tmp); 
+			}
 			break;
 		default:
 			fprintf(stderr, "Unknown command\n");
 			break;
 	}
 
+}
+
+void ADC::handleDCommand(int length)
+{
+	if(length<5){
+		return;
+	}
+
+	//only care about guid
+	getParms(length, 2);
+	
+	string tmp((char*)readBuffer, length);
+	fprintf(stderr, "%d\n", posParms.size());
+	fprintf(stderr, "%s vs. %s and %s\n", posParms[1].c_str(), tmp.c_str(), posParms[0].c_str());
+	hub->direct(posParms[1], tmp);
 }
 
 void ADC::handleHCommand(int length)
@@ -224,7 +285,7 @@ void ADC::handleCommand(int length)
 	for(int i=0; i<length-1; i++){
 		fprintf(stderr, "%c", readBuffer[i]);
 	}
-	fprintf(stderr, "\n");
+	fprintf(stderr, ">\n");
 
 	switch(readBuffer[0]){
 		case 'H':
@@ -232,6 +293,9 @@ void ADC::handleCommand(int length)
 			break;
 		case 'B':
 			handleBCommand(length);
+			break;
+		case 'D':
+			handleDCommand(length);
 			break;
 	}
 
@@ -248,7 +312,7 @@ void ADC::on_read()
 	}
 	int r = read(fd, readBuffer+rbCur, READ_SIZE);
 	if(r > 0){
-		fprintf(stderr, "Got data %d %d %d\n", rbCur, r, readBufferSize);
+		//fprintf(stderr, "Got data %d %d %d\n", rbCur, r, readBufferSize);
 		rbCur += r;
 
 		//look through data until no more left?

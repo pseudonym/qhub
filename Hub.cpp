@@ -23,9 +23,57 @@ void Hub::acceptLeaf(int fd)
 	Socket* tmp = new ADC(fd, this);
 }
 
-void Hub::addClient(ADC* client, string nick)
+Hub::Buffer Hub::getUsersList()
 {
-	users[nick] = client;
+//Good algorithm for this?
+//checkpointing + DIFFs could work. (Why? Limits the amount of (re-) iterating over nicks.)
+//caching this way reduces iteration over a random timeinterval from n^2 to n, where n is number of users
+//drawbacks include more small sends to do (can be easily merged though, remembering last size of "quits+joins"
+//part
+//methods to limit the amount of joins to begin with could help efficiency
+	string *tmp = new string();
+	for(userIter i=users.begin(); i!=users.end(); i++){
+		tmp->append(i->second->getFullInf());
+	}
+
+	return Buffer(tmp);
+}
+
+void Hub::direct(string guid, string data)
+{
+	userIter i = users.find(guid);
+	if(i != users.end()){
+		i->second->write(data);	
+	} else {
+		fprintf(stderr, "Send to non-existing user.\n");
+	}
+}
+
+void Hub::broadcast(ADC* c, string data)
+{
+	fprintf(stderr, "Broadcasting 1 %d\n", users.size());
+	for(userIter i=users.begin(); i!=users.end(); i++){
+		if(i->second != c){
+			i->second->write(data);
+		}
+	}
+}
+
+void Hub::broadcastSelf(ADC* c, string data)
+{
+	for(userIter i=users.begin(); i!=users.end(); i++){
+		i->second->write(data);
+	}
+}
+
+bool Hub::addClient(ADC* client, string guid)
+{
+	if(users.find(guid) != users.end()){
+		fprintf(stderr, "GUID collision.\n");
+		return false;
+	}
+	users[guid] = client;
+	return true;
 }
 
 void Hub::acceptInterHub(int fd)
