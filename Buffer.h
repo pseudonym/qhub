@@ -14,7 +14,7 @@ using namespace std;
 class Buffer {
 public:
 	Buffer(Buffer& b) { buf = b.buf; prio=b.prio; };
-	Buffer(string const& b, int p) : buf(b), prio(p) {};
+	Buffer(string const& b, int p=0) : buf(b), prio(p) {};
 	bool operator<(Buffer& b) { return prio < b.prio; };
 
 	string& getBuf() { return buf; };
