@@ -202,6 +202,7 @@ void ADC::realDisconnect()
 {
 	if(fd == -1){
 		//already done
+		//? don't we need delete this here?
 		return;
 	}
 	fprintf(stderr, "Disconnecting %d %p GUID: %s\n", fd, this, guid.c_str());
@@ -482,9 +483,11 @@ void ADC::on_read()
 		}
 	} else if(r < 1){
 		fprintf(stderr, "Got -1 from read\n");
-#ifdef PROTO_DEBUG
-		sendHubMsg("proto error: got -1 from read");
-#endif
+//#ifdef PROTO_DEBUG
+//		sendHubMsg("proto error: got -1 from read");
+//#endif
+		while(!queue.empty())
+			queue.pop();
 		disconnect();
 	}
 
