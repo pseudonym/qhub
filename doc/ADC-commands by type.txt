@@ -1,0 +1,26 @@
+Commands by Type
+
+H
+
+SUP, PAS, DSC, GET, SND
+
+D
+
+RCM, CTM, RES, SCH, MSG, STA
+
+I
+
+STA, SUP, INF, MSG, QUI, GET, SND
+
+C
+
+NTD, SND, GFI, GET, INF, SUP, STA
+
+B (A, P)
+
+INF, MSG
+
+U
+
+SCH, RES
+
