@@ -1,13 +1,17 @@
-AC_INIT(qhub, 0.1)
+'AC_INIT(qhub, 0.2)
 AC_CONFIG_SRCDIR(qhub.cpp)
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
 
 AC_LANG([C++])
 
+AC_LIBTOOL_DLOPEN
+AC_PROG_LIBTOOL
+
+
 AM_CONFIG_HEADER(config.h)
 
-
+AC_CHECK_LIB(ltdl, lt_dlinit)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(resolv, getaddrinfo_a)

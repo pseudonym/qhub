@@ -51,7 +51,7 @@ private:
 	hash_map<string, ADC*> users;
 	typedef hash_map<string, ADC*>::iterator userIter;
 
-	//userlist-cache. this is the ones thats OUT at the clients´
+	//userlist-cache.
 	qhub::Buffer::writeBuffer userlist;
 	list<qhub::Buffer::writeBuffer> outliers;
 
