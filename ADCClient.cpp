@@ -58,6 +58,7 @@ void ADCClient::onAlarm() throw()
 {
 	if(!disconnected) {
 		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
+		//(we could try sending an NMDC-style message here)
 		disconnect();
 	} else {
 		realDisconnect();
