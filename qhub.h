@@ -19,7 +19,6 @@
 
 #include "Socket.h"
 
-#include "DNSUser.h"
 
 extern "C" {
 #include <oop.h>
@@ -30,10 +29,12 @@ extern "C" {
 
 namespace qhub {
 
+class DNSUser;
+
 void enable_fd(int fd, oop_event ev, Socket* s);
 void cancel_fd(int fd, oop_event ev);
 
-void lookup(const char* hostname, DNSUser* d);
+void lookup(const char* hostname, DNSUser* const d);
 
 }
 #endif

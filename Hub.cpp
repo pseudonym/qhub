@@ -52,7 +52,7 @@ void Hub::onLookup(adns_answer *reply) const
 void Hub::openInterConnection(string host, int port, string password)
 {
 	//Do a DNS-lookup
-	lookup(host.c_str(), this);
+	lookup(host.c_str());
 	InterHub* tmp = new InterHub(this);
 	tmp->setHostName(host);
 	tmp->setPort(port);

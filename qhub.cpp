@@ -107,7 +107,7 @@ void qhub::cancel_fd(int fd, oop_event ev)
 	src->cancel_fd(src, fd, ev);
 }
 
-void qhub::lookup(const char* hostname, DNSUser* d){
+void qhub::lookup(const char* hostname, DNSUser* const d){
 #ifdef LIBOOP_RECENT
 	oop_adns_submit(adns,NULL,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
 #else
