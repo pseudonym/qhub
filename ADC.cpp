@@ -12,7 +12,6 @@ ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
 		readBuffer(new unsigned char[START_BUFFER]),
 		readBufferSize(START_BUFFER), rbCur(0), added(false)
 {
-	fprintf(stderr, "State of disconnected is %d", disconnected);
 	this->fd = fd;
 	struct linger so_linger;
 	// Set linger to false
@@ -263,8 +262,6 @@ void ADC::handleBCommand(int length)
 					guid = posParms[0];
 					//add us later, dont want us two times
 					if(!hub->addClient(this, posParms[0])){
-						//signal that were no in the userlist
-						guid = "";
 						disconnect();
 						return;
 					}
@@ -464,4 +461,3 @@ void ADC::on_write()
 		realDisconnect();
 	}
 }
-
