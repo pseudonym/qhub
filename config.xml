@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+
+<!DOCTYPE config [
+  <!ELEMENT config (hub)+>
+  <!ELEMENT hub	(name, port+, interport+)>
+  <!ELEMENT port (#PCDATA)>
+  <!ELEMENT name (#PCDATA)>
+]>
+
+<config>
+<hub>
+<name>Testhub 1</name>
+<port>9001</port>
+<port>9002</port>
+<port>9003</port>
+<port>9004</port>
+<interport>9000</interport>
+</hub>
+
+<hub>
+<name>skit</name>
+<port>9001</port>
+<interport>9000</interport>
+</hub>
+</config>
+
