@@ -45,9 +45,9 @@ string ADCSocket::cse(string const& in)
 	return tmp;
 }
 
-ADCSocket::ADCSocket(int fd, Domain domain) throw()
+ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
 : Socket(fd, domain), readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]),
-		state(NORMAL), escaped(false)
+		state(NORMAL), escaped(false), hub(parent)
 {
 	enable(fd, OOP_READ, this);
 	setNoLinger();

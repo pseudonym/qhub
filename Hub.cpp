@@ -80,85 +80,79 @@ void Hub::acceptLeaf(int fd, Socket::Domain d)
 	Socket* tmp = new ADCClient(fd, d, this);
 }
 
-void Hub::getUsersList(ADCClient* c)
+void Hub::getUsersList(ADCClient* c) throw()
 {
 	string tmp;
-	for(userIter i=users.begin(); i!=users.end(); i++){
+	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); i++) {
 		tmp += i->second->getInf();
 	}
-
+	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); i++) {
+		tmp += i->second->getInf();
+	}
 	Buffer::writeBuffer t(new Buffer(tmp));
 	c->writeb(t);
 }
 
-void Hub::motd(ADCClient* c)
+void Hub::motd(ADCClient* c) throw()
 {
 	char t[1024];
 	sprintf(t, "%d", interConnects.size());
 	char t2[1024];
 	sprintf(t2, "%d", interConnects2.size());
 	string tmp = string("There are ") + t + " hubs connected to us and " + t2 + " connected to from us.";
-	sprintf(t2, "%d", users.size());
+	sprintf(t2, "%dA+%dP", activeUsers.size(), passiveUsers.size());
 	sprintf(t, "%d", 0);
 	tmp += string("\nWe have ") + t2 + " local users, and " + t + " remote users.";
 	c->doHubMessage(tmp);
 }
 
-void Hub::direct(string guid, string data)
+void Hub::direct(string const& guid, string const& data, ADCClient* from) throw()
 {
-	userIter i = users.find(guid);
-	if(i != users.end()){
-		i->second->write(data);
+	Users::iterator i;
+	if((i = activeUsers.find(guid)) != activeUsers.end() || (i = passiveUsers.find(guid)) != passiveUsers.end()) {
+		Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
+		from->writeb(tmp);
+		i->second->writeb(tmp);
 	} else {
 		fprintf(stderr, "Send to non-existing user.\n");
 	}
 }
 
-void Hub::broadcast(string data, ADCClient* c)
+void Hub::broadcast(string const& data, ADCClient* except/* = NULL*/) throw()
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-	if(c == NULL) {
-		for(userIter i=users.begin(); i!=users.end(); i++) {
+	if(!except) {
+		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+			i->second->writeb(tmp);
+		}
+		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			i->second->writeb(tmp);
 		}
 	} else {
-		assert(0); // do we need this?
-		for(userIter i=users.begin(); i!=users.end(); i++) {
-			if(i->second != c)
+		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+			if(i->second != except)
+				i->second->writeb(tmp);
+		}
+		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
+			if(i->second != except)
 				i->second->writeb(tmp);
 		}
 	}
 }
 
-void Hub::broadcastActive(string data, ADCClient* c)
+void Hub::broadcastActive(string const& data) throw()
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-	if(c == NULL) {
-		for(userIter i=users.begin(); i!=users.end(); i++) {
-			if(i->second->isActive())
-				i->second->writeb(tmp);
-		}
-	} else {
-		for(userIter i=users.begin(); i!=users.end(); i++) {
-			if(i->second->isActive() && i->second != c)
-				i->second->writeb(tmp);
-		}
+	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		i->second->writeb(tmp);
 	}
 }
 
-void Hub::broadcastPassive(string data, ADCClient* c)
+void Hub::broadcastPassive(string const& data) throw()
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-	if(c == NULL) {
-		for(userIter i=users.begin(); i!=users.end(); i++){
-			if(!i->second->isActive())
-				i->second->writeb(tmp);
-		}
-	} else {
-		for(userIter i=users.begin(); i!=users.end(); i++){
-			if(!i->second->isActive() && i->second != c)
-				i->second->writeb(tmp);
-		}
+	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
+		i->second->writeb(tmp);
 	}
 }
 
@@ -167,31 +161,57 @@ void Hub::setMaxPacketSize(int s)
 	maxPacketSize = s;
 }
 
-bool Hub::hasClient(string const& guid) const
+bool Hub::hasClient(string const& guid) const throw()
 {
-	if(users.find(guid) == users.end())
+	if(activeUsers.find(guid) == activeUsers.end() && passiveUsers.find(guid) == passiveUsers.end())
 		return false;
 	return true;
 }
 
-void Hub::addClient(string const& guid, ADCClient* client)
+void Hub::addActiveClient(string const& guid, ADCClient* client) throw()
 {
 	assert(!hasClient(guid));
-	users[guid] = client;
+	activeUsers[guid] = client;
 }
 
-void Hub::removeClient(string const& guid)
+void Hub::addPassiveClient(string const& guid, ADCClient* client) throw()
+{
+	assert(!hasClient(guid));
+	passiveUsers[guid] = client;
+}
+
+void Hub::setClientMode(bool passive, string const& guid, ADCClient* client) throw()
+{
+	assert((!passive && activeUsers.find(guid) != activeUsers.end()) ||
+			(passive && passiveUsers.find(guid) != passiveUsers.end()));
+	if(!passive) {
+		activeUsers.erase(guid);
+		passiveUsers[guid] = client;
+	} else {
+		passiveUsers.erase(guid);
+		activeUsers[guid] = client;
+	}
+}
+
+void Hub::removeClient(string const& guid) throw()
 {
 	assert(hasClient(guid));
-	users.erase(guid);
+	Users::iterator i = activeUsers.find(guid);
+	if(i != activeUsers.end())
+		activeUsers.erase(i);
+	else
+		passiveUsers.erase(guid);
 }
 
-ADCClient* Hub::getClient(string const& guid)
+ADCClient* Hub::getClient(string const& guid) throw()
 {
-	userIter i = users.find(guid);
-	if(i != users.end())
+	Users::iterator i;
+	if((i = activeUsers.find(guid)) != activeUsers.end()) {
 		return i->second;
-	return (ADCClient*)0;
+	} else if((i = passiveUsers.find(guid)) != passiveUsers.end()) {
+		return i->second;
+	}
+	return NULL;
 }
 
 void Hub::acceptInterHub(int fd, Socket::Domain d)

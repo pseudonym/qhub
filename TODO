@@ -1,5 +1,3 @@
-
-
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
 	Fix oop-adns usage.
 	Add INET_NTOP/PTON
@@ -17,12 +15,8 @@ Add customizable flood protection in ADC or ADCSocket
 Fix that the hub can be DoS'ed by opening hundreds of connections and just
 letting them idle.
 
-Make PluginVirtualFsDir.h less sensitive (e.g. fix issues with trailing /'s)
+Move HDSC stuff to Hub, partially
 
-Extend plugin support to allow for state checking and modification (stop commands from going to core)
+Fix INFs stoppability
 
-Allow Plugin StringList to be writable,
-add ADCClient::MODIFIED flag, and recompose message if modified.
-Fix all plugins accordingly.
-
-Do we want to move HPAS/HDSC into a plugin completely?
+Add Plugin::VALIDATED for e.g. odd BINF

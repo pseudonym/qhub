@@ -42,16 +42,19 @@ public:
 		CLIENT_DISCONNECTED,	// client disconnected
 		CLIENT_LINE,			// client send data
 		CLIENT_LOGIN,			// client tries to authenticate with first BINF
-		CLIENT_INFO,			// client has sent a BINF (called after CLIENT_LOGIN as well)
+		CLIENT_INFO,			// client has sent a BINF (not called on first BINF)
 		// Logged in client messages
 		USER_CONNECTED,			// user connected / logged in properly
 		USER_DISCONNECTED,		// user disconnected
 		USER_COMMAND,			// user sends private message to hub bot
 		USER_MESSAGE,			// user sends message
+		USER_PRIVATEMESSAGE,	// user sends message with PM flag
 		// Last
 		LAST
 	};
 	// add AUTH_FAILED
+	//
+	// FIXME add someway to disable stringlist editing when not in CLIENT_LINE
 
 	enum Action {
 		NOTHING = 0x0,
@@ -99,42 +102,50 @@ public:
 	
 	typedef ActionType<USER_CONNECTED, HANDLE | DISCONNECT>
 			UserConnected;
-	typedef ActionType<USER_DISCONNECTED, HANDLE | DISCONNECT>
+	typedef ActionType<USER_DISCONNECTED, HANDLE>
 			UserDisconnected;
 	typedef ActionType<USER_COMMAND, REPLY | HANDLE | STOP | DISCONNECT>
 			UserCommand;
 	typedef ActionType<USER_MESSAGE, REPLY | HANDLE | STOP | DISCONNECT>
 			UserMessage;
+	typedef ActionType<USER_PRIVATEMESSAGE, REPLY | HANDLE | STOP | DISCONNECT>
+			UserPrivateMessage;
 
 	
 	template<typename T0>
-	static void fire(T0 type) throw() {
+	static void fire(T0& type) throw() {
 		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type);
 		}
 	}
 	template<typename T0, class T1>
-	static void fire(T0 type, T1 const& c1) throw() {
+	static void fire(T0& type, T1& c1) throw() {
 		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1);
 		}
 	}
 	template<typename T0, class T1, class T2>
-	static void fire(T0 type, T1 const& c1, T2& c2) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
-			(*i)->on(type, c1, c2);
-		}
-	}
-	template<typename T0, class T1, class T2>
-	static void fire(T0 type, T1 const& c1, T2 const& c2) throw() {
+	static void fire(T0& type, T1& c1, T2& c2) throw() {
 		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1, c2);
 		}
 	}
 	template<typename T0, class T1, class T2, class T3>
-	static void fire(T0 type, T1 const& c1, T2& c2, T3& c3) throw() {
+	static void fire(T0& type, T1& c1, T2& c2, T3& c3) throw() {
 		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1, c2, c3);
+		}
+	}
+	template<typename T0, class T1, class T2, class T3, class T4>
+	static void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4) throw() {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+			(*i)->on(type, c1, c2, c3, c4);
+		}
+	}
+	template<typename T0, class T1, class T2, class T3, class T4, class T5>
+	static void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4, T5& c5) throw() {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+			(*i)->on(type, c1, c2, c3, c4, c5);
 		}
 	}
 
@@ -158,7 +169,7 @@ public:
 	virtual void on(ClientDisconnected&, ADCClient*) throw() {};
 	// Called on every client input
 	// parm: ADCClient* = the client
-	virtual void on(ClientLine&, ADCClient*) throw() {};
+	virtual void on(ClientLine&, ADCClient*, u_int32_t const, StringList) throw() {};
 	// Called when a client sends first INF (modify INF's through attributes)
 	// parm: ADCClient* = the client
 	virtual void on(ClientLogin&, ADCClient*) throw() {};
@@ -173,7 +184,8 @@ public:
 	// Called when a client sends a normal broadcast chat message
 	// parm: ADCClient* = the client
 	// parm: string = the message
-	virtual void on(UserMessage&, ADCClient*, string&) throw() {};
+	virtual void on(UserMessage&, ADCClient*, u_int32_t const, string&) throw() {};
+	virtual void on(UserPrivateMessage&, ADCClient*, u_int32_t const, string&, string&) throw() {};
 
 	/*
 	 * Static methods

@@ -17,6 +17,8 @@ using namespace std;
 
 namespace qhub {
 
+class Hub;
+
 class ADCSocket : public Socket {
 public:
 	/*
@@ -28,9 +30,10 @@ public:
 	/*
 	 * Normal
 	 */
-	ADCSocket(int fd, Domain domain) throw();
+	ADCSocket(int fd, Domain domain, Hub* parent) throw();
 	virtual ~ADCSocket() throw();
 	void send(string const& msg) { write(msg, 0); };
+	Hub* getHub() throw() { return hub; };
 
 	/*
 	 * fd_demux calls
@@ -64,6 +67,8 @@ private:
 	unsigned char* readBuffer;
 	enum ReadState { NORMAL, PARTIAL } state;
 	bool escaped;
+
+	Hub* hub;
 
 	// Invalid
 	ADCSocket() {};

@@ -41,19 +41,21 @@ public:
 	void acceptLeaf(int fd, Socket::Domain d);
 	void acceptInterHub(int fd, Socket::Domain d);
 
-	bool hasClient(string const& guid) const;
-	void addClient(string const& guid, ADCClient* client);
-	void removeClient(string const& guid);
-	ADCClient* getClient(string const& guid);
+	bool hasClient(string const& guid) const throw();
+	void addActiveClient(string const& guid, ADCClient* client) throw();
+	void addPassiveClient(string const& guid, ADCClient* client) throw();
+	void removeClient(string const& guid) throw();
+	void setClientMode(bool passive, string const& guid, ADCClient* client) throw();
+	ADCClient* getClient(string const& guid) throw();
 
-	void broadcast(string data, ADCClient* = NULL);
-	void broadcastActive(string data, ADCClient* = NULL);
-	void broadcastPassive(string data, ADCClient* = NULL);
-	void direct(string guid, string data);
+	void broadcast(string const& data, ADCClient* except = NULL) throw();
+	void broadcastActive(string const& data) throw();
+	void broadcastPassive(string const& data) throw();
+	void direct(string const& data, string const& guid, ADCClient* from) throw();
 
-	void motd(ADCClient* c);
+	void motd(ADCClient* c) throw();
 
-	void getUsersList(ADCClient* c);
+	void getUsersList(ADCClient* c) throw();
 private:
 	static void add(Hub* h) throw();
 	static void remove(Hub* h) throw();
@@ -67,8 +69,9 @@ private:
 	//this is for external users
 
 	//this is for physical users
-	hash_map<string, ADCClient*> users;
-	typedef hash_map<string, ADCClient*>::iterator userIter;
+	typedef hash_map<string, ADCClient*> Users;
+	Users passiveUsers;
+	Users activeUsers;
 
 	//opened connections
 	hash_map<string, InterHub*> interConnects;

@@ -57,7 +57,7 @@ public:
 	 * ADC protocol
 	 */
 	string const& getInf() const throw();
-	bool isActive() const throw();
+	bool isUdpActive() const throw();
 
 	/*
 	 * Object information
@@ -89,27 +89,25 @@ private:
 	/*
 	 * Data handlers	
 	 */
-	void handle(StringList& sl, u_int32_t const cmd, string const& full) throw();
+	void handle(StringList& sl, u_int32_t const cmd, string const* full) throw();
 	void handleSupports(StringList& sl) throw();
 	void handleLogin(StringList& sl) throw();
 	void handlePassword(StringList& sl) throw();
 	void handleDisconnect(StringList& sl) throw();
 	void handleInfo(StringList& sl) throw();
-	void handleMessage(StringList& sl, u_int32_t const cmd, string const& full) throw();
+	void handleMessage(StringList& sl, u_int32_t const cmd, string const* full) throw();
 
 	void login() throw();
 	void logout() throw();
 	bool added;
 
 	ADCInf* attributes;	
-	Hub* hub;
 	UserData* userData;
 
 	State state;
 	string guid;
 	string password;
 	string8 salt;
-	int action;
 
 	string const& assemble(StringList const& sl) throw() {
 		StringList::const_iterator i = sl.begin();
@@ -123,7 +121,7 @@ private:
 	string full;
 
 	// Invalid
-	ADCClient() : ADCSocket(-1, Socket::IP4), attributes(0) {};
+	ADCClient() : ADCSocket(-1, Socket::IP4, NULL), attributes(0) {};
 };
 
 }
