@@ -44,9 +44,10 @@ public:
 	/*
 	 * Object information
 	 */
-	void setUserLevel(int l) throw() { userlevel = l; };
-	int getUserLevel() const throw() { return userlevel; };
 	State getState() const throw() { return state; };
+	void setInt(string const& key, int value) throw();
+	int getInt(string const& key) throw();
+	// add setVoid/setInt64/setString..
 
 	/*
 	 * Various calls (don't send in bad states!)
@@ -91,7 +92,9 @@ private:
 	string guid;
 	string password;
 	string8 salt;
-	int userlevel;
+
+	typedef hash_map<string, int> IntMap; // string is probably _way_ too slow, fixme..
+	IntMap intMap;
 	
 	// Invalid
 	ADC() : ADCSocket(-1), attributes(0) {};

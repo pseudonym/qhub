@@ -10,7 +10,7 @@ using namespace std;
 using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent)
-: ADCSocket(fd), added(false), attributes(new ADCInf(this)), hub(parent), state(START), userlevel(0)
+: ADCSocket(fd), added(false), attributes(new ADCInf(this)), hub(parent), state(START)
 {
 	onConnected();
 }
@@ -40,6 +40,16 @@ void ADC::logout()
 string const& ADC::getInf() const
 {
 	return attributes->getFullInf();
+}
+
+void ADC::setInt(string const& key, int value) throw()
+{
+	intMap[key] = value;
+}
+
+int ADC::getInt(string const& key) throw()
+{
+	return intMap[key];
 }
 
 

@@ -35,7 +35,7 @@ void Accounts::onInfo(ADC* client) throw()
 	ADCInf* attr = client->getAttr();
 	if(attr->newInf("NI")) {
 		// don't allow registered users to change nick
-		if(client->getUserLevel())
+		if(client->getInt("userlevel"))
 			attr->setInf("NI", attr->getOldInf("NI")); // reset nick
 		// don't allow users to change to a registered nick
 		else if(attr->getNewInf("NI").find("sed") != string::npos ||
@@ -46,7 +46,7 @@ void Accounts::onInfo(ADC* client) throw()
 
 void Accounts::onAuth(ADC* client) throw()
 {
-	client->setUserLevel(1);
+	client->setInt("userlevel", 1);
 	ADCInf* attr = client->getAttr();
 	attr->setInf("OP", "1");
 }
