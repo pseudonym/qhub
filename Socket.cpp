@@ -165,6 +165,7 @@ void Socket::writeb(Buffer::writeBuffer b)
 		// no 0-byte sends, please
 		return;
 	}
+	fprintf(stderr, ">> %s\n", b->getBuf().c_str());
 	queue.push(b);
 	if(!writeEnabled){
 		enable_fd(fd, OOP_WRITE, this);
