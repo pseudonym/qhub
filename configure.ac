@@ -1,4 +1,4 @@
-'AC_INIT(qhub, 0.2)
+AC_INIT(qhub, 0.3)
 AC_CONFIG_SRCDIR(qhub.cpp)
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
