@@ -12,7 +12,7 @@ AC_PROG_LIBTOOL
 AM_CONFIG_HEADER(config.h)
 
 
-AC_CHECK_LIB(dl, dlopen,,[AC_MSG_ERROR([libdl needed - should be part of libc])])
+AC_CHECK_LIB(dl, dlopen)
 
 # Check for libxmltok or libexpat
 ac_xmllib=""
@@ -25,9 +25,9 @@ if test "$ac_xmllib" = ""; then
   fi
 fi
 
+AC_CHECK_LIB(adns, adns_init,,[AC_MSG_ERROR([libadns needed - http://www.chiark.greenend.org.uk/~ian/adns/])])
 AC_CHECK_LIB(oop, oop_sys_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/])])
 AC_CHECK_LIB(oop-adns, oop_adns_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/ (ADNS component)])])
-AC_CHECK_LIB(adns, adns_init,,[AC_MSG_ERROR([libadns needed - http://www.chiark.greenend.org.uk/~ian/adns/])])
 
 AC_CHECK_LIB(event, event_init)
 AC_CHECK_LIB(oop-event, oop_event_new)
@@ -36,6 +36,68 @@ AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(resolv, getaddrinfo_a)
 
+
+#sockaddr_in6 support
+AC_DEFUN([TYPE_STRUCT_SOCKADDR_IN6],[
+  ds6_have_sockaddr_in6=
+  AC_CHECK_TYPES([struct sockaddr_in6],[
+    ds6_have_sockaddr_in6=yes
+  ],[
+    ds6_have_sockaddr_in6=no
+  ],[
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+  ])
+
+  if test "X$ds6_have_sockaddr_in6" = "Xyes"; then :
+    $1
+  else :
+    $2
+  fi
+])
+
+ipv6=yes
+TYPE_STRUCT_SOCKADDR_IN6(,[
+AC_MSG_NOTICE([Disabling IPv6 support: 'struct sockaddr_in6' support is required])
+ipv6=no
+])
+
+#IPV6 support
+AC_DEFUN([PROTO_INET6],[
+  AC_CACHE_CHECK([for INET6 protocol support], [ds6_cv_proto_inet6],[
+    AC_TRY_CPP([
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#ifndef PF_INET6
+#error Missing PF_INET6
+#endif
+#ifndef AF_INET6
+#error Mlssing AF_INET6
+#endif
+    ],[
+      ds6_cv_proto_inet6=yes
+    ],[
+      ds6_cv_proto_inet6=no
+    ])
+  ])
+
+  if test "X$ds6_cv_proto_inet6" = "Xyes"; then :
+    $1
+  else :
+    $2
+  fi
+])
+
+PROTO_INET6(,[
+AC_MSG_NOTICE([Disabling IPv6 support: INET6 protocol support is required])
+ipv6=no
+])
+
+if test "X$ipv6" = "Xyes"; then
+  AC_DEFINE([ENABLE_IPV6], 1, [Define if IPv6 support is enabled.])
+fi
 
 
 # We need to find one working header file out of a bunch.
