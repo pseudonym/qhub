@@ -70,7 +70,6 @@ void ADCClient::onAlarm() throw()
 void ADCClient::login() throw()
 {
 	alarm(0); // Stop alarm. Else we'd get booted.
-	added = true;
 	state = NORMAL;
 	Plugin::UserConnected action;
 	Plugin::fire(action, this);
@@ -80,6 +79,12 @@ void ADCClient::login() throw()
 	getHub()->getUserList(this);
 	// Add user
 	active = userInfo->isActive();
+	if(getCID32() == getHub()->getCID32()){
+		send("ISTA " + getHub()->getCID32() + " 224 CID taken\n");
+		disconnect();
+		return;		
+	}
+	added = true;
 	if(active)
 		getHub()->addActiveClient(getCID32(), this);
 	else
