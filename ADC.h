@@ -12,13 +12,13 @@
 
 #include "Buffer.h"
 #include "string8.h"
-#include "ADCInf.h"
 
 namespace qhub {
 
 using namespace std;
 
 class Hub;
+class ADCInf;
 
 class ADC : public ADCSocket {
 public:
@@ -29,9 +29,9 @@ public:
 	virtual void on_write() { ADCSocket::on_write(); };
 
 	// Other stuff
-	string const& getFullInf() const { return attributes.getFullInf(); }
+	string const& getFullInf() const;
 	string const& getCID32() const { return guid; };
-	ADCInf& getAttr() { return attributes; };
+	ADCInf* getAttr() { return attributes; };
 
 	// Send-to functions
 	void sendHubMessage(string const& msg);
@@ -60,7 +60,7 @@ public:
 	virtual void onDisconnected(string const& clue);
 	
 private:
-	ADCInf attributes;	
+	ADCInf* attributes;	
 	Hub* hub;
 	void login();
 	void logout();

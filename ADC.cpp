@@ -4,18 +4,20 @@
 #include "TigerHash.h"
 #include "Encoder.h"
 #include "Plugin.h"
+#include "ADCInf.h"
 
 using namespace std;
 using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent)
-: ADCSocket(fd), attributes(this), hub(parent), state(START), added(false)
+: ADCSocket(fd), attributes(new ADCInf(this)), hub(parent), state(START), added(false)
 {
 	onConnected();
 }
 
 ADC::~ADC()
 {
+	delete attributes;
 }
 
 void ADC::login()
@@ -25,7 +27,7 @@ void ADC::login()
 	hub->addClient(guid, this);
 	added = true;
 	//notify him that userlist is over and notify others of his presence
-	hub->broadcastSelf(attributes.getChangedInf());
+	hub->broadcastSelf(attributes->getChangedInf());
 	hub->motd(this);
 }
 
@@ -38,6 +40,11 @@ void ADC::logout()
 void ADC::sendHubMessage(string const& msg)
 {
 	send("BMSG " + hub->getCID32() + ' ' + esc(msg) + '\n');
+}
+
+string const& ADC::getFullInf() const
+{
+	return attributes->getFullInf();
 }
 
 
@@ -185,7 +192,7 @@ void ADC::handleB(StringList const& sl, string const& full)
 
 void ADC::handleBINF(StringList const& sl, string const& full)
 {
-	if(!attributes.setInf(sl)) {
+	if(!attributes->setInf(sl)) {
 		PROTOCOL_ERROR("setInf didn't like you very much");
 		return;
 	}
@@ -215,15 +222,15 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 		login();
 		state = NORMAL;
 	} else {
-		hub->broadcastSelf(attributes.getChangedInf());
+		hub->broadcastSelf(attributes->getChangedInf());
 	}
 }
 	
 void ADC::handleBMSG(StringList const& sl, string const& full)
 {
 	if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
-		attributes.setInf(sl[2].substr(7, 2), sl[2].substr(9));
-		hub->broadcastSelf(attributes.getChangedInf());
+		attributes->setInf(sl[2].substr(7, 2), sl[2].substr(9));
+		hub->broadcastSelf(attributes->getChangedInf());
 	}
 	hub->broadcastSelf(full);
 	// FIXME add check for PM<guid> flag
@@ -274,7 +281,7 @@ void ADC::handleH(StringList const& sl, string const& full)
 
 void ADC::handleHDSC(StringList const& sl, string const& full)
 {
-	if(attributes.getInf("OP").empty()) {
+	if(attributes->getInf("OP").empty()) {
 		doWarning("Access denied");
 		return;
 	}
