@@ -198,22 +198,25 @@ void ADC::sendFullInf()
 	hub->broadcastSelf(this, getFullInf());
 }
 
-void ADC::realDisconnect()
-{
-	if(fd == -1){
-		//already done
-		//? don't we need delete this here?
-		return;
-	}
-	fprintf(stderr, "Disconnecting %d %p GUID: %s\n", fd, this, guid.c_str());
-	if(added){
-		//dont remove us if we werent added
+void ADC::disconnect() {
+	Socket::disconnect();
+	if(added) {
+		fprintf(stderr, "Disconnecting %d %p GUID: %s\n", fd, this, guid.c_str());
 		hub->removeClient(guid);
-
-		//send a QUI aswell
 		hub->broadcast(this, string("IQUI " + guid + " ND\n"));
 	}
-	// done
+	added = false;
+}
+
+void ADC::realDisconnect()
+{
+	if(fd == -1) {
+		// if we're already disconnecting, we would loop trying to delete ourselves again
+		// as we're called from the destructor
+		return;
+	}
+	
+	fprintf(stderr, "Real Disconnect %d %p GUID: %s\n", fd, this, guid.c_str());
 	close(fd);
 	cancel(fd, OOP_READ);
 	if(writeEnabled){
@@ -221,7 +224,6 @@ void ADC::realDisconnect()
 	}
 
 	fd = -1;
-
 	//what about deleting us?
 	delete this;
 }

@@ -32,8 +32,6 @@ public:
 	void send(string const& msg) { write(msg, 0); }
 	void sendHubMsg(string msg);
 
-	bool dis() { return disconnected; }
-
 	static string escape(string in);
 private:
 	ADC(){};
@@ -71,6 +69,8 @@ private:
 	typedef hash_map<string, string>::iterator INFIterator;
 
 	void realDisconnect();
+protected:
+	void disconnect();
 };
 
 
