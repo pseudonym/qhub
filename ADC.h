@@ -2,21 +2,32 @@
 #define __ADC_H_
 
 #include "Socket.h"
+#include "compat_hash_map.h"
+#include <vector>
+#include <string>
 
 namespace qhub {
 
+using namespace std;
+
+class Hub;
+
 class ADC : public Socket {
 public:
-	ADC(int fd);
+	ADC(int fd, Hub* parent);
 
 	void on_read();
 	void on_write();
 private:
 	ADC(){};
 
+	Hub* hub;
+
 	enum State {
 		START,
-		PROTOCOL_ERROR //has sent message to client, at next data, disconnect
+		PROTOCOL_ERROR, //has sent message to client, at next data, disconnect
+		GOT_SUP,
+		LOGGED_IN
 	};
 	int state;
 	
@@ -25,7 +36,13 @@ private:
 	int readBufferSize;
 	int rbCur;
 
-	void handleCommand(int length);
+    void handleCommand(int length);
+	void handleHCommand(int length);
+	void handleBCommand(int length);
+
+	void getParms(int length, int positionalParms);
+	std::vector<string> posParms;
+	std::hash_map<char*, string> namedParms;
 };
 
 

@@ -1,13 +1,13 @@
 #include "ADC.h"
 #include "qhub.h"
 
-
 #define START_BUFFER 1024
 #define READ_SIZE 512
 
+using namespace std;
 using namespace qhub;
 
-ADC::ADC(int fd) : state(START), readBuffer(new unsigned char[START_BUFFER]), readBufferSize(START_BUFFER), rbCur(0)
+ADC::ADC(int fd, Hub* parent) : hub(parent), state(START), readBuffer(new unsigned char[START_BUFFER]), readBufferSize(START_BUFFER), rbCur(0)
 {
 	this->fd = fd;
 	struct linger       so_linger;
@@ -34,16 +34,209 @@ void ADC::growBuffer()
 	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
 }
 
+void ADC::getParms(int length, int positionalParms)
+{
+	posParms.clear();
+	namedParms.clear();
+	//No parameters possible (this catches one case: length==5, which is an odd one)
+	if(length<6){
+		return;
+	}
+	//Retrieve all parameters in command
+
+	string current;
+		
+	int index=5;
+	int state=0;//0==space, 1==parameter
+	bool done=false;
+	if(positionalParms>0){
+		while(index<length-1 && !done){
+			switch(state){
+				case 0:
+					if(readBuffer[index] != ' '){
+						state = 1;
+						//this is start of new parameter
+						current.clear();
+						positionalParms--;
+						current += readBuffer[index];
+					}
+					break;
+				case 1:
+					switch(readBuffer[index]){
+						case ' ':
+							state = 0;
+							fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
+							posParms.push_back(current);
+							if(positionalParms==0){
+								done=true;
+							}
+							break;
+						case '\\':
+							current += readBuffer[index];
+							index++;
+							if(index<length){
+								current += readBuffer[index];
+							}
+							break;
+						default:
+							current += readBuffer[index];
+							break;
+					}
+					break;
+			}
+			index++;
+		}
+	}
+
+	if(state == 1){
+		fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
+		posParms.push_back(current);
+	}
+
+	//Named parameters
+	while(index<length && readBuffer[index] && readBuffer[index++]!=' ');
+
+	state = 0;//0==space, 1==parm-name1, 2==parm-name2, 3==parm-value
+
+	//unsigned isnt liked by hash_map
+	char name[3];
+	name[2] = 0;
+
+	while(index<length-1){
+		switch(state){
+			case 0:
+				if(readBuffer[index] != ' '){
+					state = 1;
+					name[0] = readBuffer[index];
+				} else {
+					//parse error
+				}
+				break;
+			case 1:
+				if(readBuffer[index] != ' '){
+					state = 2;
+					name[1] = readBuffer[index];
+				} else {
+					//parse error
+				}
+				break;
+			case 2:
+				current.clear();
+				if(readBuffer[index] != ' '){
+					state = 3;
+				} else {
+					state = 0;
+					//empty parm
+					namedParms[name] = current;
+					fprintf(stderr, "Adding empty named parm %c%c\n", name[0], name[1]);
+				}
+			case 3:
+				switch(readBuffer[index]){
+					case ' ':
+						state = 0;
+						fprintf(stderr, "Adding named parm %c%c %s\n", name[0], name[1], current.c_str());
+						namedParms[name] = current;
+						break;
+					case '\\':
+						current += readBuffer[index];
+						index++;
+						if(index<length){
+							current += readBuffer[index];
+						}
+						break;
+					default:
+						current += readBuffer[index];
+						break;
+				}
+				break;
+		}
+		index++;
+	}
+	if(state == 3){
+		fprintf(stderr, "Adding named parm %c%c %s\n", name[0], name[1], current.c_str());
+		namedParms[name] = current;
+	}
+}
+
+void ADC::handleBCommand(int length)
+{
+	if(length<5){
+		return;
+	}
+
+	switch(readBuffer[1]){
+		case 'I':
+			if(readBuffer[2] == 'N' && readBuffer[3] == 'F'){
+				if(state == GOT_SUP){
+					getParms(length, 1);
+					if(posParms.size()<1){
+						cancel(fd, OOP_READ);
+						close(fd);
+					} else {
+						write((string)"BINF " + posParms[0] + "\n");
+						state = LOGGED_IN;
+					}
+				}
+			}
+			break;
+		case 'M':
+			getParms(length, 2);
+			break;
+		default:
+			fprintf(stderr, "Unknown command\n");
+			break;
+	}
+
+}
+
+void ADC::handleHCommand(int length)
+{
+	if(length<5){
+		return;
+	}
+
+	switch(readBuffer[1]){
+		case 'S':
+			if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
+				if(state == START){
+					write("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NImajs VEqhub0.02\n");
+					state = GOT_SUP;
+				}
+			} else if(readBuffer[2] == 'N' && readBuffer[3] == 'D'){
+			}
+			break;
+		case 'P':
+			//PAS
+			break;
+		case 'D':
+			//DSC
+			break;
+		case 'G':
+			//GET
+			break;
+	}
+}
+
 void ADC::handleCommand(int length)
 {
 	//there is a command in readBuffer, starting at index 0.
 	fprintf(stderr, "Command: %d ", length);
 	for(int i=0; i<length-1; i++){
-		fprintf(stderr, "%d '%c'", readBuffer[i], readBuffer[i]);
+		fprintf(stderr, "%c", readBuffer[i]);
 	}
 	fprintf(stderr, "\n");
 
+	switch(readBuffer[0]){
+		case 'H':
+			handleHCommand(length);
+			break;
+		case 'B':
+			handleBCommand(length);
+			break;
+	}
+
 	//now, this command is handled. Remove it.
+	//Note: memmove could be eliminated by using a rotating buffer
 	memmove(readBuffer, readBuffer+length, readBufferSize-length);
 	rbCur -= length;
 }

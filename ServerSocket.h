@@ -5,9 +5,11 @@
 
 namespace qhub {
 
+class Hub;
+
 class ServerSocket : public Socket{
 public:
-	ServerSocket(int port, int type);
+	ServerSocket(int port, int type, Hub* h);
 
 	enum socketTypes {
 		INTER_HUB,
@@ -20,6 +22,7 @@ protected:
 	void on_write();
 	
 	int type;
+	Hub* hub;
 };
 
 }

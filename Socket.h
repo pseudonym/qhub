@@ -17,6 +17,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <string>
+
 namespace qhub {
 
 class Socket {
@@ -36,6 +38,8 @@ public:
 
 	int getFd() { return fd; };
 
+	void write(const char* s, size_t length);
+	void write(std::string s);
 protected:
 	int fd;
 	struct sockaddr_in saddr_in;

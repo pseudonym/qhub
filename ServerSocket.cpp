@@ -19,11 +19,12 @@
 #include "ServerSocket.h"
 #include "InterHub.h"
 #include "ADC.h"
+#include "Hub.h"
 //#include "ClientPool.h"
 
 using namespace qhub;
 
-ServerSocket::ServerSocket(int port, int t) : Socket(AF_INET), type(t) {
+ServerSocket::ServerSocket(int port, int t, Hub* h) : hub(h), Socket(AF_INET), type(t) {
     int yes=1;
 
 	if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
@@ -55,10 +56,10 @@ void ServerSocket::on_read(){
 			Socket* tmp;
 			switch(type){
 				case INTER_HUB:
-					tmp = new InterHub(fd);
+					hub->acceptInterHub(fd);
 					break;
 				case LEAF_HANDLER:
-					tmp = new ADC(fd);
+					hub->acceptLeaf(fd);
 					break;
 				default:
 					fprintf(stderr, "Closing socket: unknown type for listening socket.\n");

@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 
-#include "ServerSocket.h"
 #include "DNSUser.h"
 #include "Hub.h"
 
@@ -117,9 +116,6 @@ int main()
 
 
 	Hub* tmp = new Hub();
-
-	//ServerSocket* tmp = new ServerSocket(9000, 0);
-	//src->on_fd(src, tmp->getFd(), OOP_READ, test2, tmp);
 
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);

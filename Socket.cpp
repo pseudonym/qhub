@@ -1,5 +1,7 @@
 #include "Socket.h"
 
+using namespace std;
+
 namespace qhub {
 
 Socket::Socket(int d, int t, int p)
@@ -29,6 +31,16 @@ Socket::Socket(int d, int t, int p)
 	memset(&saddr_in, '\0', sizeof(sockaddr_in));
 
 	saddr_in.sin_family = d;
+}
+
+void Socket::write(const char* s, size_t length)
+{
+	::write(fd, s, strlen(s));
+}
+
+void Socket::write(string s)
+{
+	write(s.c_str(), s.length());
 }
 
 void Socket::setPort(int p)
