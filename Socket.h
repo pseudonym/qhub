@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
-#define __USE_GNU
 #include <netdb.h>
 #include <errno.h>
 #include <sys/socket.h>
@@ -27,13 +26,18 @@ public:
 	int socket(void) {return fd;}
 	int accept();
 
-	virtual bool on_read() = 0;
-	virtual bool on_write() = 0;
+	virtual void on_read() = 0;
+	virtual void on_write() = 0;
+
+	void setPort(int p);
+	void set_bound_address(int a);
+	void bind();
+	void listen(int backlog = 8192);
+
+	int getFd() { return fd; };
+
 protected:
-
-private:
 	int fd;
-
 	struct sockaddr_in saddr_in;
 };
 

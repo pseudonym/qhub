@@ -4,18 +4,20 @@
 
 #include <stdio.h>
 
+#include "ServerSocket.h"
+
 extern "C" {
 #include <oop.h>
 #include <oop-read.h>
 
 #include <adns.h>
 #include <oop-adns.h>
-#ifdef HAVE_LIBEVENT 
+#ifdef HAVE_LIBOOP_EVENT 
 #include <oop-event.h>
 #endif
 }
 
-#ifdef HAVE_LIBEVENT
+#ifdef HAVE_LIBOOP_EVENT
 #include <event.h>
 #endif
 
@@ -59,27 +61,40 @@ void *test(oop_source *src, int fd, oop_event ev, void* usr)
 	fflush(stdout);
 
 	oop_adns_query * qadns = oop_adns_submit(adns,NULL,tmp,adns_r_a,adns_qf_owner,on_lookup,0);
-	for(int i=0; i<1000; i++){
-		qadns = oop_adns_submit(adns,NULL,"slashdot.org",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"g.mp",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"cnn.com",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"lartc.org",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"mobile-burn.com",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"aftonbladet.se",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"e.r",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"g.f",adns_r_a,adns_qf_owner,on_lookup,0);
-		qadns = oop_adns_submit(adns,NULL,"w.s",adns_r_a,adns_qf_owner,on_lookup,0);
+	return OOP_CONTINUE;
+}
+
+void *test2(oop_source *src, int fd, oop_event ev, void* usr)
+{
+	Socket* s = (Socket*) usr;
+
+	switch(ev){
+		case OOP_READ:
+			s->on_read();
+			break;
+		case OOP_WRITE:
+			s->on_write();
+			break;
 	}
+
 	return OOP_CONTINUE;
 }
 
 int main()
 {
-#ifdef HAVE_LIBEVENT
+	signal(SIGPIPE, SIG_IGN);
+	signal(SIGALRM, SIG_IGN);
+#ifdef LINUX
+	signal(SIGCLD, SIG_IGN);
+#else
+	signal(SIGCHLD, SIG_IGN);
+#endif
+
+#ifdef HAVE_LIBOOP_EVENT
 	event_init();
 #endif
 
-#ifndef HAVE_LIBEVENT
+#ifndef HAVE_LIBOOP_EVENT
 	oop_source_sys* system;
 
 	if((system=oop_sys_new()) == NULL){
@@ -95,7 +110,11 @@ int main()
 	adns = oop_adns_new(src,(adns_initflags)0,NULL);
 	src->on_fd(src, 0, OOP_READ, test, 0);
 
-#ifndef HAVE_LIBEVENT
+	ServerSocket* tmp = new ServerSocket(9000, 0);
+
+	src->on_fd(src, tmp->getFd(), OOP_READ, test2, tmp);
+
+#ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);
 #else
 	event_dispatch();

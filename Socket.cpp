@@ -17,7 +17,7 @@ Socket::Socket(int d, int t, int p)
 	//Set nonblocking
 	if ( (f = fcntl(fd, F_GETFL, 0)) < 0){
 		//XXX do more, but what?
-		printf("Error, couldnt fcntl().\n");
+		fprintf(stderr, "Error, couldnt fcntl().\n");
 	}
 
 	f |= O_NONBLOCK;
@@ -32,13 +32,44 @@ Socket::Socket(int d, int t, int p)
 	saddr_in.sin_family = d;
 }
 
+void Socket::setPort(int p)
+{
+	saddr_in.sin_port = htons(p);
+}
+
+void Socket::set_bound_address(int a)
+{
+	saddr_in.sin_addr.s_addr = htonl(a);
+}
+
+void Socket::listen(int backlog)
+{
+	int s = ::listen(fd, backlog);
+	if(s == 0){
+		printf("Listening in non-blocking mode.\n");
+	}
+}
+
+void Socket::bind()
+{
+	int ret;
+
+	ret = ::bind(fd, (struct sockaddr *)&saddr_in, sizeof(saddr_in));
+
+	if (ret == -1){
+		printf("Error binding.\n");
+		exit(1);
+	}
+}
+
 int Socket::accept()
 {
 	int Fd = ::accept(fd, NULL,  NULL);
 	if(Fd == -1){
-		printf("Error accepting socket.\n");
+		//printf("Error accepting socket.\n");
 		perror("socket");
-		exit(1);
+		//exit(1);
+		return -1;
 	}
 
 	return Fd;

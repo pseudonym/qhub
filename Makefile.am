@@ -1,2 +1,4 @@
 bin_PROGRAMS = qhub
-qhub_SOURCES = qhub.cpp qhub.h MyTime.h types.h TokenBucket.h TokenBucket.cpp Socket.h Socket.cpp
+qhub_SOURCES  = qhub.cpp qhub.h MyTime.h types.h 
+qhub_SOURCES += TokenBucket.h TokenBucket.cpp Socket.h
+qhub_SOURCES += Socket.cpp ServerSocket.cpp ServerSocket.h
