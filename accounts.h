@@ -20,8 +20,8 @@ public:
 
 	virtual void on(Message m, ADCClient* client, string const& msg) throw() {
 		switch(m) {
-		case STARTED: fprintf(stderr, "Plugin: accounts: started\n"); break;
-		case STOPPED: fprintf(stderr, "Plugin: accounts: stopped\n"); break;
+		case STARTED: load(); fprintf(stderr, "Plugin: accounts: started\n"); break;
+		case STOPPED: save(); fprintf(stderr, "Plugin: accounts: stopped\n"); break;
 		case LOGIN: onLogin(client); break;
 		case INFO: onInfo(client); break;
 		case AUTHENTICATED: onAuth(client); break;
@@ -32,12 +32,15 @@ public:
 
 private:
 	void load() throw();
-	void save() throw();
+	void save() const throw();
 	
 	void onLogin(ADCClient* client) throw();
 	void onInfo(ADCClient* client) throw();
 	void onAuth(ADCClient* client) throw();
 	void onCommand(ADCClient* client, string const& msg) throw();
+
+	typedef hash_map<string, string> Users; // too simple.. works for now
+	Users users;
 };
 
 } //namespace qhub

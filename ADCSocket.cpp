@@ -69,7 +69,7 @@ void ADCSocket::on_read()
 		if(ret == 0) {
 			disconnect(); // normal disconnect
 		} else {
-			disconnect(Util::toString((ERRNO)errno)); // error
+			disconnect(Util::errnoToString(errno)); // error
 		}
 	} else {
 		unsigned char *p = readBuffer;	// cur

@@ -243,6 +243,7 @@ void ADCClient::handleBMSG(StringList const& sl, string const& full)
 		attributes->setInf(sl[2].substr(7, 2), sl[2].substr(9));
 		hub->broadcastSelf(attributes->getChangedInf());
 	}
+	Plugin::fire(Plugin::COMMAND, this, sl[2]);
 	hub->broadcastSelf(full);
 	// FIXME add check for PM<guid> flag
 }

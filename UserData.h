@@ -17,7 +17,7 @@ public:
 
 #define GET_AND_SET(type, Type) \
 	public: \
-	void set##Type(Key key, type value) throw() { type##Map[key]; }; \
+	void set##Type(Key key, type value) throw() { type##Map[key] = value; }; \
 	type const& get##Type(Key key) const throw() { \
 		Type##Map::const_iterator i = type##Map.find(key); \
 		if(i != type##Map.end()) \
