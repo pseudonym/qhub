@@ -29,7 +29,6 @@ writeEnabled(false), written(0), disconnected(false)
 ADC::~ADC()
 {
 	delete[] readBuffer;
-	close(fd);
 }
 
 void ADC::growBuffer()
@@ -203,6 +202,27 @@ void ADC::w(Buffer::writeBuffer b)
 	}
 }
 
+void ADC::disconnect()
+{
+	disconnected = true;
+}
+
+void ADC::realDisconnect()
+{
+	fprintf(stderr, "Disconnecting %d %p\n", fd, this);
+	hub->removeClient(guid);
+	close(fd);
+	cancel(fd, OOP_READ);
+	if(writeEnabled){
+		cancel(fd, OOP_WRITE);
+	}
+
+	fd = -1;
+
+	//what about deleting us?
+	delete this;
+}
+
 void ADC::handleBCommand(int length)
 {
 	if(length<5){
@@ -215,9 +235,8 @@ void ADC::handleBCommand(int length)
 				if(state == GOT_SUP){
 					getParms(length, 1);
 					if(posParms.size()<1){
-						cancel(fd, OOP_READ);
-						close(fd);
-						//XXX do real kill-of-self
+						disconnect();
+						return;
 					} else {
 						for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
 							//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
@@ -227,11 +246,8 @@ void ADC::handleBCommand(int length)
 						//we know the guid, now register us in the hub.
 						//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
 						if(!hub->addClient(this, guid)){
-							/*close(fd);
-							cancel(fd, OOP_READ);
-							delete this;
-							return;*/
-							//XXX do real kill-of-self
+							disconnect();
+							return;
 						}
 						
 						hub->getUsersList(this);
@@ -289,7 +305,7 @@ void ADC::handleHCommand(int length)
 		case 'S':
 			if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
 				if(state == START){
-					Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NImajs HU1 HI1 VEqhub0.02\n"), 0));
+					Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NI" + hub->getHubName() + " HU1 HI1 VEqhub0.02\n"), 0));
 					w(tmp);
 					state = GOT_SUP;
 				}
@@ -301,7 +317,8 @@ void ADC::handleHCommand(int length)
 			break;
 		case 'D':
 			//DSC
-			disconnected = true;
+			disconnect();
+			return;
 			break;
 		case 'G':
 			//GET
@@ -343,7 +360,7 @@ void ADC::on_read()
 	}
 	int r = read(fd, readBuffer+rbCur, READ_SIZE);
 	if(r > 0){
-		//fprintf(stderr, "Got data %d %d %d\n", rbCur, r, readBufferSize);
+		fprintf(stderr, "Got data %d %d %d\n", rbCur, r, readBufferSize);
 		rbCur += r;
 
 		//look through data until no more left?
@@ -362,9 +379,11 @@ void ADC::on_read()
 			}
 		}
 	} else if(r < 1){
-		cancel(fd, OOP_READ);
-		close(fd);
-		disconnected = true;
+		disconnect();
+	}
+	
+	if(disconnected){
+		realDisconnect();
 	}
 }
 
@@ -377,6 +396,10 @@ void ADC::on_write()
 	if(queue.empty()){
 		cancel(fd, OOP_WRITE);
 		writeEnabled=false;
+	}
+
+	if(disconnected){
+		realDisconnect();
 	}
 }
 
@@ -398,8 +421,8 @@ void ADC::partialWrite()
 	if(w < 0){
 		switch(errno){
 			default:
-				disconnected = true;
-				cancel(fd, OOP_WRITE);
+				disconnect();
+				return;
 				break;
 		}
 	} else {

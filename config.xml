@@ -2,25 +2,35 @@
 
 <!DOCTYPE config [
   <!ELEMENT config (hub)+>
-  <!ELEMENT hub	(name, port+, interport+)>
-  <!ELEMENT port (#PCDATA)>
+  <!ELEMENT hub	(name, port+, interport*, interconnect*)>
   <!ELEMENT name (#PCDATA)>
+  <!ELEMENT port (#PCDATA)>
+  <!ELEMENT interport (#PCDATA)>
+  <!ELEMENT interconnect (host, port, password)>
+  <!ELEMENT host (#PCDATA)>
+  <!ELEMENT port (#PCDATA)>
+  <!ELEMENT password (#PCDATA)> <!-- Might want to go un-encoded here?-->
 ]>
 
 <config>
 <hub>
-<name>Testhub 1</name>
+<name>Testhub\ 1</name>
 <port>9001</port>
-<port>9002</port>
+<!--<port>9002</port>
 <port>9003</port>
-<port>9004</port>
+<port>9004</port>-->
 <interport>9000</interport>
 </hub>
 
 <hub>
 <name>skit</name>
-<port>9001</port>
-<interport>9000</interport>
+<port>8001</port>
+<!--<interport>8000</interport>-->
+<interconnect>
+	<host>localhost</host>
+	<port>9000</port>
+	<password>mdsadss</password>
+</interconnect>
 </hub>
 </config>
 

@@ -9,12 +9,20 @@ using namespace qhub;
 
 Hub::Hub() 
 {
-	//Inter-hub
-	ServerSocket* tmp = new ServerSocket(9000, ServerSocket::INTER_HUB, this);
-	enable(tmp->getFd(), OOP_READ, tmp);
 
+}
+
+void Hub::openADCPort(int port)
+{
 	//Leaf-handler
-	tmp = new ServerSocket(9001, ServerSocket::LEAF_HANDLER, this);
+	ServerSocket* tmp = new ServerSocket(port, ServerSocket::LEAF_HANDLER, this);
+	enable(tmp->getFd(), OOP_READ, tmp);
+}
+
+void Hub::openInterPort(int port)
+{
+	//Inter-hub
+	ServerSocket* tmp = new ServerSocket(port, ServerSocket::INTER_HUB, this);
 	enable(tmp->getFd(), OOP_READ, tmp);
 }
 
@@ -82,6 +90,20 @@ void Hub::broadcastSelf(ADC* c, string data)
 {
 	for(userIter i=users.begin(); i!=users.end(); i++){
 		i->second->write(data);
+	}
+}
+
+void Hub::removeClient(string guid)
+{
+	if(users.find(guid) != users.end()){
+		//add a QUIT to cache
+		//users[guid]->
+		string qui = "IQUI " + guid + " ND\n";
+		Buffer::writeBuffer tmp(new Buffer(qui, 0));
+		outliers.push_back(tmp);
+		users.erase(guid);
+	} else {
+		fprintf(stderr, "Deleting non-existing user\n");
 	}
 }
 

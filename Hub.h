@@ -19,10 +19,16 @@ class Hub {
 public:
 	Hub();
 
+	void openADCPort(int port);
+	void openInterPort(int port);
+	void setHubName(string name) { Hub::name=name; };
+	string getHubName() { return name; }
+
 	void acceptLeaf(int fd);
 	void acceptInterHub(int fd);
 
 	bool addClient(ADC* client, string guid);
+	void removeClient(string guid);
 	
 	void broadcast(ADC* c, string data);
 	void broadcastSelf(ADC* c, string data);
@@ -30,6 +36,8 @@ public:
 
 	void getUsersList(ADC* c);
 private:
+	string name;
+
 	//this is for external users
 		
 	//this is for physical users

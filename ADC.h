@@ -31,6 +31,8 @@ public:
 	void write(string& s);
 	void w(Buffer::writeBuffer b);
 
+	bool dis() { return disconnected; }
+
 private:
 	ADC(){};
 
@@ -74,6 +76,8 @@ private:
 
 	//signals that we should die
 	bool disconnected;
+	void disconnect();
+	void realDisconnect();
 };
 
 

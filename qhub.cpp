@@ -17,6 +17,8 @@
 #include <iostream>
 #endif
 
+#include <string>
+
 using namespace std;
 using namespace xercesc;
 
@@ -126,8 +128,6 @@ int main()
 	//Set up ADNS
 	adns = oop_adns_new(src,(adns_initflags)0,NULL);
 
-	Hub* tmp = new Hub();	
-
 #ifdef HAVE_XERCESC_DOM_DOM_HPP
 	fprintf(stderr, "Using Xerces XML library.\n");
 
@@ -180,13 +180,39 @@ int main()
 			//this should be a hub
 			if(c->getFirstChild() != NULL){
 				DOMNode* b = c->getFirstChild();
+				Hub* tmp = new Hub();
 				while(b){
 					if(strcmp(XMLString::transcode(b->getNodeName()), "name") == 0 && b->getFirstChild() != NULL){
 						cout << "Hubname: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
+						tmp->setHubName(string(XMLString::transcode(b->getFirstChild()->getNodeValue())));
 					} else if(strcmp(XMLString::transcode(b->getNodeName()), "port") == 0 && b->getFirstChild() != NULL){
 						cout << "\tADC port: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
+						int port = atoi(XMLString::transcode(b->getFirstChild()->getNodeValue()));
+						if(port > 0 && port<65536){
+							tmp->openADCPort(port);
+						}
 					} else if(strcmp(XMLString::transcode(b->getNodeName()), "interport") == 0 && b->getFirstChild() != NULL){
 						cout << "\tInter-hub port: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
+						int port = atoi(XMLString::transcode(b->getFirstChild()->getNodeValue()));
+						if(port > 0 && port<65536){
+							tmp->openInterPort(port);
+						}
+					} else if(strcmp(XMLString::transcode(b->getNodeName()), "interconnect") == 0 && b->getFirstChild() != NULL){
+						cout << "\tInter-connecting to: " << XMLString::transcode(b->getFirstChild()->getNodeName()) << endl;
+							DOMNode*a = b->getFirstChild();
+							string host, password;
+							int port;
+							while(a){
+								if(strcmp(XMLString::transcode(a->getNodeName()), "host") == 0 && a->getFirstChild() != NULL){
+									host = XMLString::transcode(a->getFirstChild()->getNodeValue());
+								} else if(strcmp(XMLString::transcode(a->getNodeName()), "port") == 0 && a->getFirstChild() != NULL){
+									port = atoi(XMLString::transcode(a->getFirstChild()->getNodeValue()));
+								} else if(strcmp(XMLString::transcode(a->getNodeName()), "password") == 0 && a->getFirstChild() != NULL){
+									password = XMLString::transcode(a->getFirstChild()->getNodeValue());
+								}
+								a = a->getNextSibling();
+							}
+							cout << "\tConnecting to " << host << ":" << port << " pass: " << password << endl;
 					}
 
 					b = b->getNextSibling();
@@ -203,6 +229,8 @@ int main()
 	XMLPlatformUtils::Terminate();
 #else
 	fprintf(stderr, "Warning: Xerces XML parser not used, no XML config file will be loaded.\n");
+	Hub* tmp = new Hub();
+	tmp->openADCPort(9001);
 #endif
 
 #ifndef HAVE_LIBOOP_EVENT
@@ -210,7 +238,5 @@ int main()
 #else
 	event_dispatch();
 #endif
-
-	delete tmp;
 	return 0;
 }

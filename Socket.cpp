@@ -47,7 +47,7 @@ void Socket::listen(int backlog)
 {
 	int s = ::listen(fd, backlog);
 	if(s == 0){
-		printf("Listening in non-blocking mode on port %d with backlog %d.\n", ntohs(saddr_in.sin_port), backlog);
+		//printf("Listening in non-blocking mode on port %d with backlog %d.\n", ntohs(saddr_in.sin_port), backlog);
 	}
 }
 
