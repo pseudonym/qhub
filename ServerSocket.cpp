@@ -24,7 +24,7 @@ using namespace qhub;
 ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(domain), type(t), hub(h) {
 	int yes = 1;
 
-	if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+	if(setsockopt(getSocket(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
 		perror("warning: setsockopt:SO_REUSEADDR");
 	}
 
@@ -45,7 +45,7 @@ ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(doma
 	listen();
 }
 
-void ServerSocket::onRead() throw()
+bool ServerSocket::onRead() throw()
 {
 	while(true){
 		int fd;
@@ -70,6 +70,8 @@ void ServerSocket::onRead() throw()
 			break;
 		}
 	}
+
+	return true;
 }
 
 void ServerSocket::onWrite() throw()

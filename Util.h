@@ -22,7 +22,9 @@ public:
 	static voidPtr const emptyVoidPtr;
 	static StringList const emptyStringList;
 
-	static void log(int level, string const& message) throw();
+	static void log(string const& message, int level=0) throw();
+
+	static string format(const char* msg, ...);
 		
 	static string errnoToString(int err) throw()
 	{

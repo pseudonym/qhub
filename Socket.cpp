@@ -24,14 +24,16 @@ Socket::Socket(Domain d, int t, int p) throw()
 }
 
 Socket::Socket(int f, Domain d) throw()
-		: fd(f), domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
+		: domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
 {
+	fd = f;
 	create();
 	initSocketNames();
 }
 
 Socket::~Socket() throw()
 {
+	Util::log("~Socket\n");
 	destroy();
 }
 
@@ -149,7 +151,7 @@ void Socket::accept(int& f, Domain& d) throw()
 
 void Socket::disconnect()
 {
-	cancel_fd(fd, OOP_READ); // stop reading immediately
+	disableMe(ev_read);
 	disconnected = true;
 }
 
@@ -168,14 +170,13 @@ void Socket::writeb(Buffer::writeBuffer b)
 	fprintf(stderr, ">> %s\n", b->getBuf().c_str());
 	queue.push(b);
 	if(!writeEnabled){
-		enable_fd(fd, OOP_WRITE, this);
+		enableMe(ev_write);
 		writeEnabled = true;
 	}
 }
 
 void Socket::partialWrite()
 {
-	//only try writing _once_, think it helps fairness
 	assert(!queue.empty() && "We got a write-event though we got nothing to write");
 
 	Buffer::writeBuffer top = queue.front();

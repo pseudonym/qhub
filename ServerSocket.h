@@ -18,7 +18,7 @@ public:
 	};
 
 protected:
-	virtual void onRead() throw();
+	virtual bool onRead() throw();
 	virtual void onWrite() throw();
 
 	int type;

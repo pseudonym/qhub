@@ -25,6 +25,7 @@
 #include "Buffer.h"
 #include "Util.h"
 #include "Timer.h"
+#include "EventHandler.h"
 
 using namespace std;
 
@@ -36,7 +37,7 @@ using namespace std;
 
 namespace qhub {
 
-class Socket : public Timer {
+class Socket : public EventHandler, public Timer {
 public:
 	enum Domain { IP4 = PF_INET, 
 #ifdef ENABLE_IPV6
@@ -47,7 +48,7 @@ public:
 	Socket(int fd, Domain d) throw(); // existing sockets
 	virtual ~Socket() throw();
 
-	virtual void onRead() throw() = 0;
+	virtual bool onRead() throw() = 0;
 	virtual void onWrite() throw() = 0;
 
 	// socket options
@@ -71,7 +72,6 @@ public:
 	string const& getPeerName() const throw() { return peerName; };
 
 protected:
-	int fd;
 	Domain domain;
 	int af;
 	struct sockaddr* saddrp;

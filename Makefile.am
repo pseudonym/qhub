@@ -16,6 +16,8 @@ qhub_SOURCES += Plugin.h Plugin.cpp
 qhub_SOURCES += UserData.h UserData.cpp XmlTok.h XmlTok.cpp
 qhub_SOURCES += Settings.h Settings.cpp
 qhub_SOURCES += Timer.h Timer.cpp
+qhub_SOURCES += EventHandler.cpp EventHandler.h
+
 
 EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO Settings.xml
 EXTRA_DIST += config.sub config.guess foo1.c

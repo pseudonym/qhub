@@ -31,9 +31,6 @@ namespace qhub {
 
 class DNSUser;
 
-void enable_fd(int fd, oop_event ev, Socket* s);
-void cancel_fd(int fd, oop_event ev);
-
 void lookup(const char* hostname, DNSUser* const d);
 
 }

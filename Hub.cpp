@@ -6,6 +6,7 @@
 #include "ADCClient.h"
 #include "InterHub.h"
 #include "Buffer.h"
+#include "EventHandler.h"
 
 #include <stdlib.h>
 #include <adns.h>
@@ -27,26 +28,6 @@ Hub::~Hub()
 
 void Hub::onLookup(adns_answer *reply) const
 {
-	fprintf(stderr, "Majs %s\n", reply->owner);
-	string s(reply->owner);
-	InterHub* ih = interConnects.find(s)->second;
-
-	if (adns_s_ok != reply->status) {
-		fprintf(stderr, " error: %s\n",adns_strerror(reply->status));
-	} else {
-		assert(adns_r_a == reply->type);
-		if(reply->nrrs > 0){
-			struct sockaddr_in dest_addr;
-			dest_addr.sin_family = AF_INET;
-			dest_addr.sin_port = htons(ih->getPort());
-			dest_addr.sin_addr.s_addr = inet_addr(inet_ntoa(reply->rrs.inaddr[0]));
-			memset(&(dest_addr.sin_zero), '\0', 8);
-
-			::connect(ih->getFd(), (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
-			enable_fd(ih->getFd(), OOP_READ, ih);
-			ih->connect();
-		}
-	}
 }
 
 void Hub::openInterConnection(string host, int port, string password)
@@ -71,7 +52,7 @@ void Hub::openADCPort(int port)
 	                        Socket::IP4,
 #endif
 	                        port, ServerSocket::LEAF_HANDLER, this);
-	enable_fd(tmp->getFd(), OOP_READ, tmp);
+	tmp->enableMe(EventHandler::ev_read);
 }
 
 void Hub::openInterPort(int port)
@@ -84,7 +65,7 @@ void Hub::openInterPort(int port)
 	                        Socket::IP4,
 #endif
 	                        port, ServerSocket::INTER_HUB, this);
-	enable_fd(tmp->getFd(), OOP_READ, tmp);
+	tmp->enableMe(EventHandler::ev_read);
 }
 
 void Hub::acceptLeaf(int fd, Socket::Domain d)

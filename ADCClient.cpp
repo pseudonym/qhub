@@ -41,6 +41,7 @@ ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
 
 ADCClient::~ADCClient() throw()
 {
+	Util::log("~ADCClient\n");
 	alarm(0);
 	if(userInfo)
 		delete userInfo;

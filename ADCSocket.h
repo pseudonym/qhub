@@ -33,7 +33,7 @@ public:
 	 * fd_demux calls
 	 */
 	void ADCSocket::handleOnRead() throw();
-	virtual void onRead() throw();
+	virtual bool onRead() throw();
 	virtual void onWrite() throw();
 
 	/*

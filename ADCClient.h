@@ -53,8 +53,6 @@ public:
 	ADCClient(int fd, Domain fd, Hub* parent) throw();
 	virtual ~ADCClient() throw();
 
-	virtual void onRead() throw() { ADCSocket::onRead(); };
-	virtual void onWrite() throw() { ADCSocket::onWrite(); };
 	virtual void onAlarm() throw();
 
 	/*

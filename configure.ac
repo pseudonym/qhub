@@ -1,6 +1,6 @@
-AC_INIT(qhub, 0.8)
+AC_INIT(qhub, 0.9)
 AC_CONFIG_SRCDIR(qhub.cpp)
-AM_INIT_AUTOMAKE(qhub, 0.8)
+AM_INIT_AUTOMAKE(qhub, 0.9)
 AC_PROG_CXX
 
 AC_LANG([C++])
@@ -25,12 +25,12 @@ if test "$ac_xmllib" = ""; then
   fi
 fi
 
-AC_CHECK_LIB(adns, adns_init,,[AC_MSG_ERROR([libadns needed - http://www.chiark.greenend.org.uk/~ian/adns/])])
-AC_CHECK_LIB(oop, oop_sys_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/])])
-AC_CHECK_LIB(oop-adns, oop_adns_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/ (ADNS component)])])
+#AC_CHECK_LIB(adns, adns_init,,[AC_MSG_ERROR([libadns needed - http://www.chiark.greenend.org.uk/~ian/adns/])])
+#AC_CHECK_LIB(oop, oop_sys_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/])])
+#AC_CHECK_LIB(oop-adns, oop_adns_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/ (ADNS component)])])
 
 AC_CHECK_LIB(event, event_init)
-AC_CHECK_LIB(oop-event, oop_event_new)
+#AC_CHECK_LIB(oop-event, oop_event_new)
 
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
