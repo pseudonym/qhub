@@ -1,51 +1,89 @@
 // vim:ts=4:sw=4:noet
 #include "ADCSocket.h"
+#include "qhub.h"
 
-#define START_BUFFER 1024
+// fixme, do we need a start_buffer? we're not 'growing' it
+#define START_BUFFER 512
 #define READ_SIZE 512
+
+// fixme, should be configurable or something
+#define MAX_DATALEN 128		// arguments
+#define MAX_LINELEN 1024	// one line
 
 using namespace std;
 using namespace qhub;
 
+string ADCSocket::esc(string const& in)
+{
+	string tmp;
+	tmp.reserve(255);
+	for(string::const_iterator i = in.begin(); i != in.end(); ++i) {
+		switch(*i) {
+		case ' ':
+		case '\n':
+		case '\\':
+			tmp += '\\';
+		default:
+			tmp += *i;
+		}
+	}
+	return tmp;
+}
+
+string ADCSocket::cse(string const& in)
+{
+	string tmp;
+	tmp.reserve(in.length());
+	for(string::const_iterator i = in.begin(); i != in.end(); ++i) {
+		if(*i == '\\') {
+			++i;
+			assert(i != in.end()); // shouldn't happen if we parsed input correctly earlier
+		}
+		tmp += *i;
+	}
+	return tmp;
+}
+
+
+
 ADCSocket::ADCSocket(int fd)
-: readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]), state(NORMAL)
+: readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]), state(NORMAL), escaped(false)
 {
 	this->Socket::fd = fd;
+	enable(fd, OOP_READ, this);
 	setNoLinger();
 }
 
 ADCSocket::~ADCSocket()
 {
 	delete[] readBuffer;
+	realDisconnect();
 }
-
-/*
-void ADC::growBuffer()
-{
-	unsigned char* tmp = new unsigned char[readBufferSize*2];
-	memmove(tmp, readBuffer, readBufferSize);
-	readBufferSize *= 2;
-	delete[] readBuffer;
-	readBuffer = tmp;
-	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
-}
-*/
 
 void ADCSocket::on_read()
 {
-	// TODO add some read limits!
-
 	int ret = read(fd, readBuffer, readBufferSize);
 	if(ret <= 0) {
+		// we're done, either by EOF or error
 		fprintf(stderr, "[%i] Got %i from read()\n", fd, ret);
 		perror("read");
-		// do some disconnect action here..
+		while(!queue.empty())
+			queue.pop();
+		disconnect();
 	} else {
-		unsigned char *p = readBuffer;
-		unsigned char *e = readBuffer + ret;
-		unsigned char *s = p;
-		bool escaped = false;
-		for(; p != e; ++p) {
+		unsigned char *p = readBuffer;	// cur
+		unsigned char *e = p + ret;		// end
+		unsigned char *f = p;			// after LF
+		unsigned char *s = p;			// after SP/LF
+		unsigned lineLen = raw.length();
+		unsigned dataLen = data.size();
+		for(; p != e; ++p, ++lineLen) {
+			if(lineLen > MAX_LINELEN) {
+				onLineError("max input of 1024 chars in command exceeded"); // will disconnect if appropriate
+				// note that onLine will still be called, do we want this?
+				lineLen = 0;
+			}
+			
 			switch(*p) {
 			case '\\':
 					escaped = !escaped;
@@ -54,10 +92,17 @@ void ADCSocket::on_read()
 			case ' ':
 				if(!escaped) {
 					if(state == NORMAL) {
-						data.push_back(string((char const*)s, p - s));
+						data.push_back(cse(string((char const*)s, p - s)));
 						s = p + 1;
+						++dataLen;
+						if(dataLen > MAX_DATALEN) {
+							onLineError("max arguments of 128 in command exceeded"); // will disconnect if appropriate
+							// note that onLine will still be called, do we want this?
+							dataLen = 0;
+						}
 					} else if(state == PARTIAL) {
 						data.back().append((char const*)s, p - s);
+						data.back() = cse(data.back()); // don't forget to unescape
 						state = NORMAL;
 						s = p + 1;
 					} else {
@@ -65,24 +110,82 @@ void ADCSocket::on_read()
 					}
 					if(*p == '\n') {
 						// Call our dear virtual command handler
-						onLine(data);
+						if(raw.empty())
+							onLine(data, string((char const*)f, p - f + 1));
+						else
+							onLine(data, raw + string((char const*)f, p - f + 1));
 						data.clear();
+						raw.clear();
+						f = s;
+						lineLen = 0;
 					}
-				} else {
-					escaped = false;
 				}
+				// fall through
 			default:
 				escaped = false;
 			}
 		}
-		// add leftover data
+		// Add leftover data
 		if(s != p) {
-			data.push_back(string((char const*)s, p - s));
-			state = PARTIAL;
+			if(state == NORMAL) {
+				data.push_back(string((char const*)s, p - s));
+				state = PARTIAL;
+			} else if(state == PARTIAL) {
+				data.back().append((char const*)s, p - s);
+			} else {
+				assert(0);
+			}
 		}
+		if(f != p)
+			raw += string((char const*)f, p - f);
+	}
+
+	// Check if we're disconnected
+	if(disconnected && queue.empty()) {
+		realDisconnect();
 	}
 }
 
 void ADCSocket::on_write()
 {
+	fprintf(stderr, "On_write\n");
+	partialWrite();
+	if(queue.empty()){
+		cancel(fd, OOP_WRITE);
+		writeEnabled = false;
+	}
+
+	// Check if we're disconnected
+	if(disconnected && queue.empty()) {
+		realDisconnect();
+	}
+}
+
+void ADCSocket::disconnect()
+{
+	Socket::disconnect();
+	onDisconnect();
+}
+
+void ADCSocket::realDisconnect()
+{
+	if(!disconnected)
+		disconnect(); // if we're deleted unexpectedly, make sure everyone gets to say goodbye
+	
+	if(fd == -1) {
+		// if we're already disconnecting, we would loop trying to delete ourselves again
+		// as we're called from the destructor
+		return;
+	}
+	
+	fprintf(stderr, "Real Disconnect %d %p\n", fd, this);
+	close(fd);
+	cancel(fd, OOP_READ);
+	if(writeEnabled){
+		cancel(fd, OOP_WRITE);
+	}
+
+	fd = -1;
+	// deleting us
+	delete this;
 }

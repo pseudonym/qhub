@@ -16,10 +16,11 @@ using namespace std;
 
 namespace qhub {
 
-//class Hub;
-
 class ADCSocket : public Socket {
 public:
+	static string esc(string const& in);
+	static string cse(string const& in);
+	
 	typedef vector<string> StringList;
 	
 	ADCSocket(int fd);
@@ -28,20 +29,27 @@ public:
 	virtual void on_read();
 	virtual void on_write();
 
-	virtual void onLine(StringList const& sl) = 0;
+	void send(string const& msg) { write(msg, 0); };
+
+	virtual void onLine(StringList const& sl, string const& full) = 0;
+	virtual void onLineError(string const& message) = 0;
+	virtual void onDisconnect() = 0;
+
+protected:
+	void disconnect();
 
 private:
 	StringList data;
-	
-	/*
-	void growBuffer();
-	*/
+	string raw;
+	bool escaped;
 
+	void realDisconnect();
+	
 	int readBufferSize;
 	unsigned char* readBuffer;
 	enum ReadState { NORMAL, PARTIAL } state;
 
-	// hidden
+	// Invalid
 	ADCSocket() {};
 };
 

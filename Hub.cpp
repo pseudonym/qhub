@@ -118,7 +118,7 @@ void Hub::motd(ADC* c)
 	sprintf(t2, "%d", users.size());
 	sprintf(t, "%d", 0);
 	tmp += string("\nWe have ") + t2 + " local users, and " + t + " remote users.";
-	c->sendHubMsg(tmp);
+	c->sendHubMessage(tmp);
 }
 
 void Hub::direct(string guid, string data)

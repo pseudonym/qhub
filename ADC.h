@@ -1,5 +1,6 @@
-#ifndef __ADC_H_
-#define __ADC_H_
+// vim:ts=4:sw=4:noet
+#ifndef _INCLUDED_ADC_H_
+#define _INCLUDED_ADC_H_
 
 #include "ADCSocket.h"
 #include "compat_hash_map.h"
@@ -22,19 +23,20 @@ public:
 	ADC(int fd, Hub* parent);
 	virtual ~ADC();
 
-	virtual void on_read();
-	virtual void on_write();
+	virtual void on_read() { ADCSocket::on_read(); };
+	virtual void on_write() { ADCSocket::on_write(); };
 
+	// Other stuff
 	void sendFullInf();
 	string getFullInf();
 
-	// send functions
-	void send(string const& msg) { write(msg, 0); }
-	void sendHubMsg(string msg);
+	// Send-to functions
+	void sendHubMessage(string const& msg);
 
-	static string escape(string in);
-
-	virtual void onLine(StringList const& sl);
+	// Calls from ADCSocket
+	virtual void onLine(StringList const& sl, string const& full);
+	virtual void onLineError(string const& msg);
+	virtual void onDisconnect();
 private:
 	Hub* hub;
 
@@ -46,37 +48,16 @@ private:
 	};
 	int state;
 
-	void growBuffer();
-	unsigned char* readBuffer;
-	int readBufferSize;
-	int rbCur;
-
-	void handleCommand(int length);
-	void handleHCommand(int length);
-	void handleBCommand(int length);
-	void handleDCommand(int length);
-
-	void checkParms();
-	void getParms(int length, int positionalParms);
-	vector<string> posParms;
-	typedef hash_map<string, string> parmMap;
-	parmMap namedParms;
-	typedef parmMap::iterator parmMapIterator;
-
 	string guid;
 	bool added;
 	hash_map<string, string> INF;
 	typedef hash_map<string, string>::iterator INFIterator;
 
-	void realDisconnect();
-	
-	// hidden
+	// Invalid
 	ADC() : ADCSocket(-1) {};
-protected:
-	void disconnect();
 };
 
 
 }
 
-#endif
+#endif //_INCLUDED_ADC_H_
