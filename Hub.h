@@ -29,6 +29,9 @@ public:
 	void setHubName(string name) { Hub::name=name; };
 	string getHubName() { return name; }
 
+	void setMaxPacketSize(int s);
+	int getMaxPacketSize() { return maxPacketSize; }
+
 	void acceptLeaf(int fd);
 	void acceptInterHub(int fd);
 
@@ -44,6 +47,8 @@ public:
 	void getUsersList(ADC* c);
 private:
 	string name;
+
+	int maxPacketSize;
 
 	//this is for external users
 		

@@ -14,7 +14,7 @@ readBufferSize(START_BUFFER), rbCur(0)
 {
 	fprintf(stderr, "State of disconnected is %d", disconnected);
 	this->fd = fd;
-	struct linger       so_linger;
+	struct linger so_linger;
     // Set linger to false
     so_linger.l_onoff = false;
     so_linger.l_linger = 0;
@@ -44,6 +44,14 @@ void ADC::growBuffer()
 	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
 }
 
+void ADC::checkParms()
+{
+	//check so that user isnt DOSing us with INF-data.
+	if(INF.size() > 256){
+		state = PROTOCOL_ERROR;
+		disconnect();
+	}
+}
 
 //XXX: putting them ALL in a hashmap could be worth it, simpler
 void ADC::getParms(int length, int positionalParms)
@@ -231,54 +239,54 @@ void ADC::handleBCommand(int length)
 							//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
 							INF[string(i->first)] = i->second;
 						}
-						guid = posParms[0];
 						//we know the guid, now register us in the hub.
 						//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
 
-						if(namedParms.find("LO") == namedParms.end() || namedParms["LO"] != "1"){
+						//XXX: when DC++ isnt buggy
+						/*if(namedParms.find("LO") == namedParms.end() || namedParms["LO"] != "1"){
 							//no LO1 login-tag
 							state = PROTOCOL_ERROR;
 							disconnect();
 							return;
-						}
+						}*/
 
 						//send userlist, will buffer for us
 						hub->getUsersList(this);
 						
 						//add us later, dont want us two times
-						if(!hub->addClient(this, guid)){
+						if(!hub->addClient(this, posParms[0])){
 							//signal that were no in the userlist
 							guid = "";
 							disconnect();
 							return;
 						}
+						//only update this when we are SURE that were added, ie. here!
+						guid = posParms[0];
 
 						//notify him that userlist is over
 						sendFullInf();
 						state = LOGGED_IN;
 						hub->motd(this);
-						namedParms.erase(namedParms.find("LO"));
+						//XXX: when DC++ isnt buggy
+						//namedParms.erase(namedParms.find("LO"));
 					}
+				} else {
+					//regular update
+					for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
+						//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
+						INF[string(i->first)] = i->second;
+					}
+					//broadcast it aswell, to self?
+					string tmp((char*)readBuffer, length);
+					hub->broadcastSelf(this, tmp);
 				}
 			}
 			break;
-		case 'M':
-			if(readBuffer[2] == 'S' && readBuffer[3] == 'G'){
-                getParms(length, 2);
+		default:
+			{
 				string tmp((char*)readBuffer, length);
 				hub->broadcastSelf(this, tmp);
 			}
-
-			break;
-		case 'S':
-			if(readBuffer[2] == 'C' && readBuffer[3] == 'H'){
-                getParms(length, 1);
-				string tmp((char*)readBuffer, length);
-				hub->broadcast(this, tmp); 
-			}
-			break;
-		default:
-			fprintf(stderr, "Unknown command\n");
 			break;
 	}
 
@@ -332,7 +340,7 @@ void ADC::handleHCommand(int length)
 			if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
 				if(state == START){
 					Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NI"
-						+ hub->getHubName() + " HU1 HI1 DEmajs VEqhub0.02\n"), 0));
+						+ escape(hub->getHubName()) + " HU1 HI1 DEmajs VEqhub0.02\n"), 0));
 					w(tmp);
 					state = GOT_SUP;
 				} else {
@@ -402,8 +410,14 @@ void ADC::on_read()
 		rbCur += r;
 
 		//look through data until no more left?
+		//XXX: could be optimised, start from rbCur instead
 		while(rbCur>0){
 			for(int i=0; i<rbCur; i++){
+				if(i>hub->getMaxPacketSize()){
+					state = PROTOCOL_ERROR;
+					disconnect();
+					break;
+				}
 				if(readBuffer[i] == '\\'){
 					i++;
 				} else if(readBuffer[i] == 0x0a){

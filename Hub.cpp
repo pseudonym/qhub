@@ -11,7 +11,7 @@
 
 using namespace qhub;
 
-Hub::Hub()
+Hub::Hub() : maxPacketSize(65536)
 {
 
 }
@@ -147,6 +147,11 @@ void Hub::broadcastSelf(ADC* c, string data)
 	for(userIter i=users.begin(); i!=users.end(); i++){
 		i->second->w(tmp);
 	}
+}
+
+void Hub::setMaxPacketSize(int s)
+{
+	maxPacketSize = s;
 }
 
 void Hub::removeClient(string guid)

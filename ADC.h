@@ -32,12 +32,12 @@ public:
 
 	bool dis() { return disconnected; }
 
-	string escape(string in);
+	static string escape(string in);
 private:
 	ADC(){};
 
 	Hub* hub;
-
+	
 	enum State {
 		START,
 		PROTOCOL_ERROR, //has sent message to client, at next data, disconnect
@@ -56,6 +56,7 @@ private:
 	void handleBCommand(int length);
 	void handleDCommand(int length);
 
+	void checkParms();
 	void getParms(int length, int positionalParms);
 	vector<string> posParms;
 	typedef hash_map<string, string> parmMap;

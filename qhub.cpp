@@ -125,6 +125,8 @@ int main()
 	Plugin::init();
 	Plugin::openModule("foo1");
 
+	Settings::readFromXML();
+
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);
 #else

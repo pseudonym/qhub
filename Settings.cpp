@@ -1,7 +1,6 @@
 #include "Settings.h"
 #include "Hub.h"
 
-
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
@@ -15,8 +14,6 @@ using namespace std;
 
 int Settings::readFromXML()
 {
-	fprintf(stderr, "Using Xerces XML library.\n");
-
 	try {
 		XMLPlatformUtils::Initialize();
 	}
@@ -32,7 +29,7 @@ int Settings::readFromXML()
 	if(parser){
 		ErrorHandler* errHandler = (ErrorHandler*) new HandlerBase();
 		parser->setErrorHandler(errHandler);
-		char* xmlFile = "config.xml";
+		char* xmlFile = "Settings.xml";
 
 		try {
 			parser->parse(xmlFile);
@@ -76,6 +73,12 @@ int Settings::readFromXML()
 						int port = atoi(XMLString::transcode(b->getFirstChild()->getNodeValue()));
 						if(port > 0 && port<65536){
 							tmp->openADCPort(port);
+						}
+					} else if(strcmp(XMLString::transcode(b->getNodeName()), "maxpacketsize") == 0 && b->getFirstChild() != NULL){
+						cout << "\tMaximum packet size: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
+						int size = atoi(XMLString::transcode(b->getFirstChild()->getNodeValue()));
+						if(size > 0){
+							tmp->setMaxPacketSize(size);
 						}
 					} else if(strcmp(XMLString::transcode(b->getNodeName()), "interport") == 0 && b->getFirstChild() != NULL){
 						cout << "\tInter-hub port: " << XMLString::transcode(b->getFirstChild()->getNodeValue()) << endl;
