@@ -6,13 +6,19 @@ using namespace std;
 using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent)
-: ADCSocket(fd), hub(parent), state(START), added(false)
+: attributes(this), ADCSocket(fd), hub(parent), state(START), added(false)
 {
 }
 
 ADC::~ADC()
 {
 }
+
+void ADC::sendHubMessage(string const& msg)
+{
+	send(string("BMSG ") + hub->getCID32() + ' ' + esc(msg) + '\n');
+}
+
 
 #define PROTO_DISCONNECT(errmsg) \
 	do { \
@@ -102,7 +108,7 @@ void ADC::handleB(StringList const& sl, string const& full)
 	} else if(sl[0] == "BMSG") {
 		if(sl.size() == 3) {
 			if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
-				setInf(sl[2].substr(7, 2), sl[2].substr(9));
+				attributes.setInf(sl[2].substr(7, 2), sl[2].substr(9));
 				hub->broadcastSelf(string("BINF ") + guid + " " + sl[2].substr(7) +   + "\n");
 			}
 			// default
@@ -120,30 +126,28 @@ void ADC::handleB(StringList const& sl, string const& full)
 
 void ADC::handleBINF(StringList const& sl, string const& full)
 {
-	if(!setInf(sl)) {
+	if(!attributes.setInf(sl)) {
 		PROTO_DISCONNECT("setInf didn't like you very much");
 		return;
 	}
 	if(state == GOT_SUP) {
 		guid = sl[1];
-		hub->getUsersList(this);
-		//add us later, dont want us two times
-		if(!hub->addClient(this, guid)) {
+		if(hub->hasClient(guid)) {
 			PROTO_DISCONNECT("proto error: User exists already");
 			return;
 		}
+		//send infs
+		hub->getUsersList(this);
+		//add us later, dont want us two times
+		hub->addClient(guid, this);
 		//only set this when we are sure that we are added, ie. here!
 		added = true;
-		//notify him that userlist is over
-		sendFullInf();
+		//notify him that userlist is over and notify others of his presence
+		hub->broadcastSelf(attributes.getChangedInf());
 		state = LOGGED_IN;
 		hub->motd(this);
 	} else {
-		// FIXME send changed info only
-		//hub->broadcastSelf(full);
-
-		//this sends correct IP, but always sends everything
-		sendFullInf();
+		hub->broadcastSelf(attributes.getChangedInf());
 	}
 }
 	
@@ -178,55 +182,3 @@ void ADC::handleP(StringList const& sl, string const& full)
 {
 	hub->broadcastSelf(full);
 }
-
-bool ADC::setInf(StringList const& sl)
-{
-	bool ret = true;
-	for(StringList::const_iterator sli = sl.begin() + 2; sli != sl.end(); ++sli) {
-		if(sli->length() < 2) {
-			sendHubMessage("BINF takes only named parameters");
-			return false;
-		} else {
-			ret = ret && setInf(sli->substr(0, 2), sli->substr(2));
-		}
-	}
-	return ret;
-}
-
-bool ADC::setInf(string const& key, string const& val)
-{
-	if(val.empty()) {
-		// remove empty data
-		Inf::iterator i = inf.find(key);
-		if(i != inf.end())
-			inf.erase(i);
-	} else {
-		if(key == "I4" && val == "0.0.0.0") {
-			inf[key] = getPeerName();
-		} else {
-			inf[key] = val;
-		}
-	}
-	return true;
-}	
-
-string ADC::getFullInf() const
-{
-	string parms = "BINF ";
-	parms += guid;
-	for(Inf::const_iterator i = inf.begin(); i != inf.end(); ++i)
-		//assume parameter-names are never escaped. Not mentioned in spec.
-		parms += ' ' + i->first + esc(i->second);
-	return parms + '\n';
-}
-
-void ADC::sendFullInf()
-{
-	hub->broadcastSelf(getFullInf());
-}
-
-void ADC::sendHubMessage(string const& msg)
-{
-	send(string("BMSG ") + hub->getCID32() + ' ' + esc(msg) + '\n');
-}
-

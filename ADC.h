@@ -27,11 +27,8 @@ public:
 	virtual void on_write() { ADCSocket::on_write(); };
 
 	// Other stuff
-	void sendFullInf();
-	string getFullInf() const;
+	string getFullInf() const { return attributes.getFullInf(); }
 	string const& getCID32() const { return guid; };
-	bool setInf(StringList const& sl);
-	bool setInf(string const& key, string const& val);
 
 	// Send-to functions
 	void sendHubMessage(string const& msg);
@@ -50,6 +47,22 @@ public:
 	virtual void onLineError(string const& msg);
 	virtual void onDisconnect();
 private:
+	class Attributes {
+	public:
+		Attributes(ADC* p) : parent(p) {};
+		bool setInf(StringList const& sl);
+		bool setInf(string const& key, string const& val);
+		string const& getFullInf() const { return full; }
+		string getChangedInf();
+	private:
+		void updateInf();
+		typedef hash_map<string, string> Inf;
+		Inf current;
+		Inf changes;
+		string full;
+		ADC* parent;
+	} attributes;
+		
 	Hub* hub;
 
 	enum State {
@@ -62,11 +75,8 @@ private:
 	string guid;
 	bool added;
 	
-	typedef hash_map<string, string> Inf;
-	Inf inf;
-
 	// Invalid
-	ADC() : ADCSocket(-1) {};
+	ADC() : attributes(0), ADCSocket(-1) {};
 };
 
 }

@@ -129,27 +129,25 @@ void Hub::setMaxPacketSize(int s)
 	maxPacketSize = s;
 }
 
-void Hub::removeClient(string guid)
+bool Hub::hasClient(string const& guid) const
 {
-	if(users.find(guid) != users.end()){
-		string qui = "IQUI " + guid + " ND\n";
-		Buffer::writeBuffer tmp(new Buffer(qui, 0));
-		users.erase(guid);
-	} else {
-		assert(false);
-		fprintf(stderr, "Deleting non-existing user\n");
-	}
+	if(users.find(guid) == users.end())
+		return false;
+	return true;
 }
 
-bool Hub::addClient(ADC* client, string guid)
+void Hub::addClient(string const& guid, ADC* client)
 {
-	if(users.find(guid) != users.end()){
-		fprintf(stderr, "GUID collision.\n");
-		return false;
-	}
+	assert(!hasClient(guid));
 	users[guid] = client;
+}
 
-	return true;
+void Hub::removeClient(string const& guid)
+{
+	assert(hasClient(guid));
+	string qui = "IQUI " + guid + " ND\n";
+	Buffer::writeBuffer tmp(new Buffer(qui, 0));
+	users.erase(guid);
 }
 
 void Hub::acceptInterHub(int fd)

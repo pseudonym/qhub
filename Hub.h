@@ -37,8 +37,9 @@ public:
 	void acceptLeaf(int fd);
 	void acceptInterHub(int fd);
 
-	bool addClient(ADC* client, string guid);
-	void removeClient(string guid);
+	bool hasClient(string const& guid) const;
+	void addClient(string const& guid, ADC* client);
+	void removeClient(string const& guid);
 
 	void broadcast(ADC* c, string data);
 	void broadcastSelf(string data);
