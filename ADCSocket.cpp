@@ -65,7 +65,7 @@ void ADCSocket::on_read()
 	int ret = read(fd, readBuffer, readBufferSize);
 	if(ret <= 0) {
 		// we're done, either by EOF or error
-		fprintf(stderr, "[%i] Got %i from read()\n", fd, ret);
+		fprintf(stderr, "[%i] Got %i from read(), errno=%d\n", fd, ret, errno);
 		perror("read");
 		while(!queue.empty())
 			queue.pop();
