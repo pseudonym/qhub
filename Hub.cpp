@@ -64,14 +64,26 @@ void Hub::openInterConnection(string host, int port, string password)
 void Hub::openADCPort(int port)
 {
 	//Leaf-handler
-	ServerSocket* tmp = new ServerSocket(Socket::IP6, port, ServerSocket::LEAF_HANDLER, this);
+	ServerSocket* tmp = new ServerSocket(
+#ifdef ENABLE_IPV6
+	                        Socket::IP6,
+#else
+	                        Socket::IP4,
+#endif
+	                        port, ServerSocket::LEAF_HANDLER, this);
 	enable_fd(tmp->getFd(), OOP_READ, tmp);
 }
 
 void Hub::openInterPort(int port)
 {
 	//Inter-hub
-	ServerSocket* tmp = new ServerSocket(Socket::IP6, port, ServerSocket::INTER_HUB, this);
+	ServerSocket* tmp = new ServerSocket(
+#ifdef ENABLE_IPV6
+	                        Socket::IP6,
+#else
+	                        Socket::IP4,
+#endif
+	                        port, ServerSocket::INTER_HUB, this);
 	enable_fd(tmp->getFd(), OOP_READ, tmp);
 }
 
