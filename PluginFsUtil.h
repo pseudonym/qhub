@@ -23,6 +23,8 @@ public:
 	virtual void on(PluginStopped&, Plugin*) throw();
 	virtual void on(PluginMessage&, Plugin*, void*) throw();
 	virtual void on(UserCommand&, ADCClient*, string&) throw();
+	virtual void on(UserMessage&, ADCClient*, u_int32_t const, string&) throw();
+	virtual void on(UserPrivateMessage&, ADCClient*, u_int32_t const, string&, string&) throw();
 
 private:
 	bool load() throw();

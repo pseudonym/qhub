@@ -38,6 +38,8 @@ bool FsUtil::load() throw()
 			if(p->findChild("aliases")) {
 				p = p->getNextChild();
 				aliasPrefix = p->getAttr("prefix");
+				if(aliasPrefix.empty())
+					aliasPrefix = "+";
 				if(p->findChild("alias")) {
 					XmlTok* tmp;
 					while((tmp = p->getNextChild())) {
@@ -148,7 +150,7 @@ void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 				}
 			} else if(m->arg[0] == "alias") {
 				if(m->arg.size() == 1) {
-					string tmp = "Success: aliases, prefix = " + aliasPrefix + ":\r\n";
+					string tmp = "Success: aliases, prefix = \"" + aliasPrefix + "\":\r\n";
 					for(Aliases::const_iterator i = aliases.begin(); i != aliases.end(); ++i) {
 						tmp += i->first + " = " + i->second + "\r\n";
 					}
@@ -192,6 +194,38 @@ void FsUtil::on(UserCommand& a, ADCClient* client, string& msg) throw()
 		if(j != aliases.end()) {
 			msg.replace(0, i, j->second);
 			a.setState(Plugin::MODIFIED);
+		}
+	}
+}
+
+void FsUtil::on(UserMessage& a, ADCClient* c, u_int32_t const cmd, string& msg) throw()
+{
+	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
+		string::size_type i = msg.find(' ');
+		if(i == string::npos)
+			i = msg.length();
+		Aliases::const_iterator j = aliases.find(msg.substr(aliasPrefix.length(), i - aliasPrefix.length()));
+		if(j != aliases.end()) {
+			msg.replace(0, i, j->second);
+			Plugin::UserCommand action;
+			Plugin::fire(action, c, msg);
+			a.setState(Plugin::STOP);
+		}
+	}
+}
+	
+void FsUtil::on(UserPrivateMessage& a, ADCClient* c, u_int32_t const cmd, string& msg, string& pm) throw()
+{
+	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
+		string::size_type i = msg.find(' ');
+		if(i == string::npos)
+			i = msg.length();
+		Aliases::const_iterator j = aliases.find(msg.substr(aliasPrefix.length(), i - aliasPrefix.length()));
+		if(j != aliases.end()) {
+			msg.replace(0, i, j->second);
+			Plugin::UserCommand action;
+			Plugin::fire(action, c, msg);
+			a.setState(Plugin::STOP);
 		}
 	}
 }

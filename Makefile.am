@@ -23,7 +23,7 @@ EXTRA_DIST += etc/qhub/plugins.xml etc/qhub/accounts.xml etc/qhub/fsutil.xml
 
 
 lib_LTLIBRARIES = foo1.la accounts.la virtualfs.la fsutil.la loader.la
-CXXFLAGS = -Wall -DDEBUG -g
+AM_CXXFLAGS = -Wall -DDEBUG -g
 
 foo1_la_SOURCES = foo1.c
 foo1_la_LDFLAGS = -module
