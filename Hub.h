@@ -38,7 +38,7 @@ private:
 
 	//userlist-cache. this is the ones thats OUT at the clients´
 	qhub::Buffer::writeBuffer userlist;
-	list<qhub::Buffer::writeBuffer> outliers;'
+	list<qhub::Buffer::writeBuffer> outliers;
 
 	void createCache();
 };
