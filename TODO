@@ -1,17 +1,25 @@
+Start doing things on the TODO
+
+remove Liboop+ADNS, replace with selectable DNS thread(s)+poll/libevent(win32?) mechanism. 
+(I see no reason for Liboop since libevent does all and is more portable?)
+Maybe also a pure win32-solution that is not libevent.
+
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
-	Fix oop-adns usage.
-	Add INET_NTOP/PTON
 
-LO1 handling
+Low-level network handling
+	Queue broadcast messages
+	Rate-limiting (allow bursting or not? its DDOSable.)
+	Add customizable flood protection in ADC or ADCSocket
 
-Queue broadcast messages
-
-Rate-limiting (allow bursting or not? its DDOSable.)
-
-Send delta-INFs
-
-Add customizable flood protection in ADC or ADCSocket
-
-Check CID at logon (we never ADC::ESC it anywhere.. that might cause trouble)
+Protocol stuff
+	Send delta-INFs
+	Check CID at logon (we never ADC::ESC it anywhere.. that might cause trouble)
+	LO1 handling (Status of this in spec?)
 
 Begin work on multihub support
+
+Polish plugins (what about controlling chains of plugins? Can plugins stop following plugins
+from executing? Are plugins able to filter/suppress output from the non-plugin hubcore?
+What about filtering stuff on many outgoing clients? (think a modified list of users: the
+plugin-instance for one user wants no other users to receive his INFs, this can mean work
+if there are only hooks for incoming data?)) 
