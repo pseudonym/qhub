@@ -1,6 +1,7 @@
 // vim:ts=4:sw=4:noet
 #include "ADC.h"
 #include <string>
+#include <cassert>
 #include "Util.h"
 
 using namespace qhub;

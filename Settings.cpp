@@ -15,13 +15,13 @@ int Settings::readFromXML() throw()
 	XmlTok* p = &root;
 	if(p->findChild("config")) {
 		p = p->getNextChild();
-		
+
 		// list all hubs
 		XmlTok* hubp;
 		p->findChild("hub");
 		while((hubp = p->getNextChild())) {
 			Hub* hub = new Hub();
-			
+
 			if(hubp->findChild("name")) {
 				string name = hubp->getNextChild()->getData();
 				fprintf(stderr, "Hubname: %s\n", name.c_str());
@@ -32,7 +32,7 @@ int Settings::readFromXML() throw()
 				fprintf(stderr, "\tADC Port: %i\n", port);
 				if(port > 0 && port <= 65535)
 					hub->openADCPort(port);
-			}	
+			}
 			if(hubp->findChild("maxpacketsize")) {
 				int size = Util::toInt(hubp->getNextChild()->getData());
 				fprintf(stderr, "\tMax Packet Size: %i\n", size);
@@ -51,14 +51,14 @@ int Settings::readFromXML() throw()
 			while((ichubp = hubp->getNextChild())) {
 				string host, password;
 				int port;
-				
+
 				if(ichubp->findChild("host"))
 					host = ichubp->getNextChild()->getData();
 				if(ichubp->findChild("port"))
 					port = Util::toInt(ichubp->getNextChild()->getData());
 				if(ichubp->findChild("password"))
 					password = ichubp->getNextChild()->getData();
-					
+
 				fprintf(stderr, "\tConnecting to %s:%i pass:%s\n", host.c_str(), port, password.c_str());
 				hub->openInterConnection(host, port, password);
 			}
@@ -66,6 +66,6 @@ int Settings::readFromXML() throw()
 	}
 	return 0;
 }
-			
-			
-						
+
+
+

@@ -21,6 +21,7 @@
 #include <queue>
 #include <boost/shared_ptr.hpp>
 
+#include "config.h"
 #include "Buffer.h"
 #include "Util.h"
 #include "Timer.h"
@@ -37,7 +38,11 @@ namespace qhub {
 
 class Socket : public Timer {
 public:
-	enum Domain { IP4 = PF_INET, IP6 = PF_INET6 };
+	enum Domain { IP4 = PF_INET, 
+#ifdef ENABLE_IPV6
+        IP6 = PF_INET6 
+#endif
+        };
 	Socket(Domain d = IP4, int t = SOCK_STREAM, int p = 0) throw(); // new sockets
 	Socket(int fd, Domain d) throw(); // existing sockets
 	virtual ~Socket() throw();

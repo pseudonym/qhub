@@ -10,7 +10,7 @@
 using namespace qhub;
 
 InterHub::InterHub(int fd, Domain d) throw()
-: Socket(fd, d), state(NO_DATA), readBuffer(new unsigned char[START_BUFFER]), readBufferSize(START_BUFFER), rbCur(0)
+		: Socket(fd, d), state(NO_DATA), readBuffer(new unsigned char[START_BUFFER]), readBufferSize(START_BUFFER), rbCur(0)
 {
 	struct linger       so_linger;
 	// Set linger to false

@@ -14,9 +14,9 @@ using namespace qhub;
  */
 
 extern "C" {
-void* getPlugin() { return new FsUtil(); }
+	void* getPlugin() { return new FsUtil(); }
 } //extern "C"
-	
+
 
 
 /*
@@ -82,7 +82,7 @@ void FsUtil::deinitVFS() throw()
 {
 	assert(virtualfs->rmdir("/fsutil"));
 }
-	
+
 void FsUtil::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
@@ -116,7 +116,7 @@ void FsUtil::on(PluginStopped&, Plugin* p) throw()
 		virtualfs = NULL;
 	}
 }
-	
+
 void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
@@ -127,11 +127,11 @@ void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 		} else if(m->type == VirtualFs::Message::HELP) {
 			if(m->cwd == "/fsutil/") {
 				m->reply(
-						"The following commands are available to you:\r\n"
-						"load\t\t\tloads settings\r\n"
-						"save\t\t\tsaves settings\r\n"
-						"alias [alias] [command]\t\tlist/add aliases\r\n"
-						"unalias <alias>\t\tremoves an alias\r\n"
+				    "The following commands are available to you:\r\n"
+				    "load\t\t\tloads settings\r\n"
+				    "save\t\t\tsaves settings\r\n"
+				    "alias [alias] [command]\t\tlist/add aliases\r\n"
+				    "unalias <alias>\t\tremoves an alias\r\n"
 				);
 			}
 		} else if(m->type == VirtualFs::Message::EXEC) {
@@ -175,7 +175,7 @@ void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 						m->reply("Success: alias removed");
 					} else {
 						m->reply("Failed: no such alias defined");
-					}	
+					}
 				} else {
 					m->reply("Syntax: del <nick>");
 				}
@@ -213,7 +213,7 @@ void FsUtil::on(UserMessage& a, ADCClient* c, u_int32_t const cmd, string& msg) 
 		}
 	}
 }
-	
+
 void FsUtil::on(UserPrivateMessage& a, ADCClient* c, u_int32_t const cmd, string& msg, string& pm) throw()
 {
 	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
