@@ -421,6 +421,14 @@ void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string const* fu
 	if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 		return;
 
+	// Do redundancy check
+	for(UserInfo::const_iterator i = newUserInfo.begin(); i != newUserInfo.end(); ++i) {
+		if(userInfo->get(i->first) == i->second) {
+			PROTOCOL_ERROR("Redundant INF parameter recieved");
+			return;
+		}
+	}
+
 	// Broadcast
 	if(action.isSet(Plugin::MODIFIED)) {
 		getHub()->broadcast(newUserInfo.toADC(getCID32()));
@@ -557,7 +565,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	string8 hashed_pwd(h.getResult(), TigerHash::HASH_SIZE);
 	string hashed_pwd_b32 = Encoder::toBase32(hashed_pwd.data(), hashed_pwd.length());
 	if(hashed_pwd_b32 != sl[2]) {
-		send("ISTA " + sl[1] + " 23 Bad\\ username\\ or\\ password\n");
+		send("ISTA " + sl[1] + " 223 Bad\\ username\\ or\\ password\n");
 		assert(!added);
 		disconnect();
 		return;
@@ -577,6 +585,6 @@ void ADCClient::handleSupports(StringList& sl) throw()
 {
 	send("ISUP " + getHub()->getCID32() + " +BASE\n" // <-- do we need CID?
 			"IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
-			" HU1 DEmajs VEqhub0.5 OP1\n");
+			" HU1 DEmajs VEqhub0.6 OP1\n");
 	state = IDENTIFY;
 }

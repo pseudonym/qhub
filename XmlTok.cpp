@@ -1,7 +1,18 @@
 // vim:ts=4:sw=4:noet
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "XmlTok.h"
 #include <stdio.h>
-#include <xmltok/xmlparse.h>
+
+#if defined(HAVE_EXPAT_H)
+# include <expat.h>
+#elif defined(HAVE_XMLTOK_XMLPARSE_H)
+# include <xmltok/xmlparse.h>
+#else
+# error expat or xmlparse missing
+#endif
 
 using namespace std;
 using namespace qhub;

@@ -100,7 +100,7 @@ void Hub::motd(ADCClient* c) throw()
 	char t2[1024];
 	sprintf(t2, "%d", interConnects2.size());
 	string tmp = string("There are ") + t + " hubs connected to us and " + t2 + " connected to from us.";
-	sprintf(t2, "%dA+%dP", activeUsers.size(), passiveUsers.size());
+	sprintf(t2, "%d (of which %d udp-passive)", activeUsers.size() + passiveUsers.size(), passiveUsers.size());
 	sprintf(t, "%d", 0);
 	tmp += string("\nWe have ") + t2 + " local users, and " + t + " remote users.";
 	c->doHubMessage(tmp);

@@ -1,5 +1,6 @@
 <plugins>
 	<plugin>virtualfs</plugin>
+	<plugin>fsutil</plugin>
 	<plugin>loader</plugin>
 	<plugin>accounts</plugin>
 </plugins>

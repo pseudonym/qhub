@@ -93,10 +93,12 @@ void ADCSocket::onRead() throw()
 					}
 					if(*p == '\n') {
 						// Call our dear virtual command handler
-						if(raw.empty())
-							onLine(data, string((char const*)f, p - f + 1));
-						else
+						if(raw.empty()) {
+							if(f != p) // !empty, if empty, then ignore
+								onLine(data, string((char const*)f, p - f + 1));
+						} else {
 							onLine(data, raw + string((char const*)f, p - f + 1));
+						}
 						if(disconnected && queue.empty()) {
 							realDisconnect();
 							return;

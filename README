@@ -27,13 +27,14 @@ Dependencies
 
 Required
 
-Liboop - liboop.org
-ADNS - www.chiark.greenend.org.uk/~ian/adns/
-Boost library - boost.org
-Libxmltok
+Liboop - http://liboop.org/
+ADNS - http://www.chiark.greenend.org.uk/~ian/adns/
+Boost library - http://boost.org/
+Libexpat - http://expat.sourceforge.net/
+  or Libxmltok
 Libtool (for building)
 
 Recommended
 
-Libevent (better performance) - monkey.org/~provos/libevent/
+Libevent (better performance) - http://monkey.org/~provos/libevent/
 (For libevent to be used you will need a not-yet released Liboop though.)

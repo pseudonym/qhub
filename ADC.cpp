@@ -25,7 +25,6 @@ string ADC::ESC(string const& in) throw()
 string ADC::CSE(string const& in) throw()
 {
 	string tmp;
-	fprintf(stderr, "tmp %i %i\n", tmp.capacity(), in.length());
 	tmp.reserve(in.length());
 	for(string::const_iterator i = in.begin(); i != in.end(); ++i) {
 		if(*i == '\\') {
