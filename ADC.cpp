@@ -212,6 +212,10 @@ void ADC::realDisconnect()
 		//send a QUI aswell
 		hub->broadcast(this, string("IQUI " + guid + " ND\n"));
 	}
+	// send all queued data
+	while(!queue.empty())
+		partialWrite();
+	// done
 	close(fd);
 	cancel(fd, OOP_READ);
 	if(writeEnabled){
