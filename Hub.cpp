@@ -204,15 +204,41 @@ void Hub::removeClient(string const& guid) throw()
 		passiveUsers.erase(guid);
 }
 
-ADCClient* Hub::getClient(string const& guid) throw()
+void Hub::userDisconnect(string const& actor, string const& victim, bool silent, string const& msg) throw()
 {
 	Users::iterator i;
-	if((i = activeUsers.find(guid)) != activeUsers.end()) {
-		return i->second;
-	} else if((i = passiveUsers.find(guid)) != passiveUsers.end()) {
-		return i->second;
-	}
-	return NULL;
+	if((i = activeUsers.find(victim)) != activeUsers.end())
+		i->second->doDisconnectBy(actor, silent, msg);
+	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
+		i->second->doDisconnectBy(actor, silent, msg);
+}
+
+void Hub::userKick(string const& actor, string const& victim, bool silent, string const& msg) throw()
+{
+	Users::iterator i;
+	if((i = activeUsers.find(victim)) != activeUsers.end())
+		i->second->doKickBy(actor, silent, msg);
+	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
+		i->second->doKickBy(actor, silent, msg);
+}
+
+void Hub::userBan(string const& actor, string const& victim, bool silent, u_int32_t secs, string const& msg) throw()
+{
+	Users::iterator i;
+	if((i = activeUsers.find(victim)) != activeUsers.end())
+		i->second->doBanBy(actor, silent, secs, msg);
+	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
+		i->second->doBanBy(actor, silent, secs, msg);
+}
+
+void Hub::userRedirect(string const& actor, string const& victim, bool silent, string const& addr, string const& msg)
+		throw()
+{
+	Users::iterator i;
+	if((i = activeUsers.find(victim)) != activeUsers.end())
+		i->second->doRedirectBy(actor, silent, addr, msg);
+	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
+		i->second->doRedirectBy(actor, silent, addr, msg);
 }
 
 void Hub::acceptInterHub(int fd, Socket::Domain d)

@@ -83,10 +83,10 @@ public:
 	virtual void doHubMessage(string const& msg) throw();
 	virtual void doPrivateMessage(string const& msg) throw();
 	// The four 'ban' types
-	virtual void doDisconnect(string const& kicker, string const& msg, bool silent) throw();
-	virtual void doKick(string const& kicker, string const& msg, bool silent) throw();
-	virtual void doBan(string const& kicker, u_int32_t seconds, string const& msg, bool silent) throw();
-	virtual void doRedirect(string const& kicker, string const& address, string const& msg, bool silent) throw();
+	virtual void doDisconnectBy(string const& kicker, bool silent, string const& msg) throw();
+	virtual void doKickBy(string const& kicker, bool silent, string const& msg) throw();
+	virtual void doBanBy(string const& kicker, bool silent, u_int32_t seconds, string const& msg) throw();
+	virtual void doRedirectBy(string const& kicker, bool silent, string const& address, string const& msg) throw();
 
 protected:
 	/*

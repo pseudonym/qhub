@@ -1,3 +1,4 @@
+// vim:ts=4:sw=4:noet
 #ifndef __HUB_H_
 #define __HUB_H_
 
@@ -46,7 +47,6 @@ public:
 	void addPassiveClient(string const& guid, ADCClient* client) throw();
 	void removeClient(string const& guid) throw();
 	void switchClientMode(bool toActive, string const& guid, ADCClient* client) throw();
-	ADCClient* getClient(string const& guid) throw();
 
 	void broadcast(string const& data, ADCClient* except = NULL) throw();
 	void broadcastActive(string const& data) throw();
@@ -56,6 +56,12 @@ public:
 	void motd(ADCClient* c) throw();
 
 	void getUserList(ADCClient* c) throw();
+
+	void userDisconnect(string const& actor, string const& victim, bool silent, string const& msg) throw();
+	void userKick(string const& actor, string const& victim, bool silent, string const& msg) throw();
+	void userBan(string const& actor, string const& victim, bool silent, u_int32_t secs, string const& msg) throw();
+	void userRedirect(string const& actor, string const& victim, bool silent, string const& addr,
+			string const& msg) throw();
 private:
 	static void add(Hub* h) throw();
 	static void remove(Hub* h) throw();

@@ -12,4 +12,6 @@ Send delta-INFs
 
 Add customizable flood protection in ADC or ADCSocket
 
-Move HDSC stuff to Hub, partially
+Check CID at logon (we never ADC::ESC it anywhere.. that might cause trouble)
+
+Begin work on multihub support

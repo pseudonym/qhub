@@ -150,10 +150,59 @@ void ADCClient::doPrivateMessage(string const& msg) throw()
 	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + ADC::ESC(msg) + " PM\n");
 }
 
-void ADCClient::doDisconnect(string const& kicker, string const& msg, bool silent) throw() {}
-void ADCClient::doKick(string const& kicker, string const& msg, bool silent) throw() {}
-void ADCClient::doBan(string const& kicker, u_int32_t seconds, string const& msg, bool silent) throw() {}
-void ADCClient::doRedirect(string const& kicker, string const& address, string const& msg, bool silent) throw() {}
+void ADCClient::doDisconnectBy(string const& kicker, bool silent, string const& msg) throw()
+{
+	string full = "IQUI " + getCID32() + " DI " + kicker + ' ' + msg + '\n';
+	send(full);
+	logout();
+	if(silent) {
+		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
+	} else {
+		getHub()->broadcast(full);
+	}
+	disconnect();
+}
+
+void ADCClient::doKickBy(string const& kicker, bool silent, string const& msg) throw()
+{
+	string full = "IQUI " + getCID32() + " KK " + kicker + ' ' + ADC::ESC(msg) + '\n';
+	send(full);
+	logout();
+	if(silent) {
+		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
+	} else {
+		getHub()->broadcast(full);
+	}
+	disconnect();
+}
+	
+void ADCClient::doBanBy(string const& kicker, bool silent, u_int32_t seconds, string const& msg) throw()
+{
+	// TODO add bantime to somewhere
+	string full = "IQUI " + getCID32() + " BN " + kicker + ' ' + Util::toString(seconds) + ' ' + ADC::ESC(msg) + '\n';
+	send(full);
+	logout();
+	if(silent) {
+		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
+	} else {
+		getHub()->broadcast(full);
+	}
+	disconnect();
+}
+
+void ADCClient::doRedirectBy(string const& kicker, bool silent, string const& address, string const& msg) throw()
+{
+	string full = "IQUI " + getCID32() + " RD " + kicker + ' ' + ADC::ESC(address) + ' ' + ADC::ESC(msg) + '\n';
+	send(full);
+	logout();
+	if(silent) {
+		getHub()->broadcast("IQUI " + getCID32() + " ND\n");
+	} else {
+		getHub()->broadcast(full);
+	}
+	disconnect();
+}
+	
 
 #define PROTOCOL_ERROR(errmsg) \
 	do { \
@@ -466,65 +515,31 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 
 void ADCClient::handleDisconnect(StringList& sl) throw()
 {
+	// HDSC myCID hisCID LL LL params
 	if(!userInfo->getOp()) {
 		doWarning("Access denied");
 		return;
 	}
-	if(sl.size() < 5) {
-		PROTOCOL_ERROR("HDSC corrupt");
+	if(sl.size() < 6) {
+		doWarning("Disconnect command corrupt");
 		return;
 	}
-	bool silent = sl[3] == "ND";
-	if(sl.size() >= 5) {
-		bool hide = sl[4] == "ND";
-		string const& victim_guid = sl[2];
-		if(!hide && sl[3] != sl[4]) {
-			PROTOCOL_ERROR("HDSC corrupt"); // "ND" or sl[3] should be at sl[4]
-			return;
-		}
-		ADCClient* victim = getHub()->getClient(victim_guid);
-		if(!victim)
-			return;
-		bool success = false;
-		string msg = string("IQUI ") + victim_guid;
-		if(sl.size() == 6) {
-			if(sl[3] == "DI") {
-				msg += " DI " + sl[1] + ' ' + ADC::ESC(sl[5]) + '\n';
-				victim->send(msg);
-				success = true;
-			} else if(sl[3] == "KK") {
-				msg += " KK " + sl[1] + ' ' + ADC::ESC(sl[5]) + '\n';
-				victim->send(msg);
-				// todo: set bantime
-				success = true;
-			}
-		} else if(sl.size() == 7) {
-			if(sl[3] == "BN") {
-				msg += " BN " + sl[1] + ' ' + ADC::ESC(sl[5]) + ' ' + ADC::ESC(sl[6]) + '\n';
-				victim->send(msg);
-				// todo: set bantime
-				success = true;
-			} else if(sl[3] == "RD") {
-				msg += " RD " + sl[1] + ' ' + ADC::ESC(sl[5]) + ' ' + ADC::ESC(sl[6]) + '\n';
-				victim->send(msg);
-				success = true;
-			}
-		}
-		if(success) {
-			// remove victim
-			victim->logout();
-			victim->disconnect();
-			// notify everyone else
-			if(!hide) {
-				getHub()->broadcast(msg);
-			} else {
-				if(this != victim)
-					send(msg); // notify self
-				getHub()->broadcast("IQUI " + victim_guid + " ND\n", this);
-			}
-		} else {
-			PROTOCOL_ERROR("HDSC corrupt");
-		}
+	bool silent = sl[4] == "ND";
+	if(!(silent || sl[3] == sl[4])) {
+		doWarning("Disconnect command corrupt");
+		return;
+	}
+	// TODO add plugin stuff
+	if(sl[3] == "DI" && sl.size() == 6) {
+		getHub()->userDisconnect(sl[1], sl[2], silent, sl[5]);
+	} else if(sl[3] == "KK" && sl.size() == 6) {
+		getHub()->userKick(sl[1], sl[2], silent, sl[5]);
+	} else if(sl[3] == "BN" && sl.size() == 7) {
+		getHub()->userBan(sl[1], sl[2], silent, Util::toInt(sl[5]), sl[6]);
+	} else if(sl[3] == "RD" && sl.size() == 7) {
+		 getHub()->userRedirect(sl[1], sl[2], silent, sl[5], sl[6]);
+	} else {
+		doWarning("Disconnect command corrupt");
 	}
 }
 	
