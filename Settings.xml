@@ -18,7 +18,7 @@
 
 <config>
 <hub>
-<name>Testhub\ 1</name>
+<name>Testhub 1</name>
 <maxpacketsize>65536</maxpacketsize>
 <port>9001</port>
 <!--<port>9002</port>
