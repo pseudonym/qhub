@@ -61,6 +61,7 @@ ADCSocket::~ADCSocket() throw()
 
 void ADCSocket::onRead() throw()
 {
+	//fprintf(stderr, "ADCSocket::onRead\n");
 	int ret = read(fd, readBuffer, readBufferSize);
 	if(ret <= 0) {
 		// we're done, either by EOF or error
@@ -145,33 +146,31 @@ void ADCSocket::onRead() throw()
 		if(f != p)
 			raw += string((char const*)f, p - f);
 	}
-
-	// Check if we're disconnected
-	if(disconnected && queue.empty()) {
-		realDisconnect();
-	}
 }
 
 void ADCSocket::onWrite() throw()
 {
-	//fprintf(stderr, "On_write\n");
+	//fprintf(stderr, "ADCSocket::onWrite\n");
 	partialWrite();
-	if(queue.empty()){
+	if(queue.empty()) {
 		cancel_fd(fd, OOP_WRITE);
 		writeEnabled = false;
-	}
 
-	// Check if we're disconnected
-	if(disconnected && queue.empty()) {
-		realDisconnect();
+		// Nothing left to write.. kill us
+		if(disconnected)
+			realDisconnect();
 	}
 }
 
-void ADCSocket::disconnect()
+void ADCSocket::disconnect(string const& msg)
 {
 	assert(!disconnected);
 	Socket::disconnect();
 	onDisconnected(Util::emptyString);
+
+	// If there's nothing left to write, kill us immediately
+	if(queue.empty())
+		realDisconnect();
 }
 
 void ADCSocket::realDisconnect()
@@ -183,6 +182,7 @@ void ADCSocket::realDisconnect()
 	}
 
 	if(!disconnected) {
+		fprintf(stderr, "Real Disconnect %d %p !disconnected\n", fd, this);
 		disconnect(); // notify others that we're dying
 	}
 	

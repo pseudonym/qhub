@@ -54,8 +54,7 @@ protected:
 	virtual void onConnected() throw() = 0;
 	virtual void onDisconnected(string const& clue) throw() = 0;
 
-	void disconnect();
-	void disconnect(string const& msg) { Socket::disconnect(); onDisconnected(msg); };
+	void disconnect(string const& msg = Util::emptyString);
 	void realDisconnect();
 
 private:
