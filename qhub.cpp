@@ -237,8 +237,8 @@ int main()
 #endif
 
 	//try loading
-	init();
-	openModule("foo1");
+	Plugin::init();
+	Plugin::openModule("foo1");
 
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);

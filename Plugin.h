@@ -5,26 +5,45 @@
 #include <ltdl.h>
 
 #include <compat_hash_map.h>
-
+#include <list>
 
 using namespace std;
 
 namespace qhub {
 
+class Plugin {
+public:
+	static void init();
+	static void deinit();
+	
+	//adds or removes modules from the module-list
+	static void openModule(const char* filename);
+	static void removeModule(const char* filename);
 
-void init();
-void deinit();
+	Plugin(const char* name, const lt_dlhandle h);
 
-void openModule(const char* filename);
-void removeModule(const char* filename);
+	const char* getName() { return name.c_str(); };
 
+private:
+	//loads methods from our module
+	void loadFromModule();
+	void load(const char* name);
 
+	static list<Plugin*> modules;
 
+	/* Per-class stuff
+	 * 
+	 */
 
+	//our handle, name
+	lt_dlhandle handle;
+	string name;
 
-static void loadFromModule(const lt_dlhandle);
+	//all our functions
+	//this should be replaces by function pointers (performance)
+	hash_map<string, lt_ptr> functions;
+};
 
 }
-
 
 #endif

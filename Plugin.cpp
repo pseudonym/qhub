@@ -1,42 +1,60 @@
 #include <Plugin.h>
 
-#include "compat_hash_map.h"
-
 using namespace qhub;
 
-static hash_map<string, lt_dlhandle> modules;
+list<Plugin*> Plugin::modules;
 
-void qhub::init ()
+void qhub::Plugin::init ()
 {
 	lt_dlinit();
+
+	//add search-dir
+	//lt_dladdsearchdir("./plugins/");
 }
 
-void qhub::deinit ()
+void qhub::Plugin::deinit()
 {
 	lt_dlexit();
 }
 
-void qhub::removeModule(const char* filename)
+void qhub::Plugin::removeModule(const char* filename)
 {
-	if(modules.find(string(filename)) != modules.end()){
-		modules.erase(string(filename));
-	} else {
-		fprintf(stderr, "Trying to unload non-existing module %s.\n", filename);
+	for(list<Plugin*>::iterator i=modules.begin(); i!=modules.end(); i++){
+		if(strcmp((*i)->getName(), filename) == 0){
+			modules.erase(i);
+		}
 	}
 }
 
-void qhub::openModule(const char* filename)
+Plugin::Plugin(const char* n, const lt_dlhandle h) : name(string(n)), handle(h)
+{
+	fprintf(stderr, "Created module %s.\n", name.c_str());
+}
+
+void qhub::Plugin::openModule(const char* filename)
 {
 	lt_dlhandle tmp = lt_dlopenext(filename);
 
 	if(tmp != NULL){
-		modules[string(filename)] = tmp; 
+		Plugin* t = new Plugin(filename, tmp);
+		modules.push_back(t);
+		t->loadFromModule();
 	} else {
 		fprintf(stderr, "Dynamic linking failed for %s.\n", filename);
 	}
 }
 
-static void qhub::loadFromModule(const lt_dlhandle)
+void qhub::Plugin::load(const char* name)
+{
+	if(lt_dlsym(handle, name) != NULL){
+		fprintf(stderr, "Adding function '%s' to module '%s'.\n", name, this->name.c_str());
+	} else {
+		fprintf(stderr, "Failed loading function %s.\n", name);
+	}
+}
+
+void qhub::Plugin::loadFromModule()
 {
 	//load function pointers here.
+	load("foo");
 }
