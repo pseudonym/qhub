@@ -11,3 +11,5 @@ Queue broadcast messages
 Rate-limiting (allow bursting or not? its DDOSable.)
 
 Send delta-INFs
+
+Add flood protection in ADC or ADCSocket

@@ -22,6 +22,13 @@ class ADCInf;
 
 class ADC : public ADCSocket {
 public:
+	enum State {
+		START,		// HSUP
+		IDENTIFY,	// BINF
+		VERIFY,		// HPAS
+		NORMAL
+	};
+	
 	ADC(int fd, Hub* parent);
 	virtual ~ADC();
 
@@ -33,9 +40,31 @@ public:
 	string const& getCID32() const { return guid; };
 	ADCInf* getAttr() { return attributes; };
 
-	// Send-to functions
-	void sendHubMessage(string const& msg);
+	/*
+	 * Object information
+	 */
+	void setUserLevel(int l) throw() { userlevel = l; };
+	int getUserLevel() const throw() { return userlevel; };
+	State getState() const throw() { return state; };
 
+	/*
+	 * Various calls (don't send in bad states!)
+	 */
+	virtual void doAskPassword(string const& pwd) throw(); // send at LOGIN only!
+	virtual void doWarning(string const& msg) throw();
+	virtual void doError(string const& msg) throw();
+	virtual void doDisconnect(string const& msg = Util::emptyString) throw();
+	virtual void doHubMessage(string const& msg) throw();
+
+protected:
+	/*
+	 * Calls from ADCSocket
+	 */
+	virtual void onLine(StringList const& sl, string const& full) throw();
+	virtual void onConnected() throw();
+	virtual void onDisconnected(string const& clue) throw();
+	
+private:
 	/*
 	 * Data handlers	
 	 */
@@ -50,34 +79,18 @@ public:
 	void handleHSUP(StringList const& sl, string const& full);
 	void handleP(StringList const& sl, string const& full);
 
-	/*
-	 * Calls from other classes
-	 */
-	virtual void doAskPassword(string const& pwd) throw();
-	virtual void doWarning(string const& msg) throw();
-	virtual void doError(string const& msg) throw();
-	
-	virtual void onLine(StringList const& sl, string const& full) throw();
-	virtual void onConnected() throw();
-	virtual void onDisconnected(string const& clue) throw();
-	
-private:
-	ADCInf* attributes;	
-	Hub* hub;
 	void login();
 	void logout();
-
-	enum State {
-		START,		// HSUP
-		IDENTIFY,	// BINF
-		VERIFY,		// HPAS
-		NORMAL
-	};
-	int state;
-	string guid;
 	bool added;
+
+	ADCInf* attributes;	
+	Hub* hub;
+
+	State state;
+	string guid;
 	string password;
 	string8 salt;
+	int userlevel;
 	
 	// Invalid
 	ADC() : ADCSocket(-1), attributes(0) {};

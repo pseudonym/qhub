@@ -10,7 +10,7 @@ using namespace std;
 using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent)
-: ADCSocket(fd), attributes(new ADCInf(this)), hub(parent), state(START), added(false)
+: ADCSocket(fd), added(false), attributes(new ADCInf(this)), hub(parent), state(START), userlevel(0)
 {
 	onConnected();
 }
@@ -37,11 +37,6 @@ void ADC::logout()
 	added = false;
 }
 
-void ADC::sendHubMessage(string const& msg)
-{
-	send("BMSG " + hub->getCID32() + ' ' + esc(msg) + '\n');
-}
-
 string const& ADC::getInf() const
 {
 	return attributes->getFullInf();
@@ -51,13 +46,8 @@ string const& ADC::getInf() const
 #define PROTOCOL_ERROR(errmsg) \
 	do { \
 		doError(errmsg); \
-		if(added) { \
-			logout(); \
-			hub->broadcastSelf("IQUI " + guid + " DI " + hub->getCID32() + ' ' + esc(errmsg) + '\n'); \
-		} \
-		disconnect(); \
+		doDisconnect(errmsg); \
 	} while(0)
-
 
 /*******************************************/
 /* Calls from ADCSocket (and other places) */
@@ -65,12 +55,11 @@ string const& ADC::getInf() const
 
 void ADC::doAskPassword(string const& pwd) throw()
 {
-	if(!added) {
-		password = pwd;
-		salt = Util::genRand192();
-		send("IGPA " + hub->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.length()) + '\n');
-		state = VERIFY;
-	}
+	assert(state == IDENTIFY); // OR added == false
+	password = pwd;
+	salt = Util::genRand192();
+	send("IGPA " + hub->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.length()) + '\n');
+	state = VERIFY;
 }
 
 void ADC::doWarning(string const& msg) throw()
@@ -81,6 +70,23 @@ void ADC::doWarning(string const& msg) throw()
 void ADC::doError(string const& msg) throw()
 {
 	send("ISTA " + guid + " 20 " + esc(msg) + '\n');
+}
+
+void ADC::doDisconnect(string const& msg) throw()
+{
+	if(added) {
+		logout();
+		if(msg.empty())
+			hub->broadcastSelf("IQUI " + guid + " ND\n");
+		else
+			hub->broadcastSelf("IQUI " + guid + " DI " + hub->getCID32() + ' ' + esc(msg) + '\n');
+	}
+	disconnect();
+}
+
+void ADC::doHubMessage(string const& msg) throw()
+{
+	send("BMSG " + hub->getCID32() + ' ' + esc(msg) + '\n');
 }
 
 void ADC::onLine(StringList const& sl, string const& full) throw()

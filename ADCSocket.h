@@ -42,11 +42,15 @@ public:
 	 * Do protocol stuff / Handle events
 	 */
 	virtual void doError(string const& msg) throw() = 0; // send FatalError message
+	
+protected:
+	/*
+	 * Do protocol stuff / Handle events
+	 */
 	virtual void onLine(StringList const& sl, string const& full) throw() = 0;
 	virtual void onConnected() throw() = 0;
 	virtual void onDisconnected(string const& clue) throw() = 0;
 
-protected:
 	void disconnect() { Socket::disconnect(); onDisconnected(Util::emptyString); };
 	void disconnect(string const& msg) { Socket::disconnect(); onDisconnected(msg); };
 

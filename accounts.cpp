@@ -10,19 +10,11 @@ using namespace qhub;
  * Plugin loader
  */
 
-static Accounts* accounts = NULL;
-
 extern "C" {
 
-void* start()
+void* getPlugin()
 {
-	accounts = new Accounts();
-	return accounts;
-}
-
-void stop()
-{
-	delete accounts;
+	return new Accounts();
 }
 
 } //extern "C"
@@ -44,16 +36,22 @@ void Accounts::onLogin(ADC* client) throw() {
 
 void Accounts::onInfo(ADC* client) throw() {
 	ADCInf* attr = client->getAttr();
-	// don't allow registered nicks to be used
-	if(attr->newInf("NI"))
-		if(attr->getNewInf("NI").find("sed") != string::npos || attr->getNewInf("NI").find("sandos") != string::npos)
-			attr->setInf("NI", attr->getOldInf("NI")); // reset nick if registered
-	// fix so registered users can't change nicks at all
-	// (except maybe from sed -> sed|away e.g.)
-	// else they can't get their nick back :P
+	if(attr->newInf("NI")) {
+		// don't allow registered users to change nick
+		if(client->getUserLevel())
+			attr->setInf("NI", attr->getOldInf("NI")); // reset nick
+		// don't allow users to change to a registered nick
+		else if(attr->getNewInf("NI").find("sed") != string::npos ||
+				attr->getNewInf("NI").find("sandos") != string::npos)
+			attr->setInf("NI", attr->getOldInf("NI")); // reset nick
+	}
 }
 
 void Accounts::onAuth(ADC* client) throw() {
+	client->setUserLevel(1);
 	ADCInf* attr = client->getAttr();
 	attr->setInf("OP", "1");
+}
+
+void Accounts::onCommand(ADC* client, string const& msg) throw() {
 }
