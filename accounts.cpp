@@ -24,13 +24,17 @@ void* getPlugin() { return new Accounts(); }
  */
 
 UserData::Key Accounts::idUserLevel = UserData::toKey("userlevel");
+UserData::Key Accounts::idVirtualPath = UserData::toKey("virtualpath");
 
-void Accounts::load() throw()
+bool Accounts::load() throw()
 {
+	bool success = false;
 	XmlTok root;
-	if(root.load("/etc/qhub/accounts.xml")) {
+	if(root.load("etc/qhub/accounts.xml")) {
 		XmlTok* p = &root;
 		if(p->findChild("accounts")) {
+			users.clear(); // clean old users
+			success = true;
 			p = p->getNextChild();
 			if(p->findChild("user")) {
 				XmlTok* tmp;
@@ -41,9 +45,10 @@ void Accounts::load() throw()
 			p = p->getParent();
 		}
 	}
+	return success;
 }
 
-void Accounts::save() const throw()
+bool Accounts::save() const throw()
 {
 	XmlTok root;
 	XmlTok* p = &root;
@@ -54,11 +59,12 @@ void Accounts::save() const throw()
 		tmp->setAttr("password", i->second);
 	}
 	p = p->getParent();
-	root.save("/etc/qhub/accounts.xml");
+	return root.save("etc/qhub/accounts.xml");
 }
 		
-void Accounts::onLogin(ADCClient* client) throw()
+void Accounts::onLogin(int& a, ADCClient* client) throw()
 {
+	a |= HANDLED;
 	ADCInf* attr = client->getAttr();
 	Users::const_iterator i = users.find(attr->getNewInf("NI"));
 	if(i != users.end()) {
@@ -66,8 +72,9 @@ void Accounts::onLogin(ADCClient* client) throw()
 	}
 }
 
-void Accounts::onInfo(ADCClient* client) throw()
+void Accounts::onInfo(int& a, ADCClient* client) throw()
 {
+	a |= HANDLED;
 	ADCInf* attr = client->getAttr();
 	UserData* data = client->getData();
 	if(attr->newInf("NI")) {
@@ -80,8 +87,9 @@ void Accounts::onInfo(ADCClient* client) throw()
 	}
 }
 
-void Accounts::onAuth(ADCClient* client) throw()
+void Accounts::onAuth(int& a, ADCClient* client) throw()
 {
+	a |= HANDLED;
 	UserData* data = client->getData();
 	data->setInt(idUserLevel, 1);
 	assert(data->getInt(idUserLevel) == 1);
@@ -89,28 +97,71 @@ void Accounts::onAuth(ADCClient* client) throw()
 	attr->setInf("OP", "1");
 }
 
-void Accounts::onCommand(ADCClient* client, string const& msg) throw()
+void Accounts::onCommand(int& a, ADCClient* client, string const& msg) throw()
 {
 	if(client->getData()->getInt(idUserLevel)) {
+		UserData* data = client->getData();
 		StringList sl = Util::lazyStringTokenize(msg);
-		if(sl.size() >= 1 && sl[0] == "acct") {
-			if(sl.size() == 2 && sl[1] == "load") {
-				load();
-				client->doHubMessage("accounts reloaded");
-			} else if(sl.size() == 2 && sl[1] == "save") {
-				save();
-				client->doHubMessage("accounts saved");
-			} else if(sl.size() == 4 && sl[1] == "add") {
-				users[sl[2]] = sl[3];
-				client->doHubMessage("account added/updated");
-			} else if(sl.size() == 3 && sl[1] == "del") {
-				Users::iterator i = users.find(sl[2]);
+		string const& pwd = data->getString(idVirtualPath);
+		size_t siz = sl.size();
+		if(a != HANDLED && a != STOP && siz == 1 && sl[0] == "pwd") {
+			a |= HANDLED;
+			client->doPrivateMessage(pwd.empty() ? "/" : pwd);
+		} else if(pwd.empty() && siz == 1 && sl[0] == "ls") {
+			a |= HANDLED;
+			client->doPrivateMessage("accounts/");
+		} else if(a != HANDLED && a != STOP && 
+				((siz == 1 && sl[0] == "cd") || (siz == 2 && sl[0] == "cd" && sl[1] == "/"))) {
+			a |= HANDLED;
+			data->setString(idVirtualPath, Util::emptyString);
+			client->doPrivateMessage("/");
+		}
+		if(a == HANDLED || a == STOP)
+			return;
+
+		if(siz == 2 && sl[0] == "cd" && sl[1] == "/accounts" || sl[1] == "/accounts/" ||
+				(pwd.empty() && (sl[1] == "accounts/" || sl[1] == "accounts"))) {
+			a |= HANDLED;
+			data->setString(idVirtualPath, "/accounts/");
+			client->doPrivateMessage("/accounts/");
+		} else if(pwd.find("/accounts/") == 0) {
+			a |= HANDLED;
+			if(siz == 1 && sl[0] == "ls") {
+				client->doPrivateMessage("add <nick> <password>");
+				client->doPrivateMessage("del <nick>");
+				client->doPrivateMessage("list [wildcards]");
+				client->doPrivateMessage("load");
+				client->doPrivateMessage("save");
+			} else if(siz == 1 && sl[0] == "load") {
+				if(load()) {
+					client->doPrivateMessage("success: accounts reloaded");
+				} else {
+					client->doPrivateMessage("failure: accounts file loading failed");
+				}
+			} else if(siz == 1 && sl[0] == "save") {
+				if(save()) {
+					client->doPrivateMessage("success: accounts saved");
+				} else {
+					client->doPrivateMessage("failure: accounts file saving failed");
+				}
+			} else if(sl.size() == 3 && sl[0] == "add") {
+				users[sl[1]] = sl[2];
+				client->doPrivateMessage("success: account added/updated");
+			} else if(sl.size() == 2 && sl[0] == "del") {
+				Users::iterator i = users.find(sl[1]);
 				if(i != users.end()) {
 					users.erase(i);
-					client->doHubMessage("account deleted");
+					client->doPrivateMessage("success: account deleted");
 				} else {
-					client->doHubMessage("account not found");
-				}	
+					client->doPrivateMessage("failure: account not found");
+				}
+			} else if(sl.size() >= 1 && sl[0] == "list") {
+				// accept wildcards.. fixme
+				for(Users::const_iterator i = users.begin(); i != users.end(); ++i) {
+					client->doPrivateMessage(i->first + '\t' + i->second);
+				}
+			} else {
+				client->doPrivateMessage("failure: command or parameters unexpected");
 			}
 		}
 	}

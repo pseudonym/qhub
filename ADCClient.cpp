@@ -91,6 +91,11 @@ void ADCClient::doHubMessage(string const& msg) throw()
 	send("BMSG " + hub->getCID32() + ' ' + esc(msg) + '\n');
 }
 
+void ADCClient::doPrivateMessage(string const& msg) throw()
+{
+	send("DMSG " + guid + ' ' + hub->getCID32() + ' ' + esc(msg) + " PM\n");
+}
+
 void ADCClient::onLine(StringList const& sl, string const& full) throw()
 {		
 	assert(!sl.empty());
@@ -152,7 +157,8 @@ void ADCClient::onLine(StringList const& sl, string const& full) throw()
 
 void ADCClient::onConnected() throw()
 {
-	Plugin::fire(Plugin::CONNECTED, this);
+	int a = Plugin::NONE; // action is ignored
+	Plugin::fire(Plugin::CONNECTED, a, this);
 }
 
 void ADCClient::onDisconnected(string const& clue) throw()
@@ -168,7 +174,8 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		else
 			hub->broadcast(this, string("IQUI " + guid + " DI " + guid + ' ' + esc(clue) + '\n'));
 	}
-	Plugin::fire(Plugin::DISCONNECTED, this);
+	int a = Plugin::NONE; // action is ignore
+	Plugin::fire(Plugin::DISCONNECTED, a, this);
 }
 
 
@@ -226,14 +233,17 @@ void ADCClient::handleBINF(StringList const& sl, string const& full)
 			return;
 		}
 
-		Plugin::fire(Plugin::LOGIN, this);
-		if(password.empty()) {
+		int a = Plugin::NONE;
+		Plugin::fire(Plugin::LOGIN, a, this);
+		if(a != Plugin::STOP && password.empty()) { // major breakage on STOP
 			login();
 			state = NORMAL;
 		}
 	} else {
-		Plugin::fire(Plugin::INFO, this);
-		hub->broadcastSelf(attributes->getChangedInf());
+		int a = Plugin::NONE;
+		Plugin::fire(Plugin::INFO, a, this);
+		if(a != Plugin::STOP)
+			hub->broadcastSelf(attributes->getChangedInf());
 	}
 }
 	
@@ -243,7 +253,6 @@ void ADCClient::handleBMSG(StringList const& sl, string const& full)
 		attributes->setInf(sl[2].substr(7, 2), sl[2].substr(9));
 		hub->broadcastSelf(attributes->getChangedInf());
 	}
-	Plugin::fire(Plugin::COMMAND, this, sl[2]);
 	hub->broadcastSelf(full);
 	// FIXME add check for PM<guid> flag
 }
@@ -259,10 +268,17 @@ void ADCClient::handleD(StringList const& sl, string const& full)
 			sl[0] == "DCTM" ||
 			sl[0] == "DRCM"
 	)) {
-		hub->direct(sl[1], full);
-		// "Apart from sending the message to the target, an exact copy must always be sent to the source
-		//  to confirm that the hub has correctly processed the message."
-		send(full); 
+		// This will be classified as COMMAND (replied to through doPrivateMessage)
+		if(sl[0] == "DMSG" && sl[1] == hub->getCID32() && sl[4] == "PM") {
+			send(full); 
+			int a = Plugin::NONE;
+			Plugin::fire(Plugin::COMMAND, a, this, sl[3]);
+		} else {
+			hub->direct(sl[1], full);
+			// "Apart from sending the message to the target, an exact copy must always be sent to the source
+			//  to confirm that the hub has correctly processed the message."
+			send(full); 
+		}
 	} else {
 		PROTOCOL_ERROR(sl[0] + " message type or parameter count unsupported");
 	}
@@ -378,16 +394,19 @@ void ADCClient::handleHPAS(StringList const& sl, string const& full)
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		return;
 	}
-	Plugin::fire(Plugin::AUTHENTICATED, this);
-	login();
-	state = NORMAL;
+	int a = Plugin::NONE;
+	Plugin::fire(Plugin::AUTHENTICATED, a, this);
+	if(a != Plugin::STOP) { // major breakage on STOP
+		login();
+		state = NORMAL;
+	}
 }
 
 void ADCClient::handleHSUP(StringList const& sl, string const& full)
 {
 	send("ISUP " + hub->getCID32() + " +BASE\n" // <-- do we need CID?
 			"IINF " + hub->getCID32() + " NI" + esc(hub->getHubName()) +
-			" HU1 HI1 DEmajs VEqhub0.02\n");
+			" HU1 DEmajs VEqhub0.02\n");
 	state = IDENTIFY;
 }
 	

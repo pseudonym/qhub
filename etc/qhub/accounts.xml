@@ -1,5 +1,8 @@
 <accounts>
 	<user nick="sed" password="hoi"/>
+	<user nick="sedje" password="hoi"/>
 	<user nick="[rug.nl]s2-10n" password="hoi"/>
+	<user nick="PseudonympH" password="somepass"/>
+	<user nick="åäö23" password="majs"/>
 	<user nick="sandos" password="majs"/>
 </accounts>

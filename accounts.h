@@ -13,31 +13,32 @@ class ADCClient;
 
 class Accounts : public Plugin {
 public:
-	static UserData::Key idUserLevel;
+	static UserData::Key idUserLevel;	// int
+	static UserData::Key idVirtualPath;	// string
 	
 	Accounts() throw() {};
 	virtual ~Accounts() throw() {};
 
-	virtual void on(Message m, ADCClient* client, string const& msg) throw() {
+	virtual void on(Message m, int& a, ADCClient* client, string const& msg) throw() {
 		switch(m) {
 		case STARTED: load(); fprintf(stderr, "Plugin: accounts: started\n"); break;
 		case STOPPED: save(); fprintf(stderr, "Plugin: accounts: stopped\n"); break;
-		case LOGIN: onLogin(client); break;
-		case INFO: onInfo(client); break;
-		case AUTHENTICATED: onAuth(client); break;
-		case COMMAND: onCommand(client, msg); break;
+		case LOGIN: onLogin(a, client); break;
+		case INFO: onInfo(a, client); break;
+		case AUTHENTICATED: onAuth(a, client); break;
+		case COMMAND: onCommand(a, client, msg); break;
 		default: break;
 		}
 	}
 
 private:
-	void load() throw();
-	void save() const throw();
+	bool load() throw();
+	bool save() const throw();
 	
-	void onLogin(ADCClient* client) throw();
-	void onInfo(ADCClient* client) throw();
-	void onAuth(ADCClient* client) throw();
-	void onCommand(ADCClient* client, string const& msg) throw();
+	void onLogin(int& a, ADCClient* client) throw();
+	void onInfo(int& a, ADCClient* client) throw();
+	void onAuth(int& a, ADCClient* client) throw();
+	void onCommand(int& a, ADCClient* client, string const& msg) throw();
 
 	typedef hash_map<string, string> Users; // too simple.. works for now
 	Users users;

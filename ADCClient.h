@@ -58,6 +58,7 @@ public:
 	virtual void doError(string const& msg) throw();
 	virtual void doDisconnect(string const& msg = Util::emptyString) throw();
 	virtual void doHubMessage(string const& msg) throw();
+	virtual void doPrivateMessage(string const& msg) throw();
 
 protected:
 	/*

@@ -64,6 +64,19 @@ public:
 		}
 		return sl;
 	};
+	/*
+	static StringList lazyQuotedStringTokenize(string const& msg, char token = ' ', char quote = '"') throw()
+	{
+		StringList sl;
+		string::size_type i = 0, start;
+		int state = 0;
+		for(string::const_iterator i = msg.begin(); i != msg.end(); ++i) {
+			
+		string both; both.push_back(token); both.push_back(quote);
+		while((i = msg.find_first_of(both, j)) != string::npos) {
+	*/		
+		
+		
 		
 };
 

@@ -28,6 +28,12 @@ public:
 		INFO,			// User sends a new INF line (param ADCClient*)
 		COMMAND			// User sends direct message to hub cid
 	};
+
+	enum Action {
+		NONE = 0,
+		HANDLED = 1,	// I handled the command
+		STOP = 2,		// Don't handle this command
+	};
 	
 	/*
 	 * Static methods
@@ -37,11 +43,11 @@ public:
 	static void openModule(const char* filename) throw();
 	static void removeModule(const char* filename) throw();
 	static void removeAllModules() throw();
-	static void fire(Message m, ADCClient* client = NULL, string const& msg = Util::emptyString) throw();
+	static void fire(Message m, int& a, ADCClient* client = NULL, string const& msg = Util::emptyString) throw();
 
 	Plugin() throw() {};
 	virtual ~Plugin() throw() {};
-	virtual void on(Message m, ADCClient* client, string const& msg) throw() = 0;
+	virtual void on(Message m, int& a, ADCClient* client, string const& msg) throw() = 0;
 
 private:
 	typedef list<Plugin*> Plugins;

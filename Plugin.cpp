@@ -31,7 +31,8 @@ void Plugin::openModule(const char* filename) throw()
 				fprintf(stderr, "success\n");
 				p->name = filename;
 				p->handle = h;
-				p->on(STARTED, NULL, Util::emptyString);
+				int a = Plugin::NONE;
+				p->on(STARTED, a, NULL, Util::emptyString);
 				modules.push_back(p);
 				return;
 			}	
@@ -45,7 +46,8 @@ void Plugin::removeModule(const char* filename) throw()
 	string tmp = filename;
 	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i){
 		if((*i)->name == tmp) {
-			(*i)->on(STOPPED, NULL, Util::emptyString);
+			int a = Plugin::NONE;
+			(*i)->on(STOPPED, a, NULL, Util::emptyString);
 			lt_dlhandle h = (*i)->handle;
 			delete *i;
 			lt_dlclose(h); // close AFTER deleting, not while
@@ -58,7 +60,8 @@ void Plugin::removeAllModules() throw()
 {
 	while(!modules.empty()) {
 		Plugins::iterator i = modules.begin();
-		(*i)->on(STOPPED, NULL, Util::emptyString);
+		int a = Plugin::NONE;
+		(*i)->on(STOPPED, a, NULL, Util::emptyString);
 		lt_dlhandle h = (*i)->handle;
 		delete *i;
 		lt_dlclose(h); // close AFTER deleting, not while
@@ -66,9 +69,9 @@ void Plugin::removeAllModules() throw()
 	}
 }	
 
-void Plugin::fire(Message m, ADCClient* client, string const& msg) throw()
+void Plugin::fire(Message m, int& a, ADCClient* client, string const& msg) throw()
 {
 	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i) {
-		(*i)->on(m, client, msg);
+		(*i)->on(m, a, client, msg);
 	}
 }
