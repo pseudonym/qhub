@@ -4,6 +4,7 @@
 #include "ServerSocket.h"
 #include "ADC.h"
 #include "InterHub.h"
+#include "Buffer.h"
 
 #include <stdlib.h>
 #include <adns.h>
@@ -40,7 +41,6 @@ void Hub::onLookup(adns_answer *reply) const
 	}
 }
 
-
 void Hub::openInterConnection(string host, int port, string password)
 {
 	//Do a DNS-lookup
@@ -72,40 +72,15 @@ void Hub::acceptLeaf(int fd)
 	Socket* tmp = new ADC(fd, this);
 }
 
-void Hub::createCache()
+void Hub::getUsersList(ADC* c)
 {
-	//rebuild master cache
 	string tmp;
 	for(userIter i=users.begin(); i!=users.end(); i++){
 		tmp += i->second->getFullInf();
 	}
 
-	userlist.reset(new Buffer(tmp, 0));
-
-	outliers.clear();
-
-	fprintf(stderr, "Created a cache: %s\n", tmp.c_str());
-}
-
-void Hub::getUsersList(ADC* c)
-{
-	//Good algorithm for this?
-	//checkpointing + DIFFs could work. (Why? Limits the amount of (re-) iterating over nicks.)
-	//caching this way reduces iteration over a random timeinterval from n^2 to n, where n is number of users
-	//drawbacks include more small sends to do (can be easily merged though, remembering last size of "quits+joins"
-	//part
-	//methods to limit the amount of joins to begin with could help efficiency
-	if(userlist.get() == NULL /*|| oldcache*/){
-		createCache();
-	}
-
-	//send userlist
-	c->writeb(userlist);
-	fprintf(stderr, (string("Userlist is ") + userlist->getBuf() + "<").c_str());
-	for(list<qhub::Buffer::writeBuffer>::iterator i=outliers.begin(); i!=outliers.end(); i++){
-		c->writeb(*i);
-		fprintf(stderr, (string("Adding outlier ") + i->get()->getBuf()).c_str());
-	}
+	Buffer::writeBuffer t(new Buffer(tmp));
+	c->writeb(t);
 }
 
 void Hub::motd(ADC* c)
@@ -157,11 +132,8 @@ void Hub::setMaxPacketSize(int s)
 void Hub::removeClient(string guid)
 {
 	if(users.find(guid) != users.end()){
-		//add a QUIT to cache
-		//users[guid]->
 		string qui = "IQUI " + guid + " ND\n";
-		Buffer::writeBuffer tmp(new Buffer(qui, PRIO_LIST));
-		outliers.push_back(tmp);
+		Buffer::writeBuffer tmp(new Buffer(qui, 0));
 		users.erase(guid);
 	} else {
 		assert(false);
@@ -176,15 +148,6 @@ bool Hub::addClient(ADC* client, string guid)
 		return false;
 	}
 	users[guid] = client;
-
-	//add to userlist cache, dont check age here (?)
-	/*if(userlist.get() == NULL){
-		createCache();
-	} else {
-		Buffer::writeBuffer tmp(new Buffer(client->getFullInf(), PRIO_LIST));
-		outliers.push_back(tmp);
-	}*/
-	createCache();
 
 	return true;
 }

@@ -58,17 +58,11 @@ private:
 	hash_map<string, ADC*> users;
 	typedef hash_map<string, ADC*>::iterator userIter;
 
-	//userlist-cache.
-	qhub::Buffer::writeBuffer userlist;
-	list<qhub::Buffer::writeBuffer> outliers;
-
 	//opened connections
 	hash_map<string, InterHub*> interConnects;
 
 	//listened opened connections
 	list<InterHub*>	interConnects2;
-
-	void createCache();
 };
 
 }
