@@ -12,9 +12,16 @@
 
 using namespace qhub;
 
+Hub::Hubs Hub::hubs;
+
 Hub::Hub() : maxPacketSize(65536)
 {
+	add(this);
+}
 
+Hub::~Hub()
+{
+	remove(this);
 }
 
 void Hub::onLookup(adns_answer *reply) const
@@ -164,4 +171,20 @@ void Hub::acceptInterHub(int fd)
 	interConnects2.push_back(tmp);
 }
 
+void Hub::killAll() throw()
+{
+	while(!hubs.empty())
+		delete *hubs.begin();
+}
 
+void Hub::add(Hub* h) throw()
+{
+	assert(find(hubs.begin(), hubs.end(), h) == hubs.end());
+	hubs.push_back(h);
+}
+
+void Hub::remove(Hub* h) throw()
+{
+	assert(find(hubs.begin(), hubs.end(), h) != hubs.end());
+	hubs.erase(find(hubs.begin(), hubs.end(), h));
+}

@@ -28,13 +28,13 @@ public:
 	}
 
 private:
+	void load() throw();
+	void save() throw();
+	
 	void onLogin(ADC* client) throw();
 	void onInfo(ADC* client) throw();
 	void onAuth(ADC* client) throw();
-
 	void onCommand(ADC* client, string const& msg) throw();
-
-	
 };
 
 } //namespace qhub

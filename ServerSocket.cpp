@@ -22,7 +22,7 @@
 
 using namespace qhub;
 
-ServerSocket::ServerSocket(int port, int t, Hub* h) : hub(h), Socket(AF_INET), type(t) {
+ServerSocket::ServerSocket(int port, int t, Hub* h) : Socket(AF_INET), type(t), hub(h) {
 	int yes=1;
 
 	if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {

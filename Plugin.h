@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef __PLUGIN_H_
-#define __PLUGIN_H_
+#ifndef _INCLUDED_PLUGIN_H_
+#define _INCLUDED_PLUGIN_H_
 
 #include <string>
 #include <ltdl.h>
@@ -36,21 +36,21 @@ public:
 	static void deinit() throw();
 	static void openModule(const char* filename) throw();
 	static void removeModule(const char* filename) throw();
+	static void removeAllModules() throw();
 	static void fire(Message m, ADC* client = NULL, string const& msg = Util::emptyString) throw();
 
 	Plugin() throw() {};
-	virtual ~Plugin() throw();
+	virtual ~Plugin() throw() {};
 	virtual void on(Message m, ADC* client, string const& msg) throw() = 0;
 
 private:
 	typedef list<Plugin*> Plugins;
 	static Plugins modules;
 	typedef void* (*get_plugin_t)();
-
 	string name;
 	lt_dlhandle handle;
 };
 
-}
+} //namespace qhub
 
-#endif
+#endif //_INCLUDED_PLUGIN_H_

@@ -19,8 +19,10 @@ class ADC;
 
 class Hub : public DNSUser {
 public:
+	static void killAll() throw();
+
 	Hub();
-	virtual ~Hub() {};
+	virtual ~Hub();
 
 	void openADCPort(int port);
 	void openInterPort(int port);
@@ -51,6 +53,11 @@ public:
 
 	void getUsersList(ADC* c);
 private:
+	static void add(Hub* h) throw();
+	static void remove(Hub* h) throw();
+	typedef list<Hub*> Hubs;
+	static Hubs hubs;
+	
 	string name;
 
 	int maxPacketSize;

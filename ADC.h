@@ -26,7 +26,8 @@ public:
 		START,		// HSUP
 		IDENTIFY,	// BINF
 		VERIFY,		// HPAS
-		NORMAL
+		NORMAL,
+		DISCONNECTED	// signals that one shouldn't use this anymore
 	};
 	
 	ADC(int fd, Hub* parent);

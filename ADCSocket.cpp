@@ -171,16 +171,16 @@ void ADCSocket::on_write()
 
 void ADCSocket::realDisconnect()
 {
-	if(!disconnected) {
-		disconnect(); // notify others that we're dying
-	}
-	
 	if(fd == -1) {
 		// if we're already disconnecting, we would loop trying to delete ourselves again
 		// as we're called from the destructor
 		return;
 	}
-	
+
+	if(!disconnected) {
+		disconnect(); // notify others that we're dying
+	}
+		
 	fprintf(stderr, "Real Disconnect %d %p\n", fd, this);
 	close(fd);
 	if(writeEnabled){

@@ -4,24 +4,20 @@ using namespace qhub;
 
 Plugin::Plugins Plugin::modules;
 
-void qhub::Plugin::init() throw()
+void Plugin::init() throw()
 {
 	lt_dlinit();
 	//add search-dir
 	//lt_dladdsearchdir("./plugins/");
 }
 
-void qhub::Plugin::deinit() throw()
+void Plugin::deinit() throw()
 {
+	removeAllModules();
 	lt_dlexit();
 }
 
-Plugin::~Plugin() throw()
-{
-	lt_dlclose(handle);
-}
-
-void qhub::Plugin::openModule(const char* filename) throw()
+void Plugin::openModule(const char* filename) throw()
 {
 	fprintf(stderr, "Loading plugin %s ... ", filename);
 	lt_dlhandle h = lt_dlopenext(filename);
@@ -44,17 +40,31 @@ void qhub::Plugin::openModule(const char* filename) throw()
 	fprintf(stderr, "failed\n");
 }
 
-void qhub::Plugin::removeModule(const char* filename) throw()
+void Plugin::removeModule(const char* filename) throw()
 {
 	string tmp = filename;
 	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i){
 		if((*i)->name == tmp) {
 			(*i)->on(STOPPED, NULL, Util::emptyString);
+			lt_dlhandle h = (*i)->handle;
 			delete *i;
+			lt_dlclose(h); // close AFTER deleting, not while
 			modules.erase(i);
 		}
 	}
 }
+
+void Plugin::removeAllModules() throw()
+{
+	while(!modules.empty()) {
+		Plugins::iterator i = modules.begin();
+		(*i)->on(STOPPED, NULL, Util::emptyString);
+		lt_dlhandle h = (*i)->handle;
+		delete *i;
+		lt_dlclose(h); // close AFTER deleting, not while
+		modules.erase(i);
+	}
+}	
 
 void Plugin::fire(Message m, ADC* client, string const& msg) throw()
 {

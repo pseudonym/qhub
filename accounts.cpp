@@ -11,12 +11,7 @@ using namespace qhub;
  */
 
 extern "C" {
-
-void* getPlugin()
-{
-	return new Accounts();
-}
-
+void* getPlugin() { return new Accounts(); }
 } //extern "C"
 	
 
@@ -25,7 +20,8 @@ void* getPlugin()
  * Plugin details
  */
 
-void Accounts::onLogin(ADC* client) throw() {
+void Accounts::onLogin(ADC* client) throw()
+{
 	ADCInf* attr = client->getAttr();
 	if(attr->getNewInf("NI").find("sed") != string::npos) {
 		client->doAskPassword("hoi");
@@ -34,7 +30,8 @@ void Accounts::onLogin(ADC* client) throw() {
 	}
 }
 
-void Accounts::onInfo(ADC* client) throw() {
+void Accounts::onInfo(ADC* client) throw()
+{
 	ADCInf* attr = client->getAttr();
 	if(attr->newInf("NI")) {
 		// don't allow registered users to change nick
@@ -47,11 +44,13 @@ void Accounts::onInfo(ADC* client) throw() {
 	}
 }
 
-void Accounts::onAuth(ADC* client) throw() {
+void Accounts::onAuth(ADC* client) throw()
+{
 	client->setUserLevel(1);
 	ADCInf* attr = client->getAttr();
 	attr->setInf("OP", "1");
 }
 
-void Accounts::onCommand(ADC* client, string const& msg) throw() {
+void Accounts::onCommand(ADC* client, string const& msg) throw()
+{
 }

@@ -97,8 +97,16 @@ void qhub::lookup(const char* hostname, DNSUser* d){
 	//oop_adns_query * qadns = oop_adns_submit(adns,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
 }
 
+void end(int)
+{
+	Plugin::deinit();
+	Hub::killAll();
+	exit(0);
+}
+
 int main()
 {
+	signal(SIGINT, &end);
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGALRM, SIG_IGN);
 #ifdef LINUX
@@ -133,13 +141,14 @@ int main()
 
 	Settings::readFromXML();
 
+	//Init random number generator
+	srand(time(NULL));
+
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);
 #else
 	event_dispatch();
 #endif
 
-	//Init random number generator
-	srand(time(NULL));
 	return 0;
 }
