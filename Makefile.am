@@ -19,6 +19,7 @@ qhub_SOURCES += Timer.h Timer.cpp
 
 EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO Settings.xml
 EXTRA_DIST += config.sub config.guess foo1.c
+EXTRA_DIST += etc/qhub/plugins.xml etc/qhub/accounts.xml
 
 
 lib_LTLIBRARIES = foo1.la accounts.la virtualfs.la loader.la
@@ -31,7 +32,7 @@ accounts_la_SOURCES = PluginAccounts.h PluginAccounts.cpp
 accounts_la_LDFLAGS = -module
 
 virtualfs_la_SOURCES = PluginVirtualFsDir.h PluginVirtualFs.h PluginVirtualFs.cpp
-virtualfs_la_LDFLAGS = -module
+virtualfs_la_LDFLAGS = -module -export-dynamic
 
 loader_la_SOURCES = PluginLoader.h PluginLoader.cpp
 loader_la_LDFLAGS = -module
