@@ -9,3 +9,5 @@ Make ADC core simpler and more robust, always verify source GUID
 Queue broadcast messages
 
 Rate-limiting (allow bursting or not? its DDOSable.)
+
+Send delta-INFs
