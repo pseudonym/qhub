@@ -88,7 +88,9 @@ void qhub::cancel(int fd, oop_event ev)
 }
 
 void qhub::lookup(const char* hostname, DNSUser* d){
-	oop_adns_query * qadns = oop_adns_submit(adns,NULL,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
+	//oop_adns_query * qadns = oop_adns_submit(adns,NULL,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
+	//this might be required to compile
+	//oop_adns_query * qadns = oop_adns_submit(adns,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
 }
 
 int main()
