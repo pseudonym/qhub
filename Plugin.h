@@ -213,7 +213,8 @@ private:
 	static Plugins plugins;
 	typedef void* (*get_plugin_t)();
 	string name;
-	lt_dlhandle handle;
+//	lt_dlhandle handle;
+	void* handle;
 };
 
 } //namespace qhub

@@ -1,5 +1,6 @@
 // vim:ts=4:sw=4:noet
-#include <Plugin.h>
+#include "Plugin.h"
+#include <dlfcn.h>
 
 using namespace qhub;
 
@@ -8,7 +9,7 @@ Plugin::Plugins Plugin::plugins;
 
 void Plugin::init() throw()
 {
-	lt_dlinit();
+	//lt_dlinit();
 	//add search-dir
 	//lt_dladdsearchdir("./plugins/");
 }
@@ -16,16 +17,23 @@ void Plugin::init() throw()
 void Plugin::deinit() throw()
 {
 	removeAllModules();
-	lt_dlexit();
+	//lt_dlexit();
 }
 
 bool Plugin::openModule(string const& filename, string const& insertBefore) throw()
 {
-	lt_dlhandle h = lt_dlopenext(filename.c_str());
+	//lt_dlhandle h = lt_dlopenext(filename.c_str());
+	void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
+	// !! export LD_LIBRARY_PATH=.libs !!
+	fprintf(stderr, "dlerror() = %s\n", dlerror());
 
 	if(h != NULL) {
-		lt_ptr ptr;
-		if((ptr = lt_dlsym(h, "getPlugin")) != NULL) {
+//		lt_ptr ptr;
+		void* ptr;
+//		if((ptr = lt_dlsym(h, "getPlugin")) != NULL) {
+		ptr = dlsym(h, "getPlugin");
+		char const* error;
+		if((error = dlerror()) == NULL) {
 			get_plugin_t getPlugin = (get_plugin_t)ptr;
 			Plugin* p = (Plugin*)getPlugin();
 			if(p) {
@@ -47,6 +55,8 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 				fprintf(stderr, "Loading plugin \"%s\" SUCCESS!\n", filename.c_str());
 				return true;
 			}	
+		} else {
+			fprintf(stderr, "dlerror() = %s\n", error);
 		}
 	}
 	fprintf(stderr, "Loading plugin \"%s\" FAILED!\n", filename.c_str());
@@ -60,9 +70,11 @@ bool Plugin::removeModule(string const& filename) throw()
 			// deinit self before others
 			PluginStopped action;
 			(*i)->on(action, *i);
-			lt_dlhandle h = (*i)->handle;
+//			lt_dlhandle h = (*i)->handle;
+			void* h = (*i)->handle;
 			delete *i;
-			lt_dlclose(h); // close AFTER deleting, not while
+//			lt_dlclose(h); // close AFTER deleting, not while
+			dlclose(h);
 			plugins.erase(i);
 			// fire in reverse order
 			for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
@@ -84,9 +96,11 @@ void Plugin::removeAllModules() throw()
 		PluginStopped action;
 		for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
 			(*j)->on(action, *i);
-		lt_dlhandle h = (*i)->handle;
+//		lt_dlhandle h = (*i)->handle;
+		void* h = (*i)->handle;
 		delete *i;
-		lt_dlclose(h); // close AFTER deleting, not while
+//		lt_dlclose(h); // close AFTER deleting, not while
+		dlclose(h);
 		plugins.erase(i);
 	}
 }

@@ -185,7 +185,7 @@ int main()
 
 	//try loading
 	Plugin::init();
-	Plugin::openModule("loader");
+	Plugin::openModule("loader.so");
 
 	Settings::readFromXML();
 
