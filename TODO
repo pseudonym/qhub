@@ -2,11 +2,7 @@
 
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
 
-Rename config.xml to settings.xml, ./configure easier.
-
 LO1 handling
-
-move xml code into class
 
 Make ADC core simpler and more robust
 
