@@ -178,12 +178,13 @@ bool Hub::addClient(ADC* client, string guid)
 	users[guid] = client;
 
 	//add to userlist cache, dont check age here (?)
-	if(userlist.get() == NULL){
+	/*if(userlist.get() == NULL){
 		createCache();
 	} else {
 		Buffer::writeBuffer tmp(new Buffer(client->getFullInf(), PRIO_LIST));
 		outliers.push_back(tmp);
-	}
+	}*/
+	createCache();
 
 	return true;
 }
