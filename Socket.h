@@ -48,8 +48,8 @@ public:
 	void listen(int backlog = 8192);
 
 	//beware: this will copy string. Limit use.
-	void write(string& s, int prio=PRIO_NORM);
-	void w(Buffer::writeBuffer b);
+	void write(string const& s, int prio=PRIO_NORM);
+	void writeb(Buffer::writeBuffer b);
 
 	int getFd() { return fd; };
 	string getSockName() const;

@@ -1,3 +1,4 @@
+// vim:ts=4:sw=4:noet
 #include "ADC.h"
 #include "qhub.h"
 #include "Hub.h"
@@ -48,6 +49,9 @@ void ADC::checkParms()
 	//check so that user isnt DOSing us with INF-data.
 	if(INF.size() > 256){
 		state = PROTOCOL_ERROR;
+#ifdef PROTO_DEBUG
+		sendHubMsg("proto error: INF size > 256");		
+#endif
 		disconnect();
 	}
 }
@@ -234,6 +238,9 @@ void ADC::handleBCommand(int length)
 				if(posParms.size()<1){
 					fprintf(stderr, "Malformed parms\n");
 					state = PROTOCOL_ERROR;
+#ifdef PROTO_DEBUG
+					sendHubMsg("proto error: Malformed parms in BINF");		
+#endif
 					disconnect();
 					return;
 				} else {
@@ -262,6 +269,9 @@ void ADC::handleBCommand(int length)
 					guid = posParms[0];
 					//add us later, dont want us two times
 					if(!hub->addClient(this, posParms[0])){
+#ifdef PROTO_DEBUG
+						sendHubMsg("proto error: User exists already");		
+#endif
 						disconnect();
 						return;
 					}
@@ -314,8 +324,7 @@ void ADC::handleDCommand(int length)
 
 void ADC::sendHubMsg(string msg)
 {
-	Buffer::writeBuffer tmp(new Buffer(string("BMSG FQI2LLF4K5W3Y " + escape(msg) + "\n"), 0));
-	w(tmp);
+	send(string("BMSG ") + hub->getCID32() + ' ' + escape(msg) + '\n');
 }
 
 string ADC::escape(string in)
@@ -324,7 +333,9 @@ string ADC::escape(string in)
 	tmp.reserve(255);
 	for(int i=0; i<in.size(); i++){
 		switch(in[i]){
-case ' ': case 0x0a: case '\\':
+		case ' ':
+		case '\n':
+		case '\\':
 			tmp += '\\'; tmp += in[i];
 			break;
 		default:
@@ -343,13 +354,16 @@ void ADC::handleHCommand(int length)
 	switch(readBuffer[1]){
 	case 'S':
 		if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
-			if(state == START){
-				Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NI"
-				                                   + escape(hub->getHubName()) + " HU1 HI1 DEmajs VEqhub0.02\n"), 0));
-				w(tmp);
+			if(state == START) {
+				send(string("ISUP ") + hub->getCID32() + " +BASE\n"
+						"IINF " + hub->getCID32() + " NI" + escape(hub->getHubName()) +
+							" HU1 HI1 DEmajs VEqhub0.02\n");
 				state = GOT_SUP;
 			} else {
 				state = PROTOCOL_ERROR;
+#ifdef PROTO_DEBUG
+				sendHubMsg("proto error: ISUP not expected");		
+#endif
 				disconnect();
 			}
 		} else if(readBuffer[2] == 'N' && readBuffer[3] == 'D'){
@@ -361,12 +375,18 @@ void ADC::handleHCommand(int length)
 			//check password
 		} else {
 			state = PROTOCOL_ERROR;
+#ifdef PROTO_DEBUG
+			sendHubMsg("proto error: ISUP expected");		
+#endif
 			disconnect();
 		}
 		break;
 	case 'D':
 		//DSC
 		fprintf(stderr, "DSC gotten\n");
+#ifdef PROTO_DEBUG
+		sendHubMsg("proto error: got HDSC");		
+#endif
 		disconnect();
 		return;
 		break;
@@ -421,6 +441,9 @@ void ADC::on_read()
 			for(int i=0; i<rbCur; i++){
 				if(i>hub->getMaxPacketSize()){
 					state = PROTOCOL_ERROR;
+#ifdef PROTO_DEBUG
+					sendHubMsg("proto error: packet too large");
+#endif
 					disconnect();
 					break;
 				}
@@ -437,6 +460,9 @@ void ADC::on_read()
 		}
 	} else if(r < 1){
 		fprintf(stderr, "Got -1 from read\n");
+#ifdef PROTO_DEBUG
+		sendHubMsg("proto error: got -1 from read");
+#endif
 		disconnect();
 	}
 

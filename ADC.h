@@ -28,6 +28,8 @@ public:
 	void sendFullInf();
 	string getFullInf();
 
+	// send functions
+	void send(string const& msg) { write(msg, 0); }
 	void sendHubMsg(string msg);
 
 	bool dis() { return disconnected; }

@@ -100,10 +100,10 @@ void Hub::getUsersList(ADC* c)
 	}
 
 	//send userlist
-	c->w(userlist);
+	c->writeb(userlist);
 	fprintf(stderr, (string("Userlist is ") + userlist->getBuf() + "<").c_str());
 	for(list<qhub::Buffer::writeBuffer>::iterator i=outliers.begin(); i!=outliers.end(); i++){
-		c->w(*i);
+		c->writeb(*i);
 		fprintf(stderr, (string("Adding outlier ") + i->get()->getBuf()).c_str());
 	}
 }
@@ -136,7 +136,7 @@ void Hub::broadcast(ADC* c, string data)
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	for(userIter i=users.begin(); i!=users.end(); i++){
 		if(i->second != c){
-			i->second->w(tmp);
+			i->second->writeb(tmp);
 		}
 	}
 }
@@ -145,7 +145,7 @@ void Hub::broadcastSelf(ADC* c, string data)
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	for(userIter i=users.begin(); i!=users.end(); i++){
-		i->second->w(tmp);
+		i->second->writeb(tmp);
 	}
 }
 

@@ -27,6 +27,8 @@ extern "C" {
 #include <adns.h>
 }
 
+#define PROTO_DEBUG
+
 namespace qhub {
 
 void enable(int fd, oop_event ev, Socket* s);

@@ -73,13 +73,13 @@ void Socket::disconnect()
 	disconnected = true;
 }
 
-void Socket::write(string& s, int prio)
+void Socket::write(string const& s, int prio)
 {
 	Buffer::writeBuffer tmp(new Buffer(s, prio));
-	w(tmp);
+	writeb(tmp);
 }
 
-void Socket::w(Buffer::writeBuffer b)
+void Socket::writeb(Buffer::writeBuffer b)
 {
 	if(b->getBuf().size() == 0){
 		//no 0-byte sends, please

@@ -26,11 +26,13 @@ public:
 	void openInterConnection(string host, int port, string password);
 	void onLookup(adns_answer *reply) const;
 
+	string getCID32() const { return "FQI2LLF4K5W3Y"; };
+
 	void setHubName(string name) { Hub::name=name; };
-	string getHubName() { return name; }
+	string getHubName() const { return name; };
 
 	void setMaxPacketSize(int s);
-	int getMaxPacketSize() { return maxPacketSize; }
+	int getMaxPacketSize() const { return maxPacketSize; };
 
 	void acceptLeaf(int fd);
 	void acceptInterHub(int fd);
