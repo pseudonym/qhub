@@ -1,12 +1,12 @@
 #include "config.h"
 #include "qhub.h"
-#include "MyTime.h"
 
 #include <stdio.h>
 
 #include "DNSUser.h"
 #include "Hub.h"
 
+#include "Plugin.h"
 
 #ifdef HAVE_XERCESC_DOM_DOM_HPP
 #include <xercesc/parsers/XercesDOMParser.hpp>
@@ -235,6 +235,10 @@ int main()
 	Hub* tmp = new Hub();
 	tmp->openADCPort(9001);
 #endif
+
+	//try loading
+	init();
+	openModule("foo1");
 
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);

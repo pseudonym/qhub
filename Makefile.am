@@ -11,3 +11,9 @@ qhub_SOURCES += Plugin.h Plugin.cpp
 
 EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO config.xml
 EXTRA_DIST += config.sub config.guess
+
+
+lib_LTLIBRARIES = foo1.la
+
+foo1_la_SOURCES = foo1.c
+foo1_la_LDFLAGS = -module
