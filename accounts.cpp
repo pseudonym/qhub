@@ -22,7 +22,7 @@ void* getPlugin() { return new Accounts(); }
  * Plugin details
  */
 
-u_int32_t Accounts::idUserLevel = UserData::toKey("userlevel");
+UserData::Key Accounts::idUserLevel = UserData::toKey("userlevel");
 
 void Accounts::onLogin(ADCClient* client) throw()
 {

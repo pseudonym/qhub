@@ -3,6 +3,7 @@
 #define _INCLUDED_PLUGIN_ACCOUNTS_H_
 
 #include "Plugin.h"
+#include "UserData.h"
 
 using namespace std;
 
@@ -12,7 +13,7 @@ class ADCClient;
 
 class Accounts : public Plugin {
 public:
-	static u_int32_t idUserLevel;
+	static UserData::Key idUserLevel;
 	
 	Accounts() throw() {};
 	virtual ~Accounts() throw() {};
