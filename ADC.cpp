@@ -140,7 +140,10 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 		hub->motd(this);
 	} else {
 		// FIXME send changed info only
-		hub->broadcastSelf(full);
+		//hub->broadcastSelf(full);
+
+		//this sends correct IP, but always sends everything
+		sendFullInf();
 	}
 }
 	
@@ -212,7 +215,8 @@ string ADC::getFullInf() const
 	string parms = "BINF ";
 	parms += guid;
 	for(Inf::const_iterator i = inf.begin(); i != inf.end(); ++i)
-		parms += ' ' + i->first + i->second;
+		//assume parameter-names are never escaped. Not mentioned in spec.
+		parms += ' ' + i->first + esc(i->second);
 	return parms + '\n';
 }
 
