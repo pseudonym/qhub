@@ -95,6 +95,38 @@ void qhub::lookup(const char* hostname, DNSUser* d){
 	//oop_adns_query * qadns = oop_adns_submit(adns,NULL,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
 	//this might be required to compile
 	//oop_adns_query * qadns = oop_adns_submit(adns,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
+#if 0
+	1.0:
+
+	oop_adns_query *oop_adns_submit_reverse(
+	oop_adapter_adns *,int *errcode,
+	const struct sockaddr *addr,adns_rrtype type,adns_queryflags flags,
+	oop_adns_call *,void *);
+
+	0.8:
+
+	oop_adns_query *oop_adns_submit(
+	oop_adapter_adns *,
+	const char *owner,adns_rrtype type,adns_queryflags flags,
+	oop_adns_call *,void *);
+
+	0.9:
+
+oop_adns_query *oop_adns_submit(
+	oop_adapter_adns *,
+	const char *owner,adns_rrtype type,adns_queryflags flags,
+	oop_adns_call *,void *);
+
+	Mine:
+
+	oop_adns_query *oop_adns_submit(
+        oop_adapter_adns *,int *errcode,
+        const char *owner,adns_rrtype type,adns_queryflags flags,
+        oop_adns_call *,void *);
+
+
+#endif
+
 }
 
 void end(int)
@@ -102,6 +134,24 @@ void end(int)
 	Plugin::deinit();
 	Hub::killAll();
 	exit(0);
+}
+
+struct timer {
+        struct timeval tv;
+        int delay;
+};
+
+static void *on_timer(oop_source *source,struct timeval tv,void *data) {
+        struct timer *timer = (struct timer *) data;
+        timer->tv = tv;
+        timer->tv.tv_usec += timer->delay;
+	while(timer->tv.tv_usec>=1000000){
+		timer->tv.tv_sec++;
+		timer->tv.tv_usec -= 1000000;
+	}
+        source->on_time(source,timer->tv,on_timer,data);
+        //fprintf(stderr, "timer: once every %d microseconds\n", timer->delay);
+        return OOP_CONTINUE;
 }
 
 int main()
@@ -143,6 +193,12 @@ int main()
 
 	//Init random number generator
 	srand(time(NULL));
+
+        struct timer *timer = (struct timer*) malloc(sizeof(struct timer));
+        gettimeofday(&timer->tv,NULL);
+        timer->delay = 1000000;
+        on_timer(src,timer->tv,timer);
+
 
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);
