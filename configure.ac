@@ -11,7 +11,7 @@ AC_PROG_LIBTOOL
 
 AM_CONFIG_HEADER(config.h)
 
-AC_CHECK_LIB(ltdl, lt_dlinit)
+AC_CHECK_LIB(ltdl, lt_dlinit,,[ltdl library not found. Libtool needed?])
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(resolv, getaddrinfo_a)
