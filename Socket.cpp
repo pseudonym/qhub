@@ -90,14 +90,14 @@ void Socket::setBindAddress(string const& a) throw()
 	if(inet_pton(af, a.c_str(), inaddrp) == 0) {
 		if(domain == Socket::IP4) {
 			if(inet_pton(af, "0.0.0.0", inaddrp) == 0) {
-				perror("error: setBoundAddress:inet_pton:0.0.0.0");
+				perror("error (pton+ipv4): setBoundAddress:inet_pton:0.0.0.0");
 				exit(1);
 			}
 		}
 #ifdef ENABLE_IPV6        
 		else if(domain == Socket::IP6) {
 			if(inet_pton(af, "::", inaddrp) == 0) {
-				perror("error: setBoundAddress:inet_pton:[::]");
+				perror("error (pton+ipv6): setBoundAddress:inet_pton:[::]");
 				exit(1);
 			}
 		}
@@ -107,14 +107,14 @@ void Socket::setBindAddress(string const& a) throw()
 	if(inet_aton(a.c_str(), (struct in_addr *)inaddrp) == 0) {
 		if(domain == Socket::IP4) {
 			if(inet_aton("0.0.0.0", (struct in_addr *)inaddrp) == 0) {
-				perror("error: setBoundAddress:inet_pton:0.0.0.0");
+				perror("error (aton+ipv4): setBoundAddress:inet_pton:0.0.0.0");
 				exit(1);
 			}
 		}
 #ifdef ENABLE_IPV6        
 		else if(domain == Socket::IP6) {
 			if(inet_aton("::", (struct in_addr *)inaddrp) == 0) {
-				perror("error: setBoundAddress:inet_pton:[::]");
+				perror("error (aton+ipv6): setBoundAddress:inet_pton:[::]");
 				exit(1);
 			}
 		}
