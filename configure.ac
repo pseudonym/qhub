@@ -1,6 +1,6 @@
-AC_INIT(qhub, 0.7)
+AC_INIT(qhub, 0.8)
 AC_CONFIG_SRCDIR(qhub.cpp)
-AM_INIT_AUTOMAKE(qhub, 0.7)
+AM_INIT_AUTOMAKE(qhub, 0.8)
 AC_PROG_CXX
 
 AC_LANG([C++])
