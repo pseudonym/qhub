@@ -21,6 +21,8 @@ public:
 	static int const emptyInt;
 	static voidPtr const emptyVoidPtr;
 	static StringList const emptyStringList;
+
+	static void log(int level, string const& message) throw();
 		
 	static string errnoToString(int err) throw()
 	{

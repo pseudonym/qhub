@@ -12,6 +12,11 @@ int const Util::emptyInt = 0;
 voidPtr const Util::emptyVoidPtr = NULL;
 StringList const Util::emptyStringList;
 
+void Util::log(int level, string const& message) throw()
+{
+	fprintf(stderr, "%s", message.c_str());
+}
+
 StringList Util::stringTokenize(string const& msg, char token /*= ' '*/) throw()
 {
 	StringList sl;
