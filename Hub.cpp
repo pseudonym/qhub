@@ -34,6 +34,7 @@ void Hub::onLookup(adns_answer *reply) const
 			
 			::connect(ih->getFd(), (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
 			enable(ih->getFd(), OOP_READ, ih);
+			ih->connect();
 		}
 	}
 }
@@ -43,7 +44,7 @@ void Hub::openInterConnection(string host, int port, string password)
 {
 	//Do a DNS-lookup
 	lookup(host.c_str(), this);
-	InterHub* tmp = new InterHub();
+	InterHub* tmp = new InterHub(this);
 	tmp->setHostName(host);
 	tmp->setPort(port);
 	tmp->setPassword(password);
@@ -99,8 +100,10 @@ void Hub::getUsersList(ADC* c)
 
 	//send userlist
 	c->w(userlist);
+	fprintf(stderr, (string("Userlist is ") + userlist->getBuf() + "<").c_str());
 	for(list<qhub::Buffer::writeBuffer>::iterator i=outliers.begin(); i!=outliers.end(); i++){
 		c->w(*i);
+		fprintf(stderr, (string("Adding outlier ") + i->get()->getBuf()).c_str());
 	}
 }
 
@@ -116,19 +119,19 @@ void Hub::direct(string guid, string data)
 
 void Hub::broadcast(ADC* c, string data)
 {
-	Buffer::writeBuffer tmp(new Buffer(data, 0));
-	fprintf(stderr, "Broadcasting to %d users.\n", users.size());
+	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	for(userIter i=users.begin(); i!=users.end(); i++){
 		if(i->second != c){
-			i->second->write(data);
+			i->second->w(tmp);
 		}
 	}
 }
 
 void Hub::broadcastSelf(ADC* c, string data)
 {
+	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	for(userIter i=users.begin(); i!=users.end(); i++){
-		i->second->write(data);
+		i->second->w(tmp);
 	}
 }
 
@@ -138,10 +141,11 @@ void Hub::removeClient(string guid)
 		//add a QUIT to cache
 		//users[guid]->
 		string qui = "IQUI " + guid + " ND\n";
-		Buffer::writeBuffer tmp(new Buffer(qui, 0));
+		Buffer::writeBuffer tmp(new Buffer(qui, PRIO_LIST));
 		outliers.push_back(tmp);
 		users.erase(guid);
 	} else {
+		assert(false);
 		fprintf(stderr, "Deleting non-existing user\n");
 	}
 }
@@ -158,7 +162,7 @@ bool Hub::addClient(ADC* client, string guid)
 	if(userlist.get() == NULL){
 		createCache();
 	} else {
-		Buffer::writeBuffer tmp(new Buffer(client->getFullInf(), 0));
+		Buffer::writeBuffer tmp(new Buffer(client->getFullInf(), PRIO_LIST));
 		outliers.push_back(tmp);
 	}
 

@@ -7,11 +7,14 @@
 
 using namespace std;
 
+
 namespace qhub {
+
+class Hub;
 
 class InterHub : public Socket {
 public:
-	InterHub() {};
+	InterHub(Hub* h) { hub = h; };
 	InterHub(int fd);
 
 	void on_read();
@@ -24,6 +27,7 @@ public:
 
 	void connect();
 protected:
+	Hub* hub;
 	int state;
 	
 	void sendData(string data);
@@ -47,6 +51,8 @@ protected:
 	string hostname;
 	string password;
 	int port;
+
+	void realDisconnect();
 };
 
 }

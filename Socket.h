@@ -25,6 +25,12 @@
 
 using namespace std;
 
+#define PRIO_NORM 200
+#define PRIO_EINF 300
+#define PRIO_LIST 400
+//Need another priority for quits.
+#define PRIO_QUIT 350
+
 namespace qhub {
 
 class Socket {
@@ -41,13 +47,18 @@ public:
 	void bind();
 	void listen(int backlog = 8192);
 
+	//beware: this will copy string. Limit use.
+	void write(string& s, int prio=PRIO_NORM);
+	void w(Buffer::writeBuffer b);
+
 	int getFd() { return fd; };
 protected:
 	int fd;
 	struct sockaddr_in saddr_in;
 
 	//output queue
-	priority_queue<Buffer::writeBuffer> queue;
+	//priority_queue<Buffer::writeBuffer> queue;
+	queue<Buffer::writeBuffer> queue;
 
 	void partialWrite();
 	bool writeEnabled;

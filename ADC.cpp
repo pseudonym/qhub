@@ -12,6 +12,7 @@ ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
 readBuffer(new unsigned char[START_BUFFER]),
 readBufferSize(START_BUFFER), rbCur(0)
 {
+	fprintf(stderr, "State of disconnected is %d", disconnected);
 	this->fd = fd;
 	struct linger       so_linger;
     // Set linger to false
@@ -27,6 +28,7 @@ readBufferSize(START_BUFFER), rbCur(0)
 
 ADC::~ADC()
 {
+	realDisconnect();
 	delete[] readBuffer;
 }
 
@@ -185,28 +187,21 @@ void ADC::sendFullInf()
 	hub->broadcastSelf(this, getFullInf());
 }
 
-void ADC::write(string& s)
-{
-	Buffer::writeBuffer tmp(new Buffer(s, 0));
-	w(tmp);
-}
 
-
-void ADC::w(Buffer::writeBuffer b)
-{
-	queue.push(b);
-	if(!writeEnabled){
-		enable(fd, OOP_WRITE, this);
-		writeEnabled=true;
-	}
-}
 
 
 
 void ADC::realDisconnect()
 {
-	fprintf(stderr, "Disconnecting %d %p\n", fd, this);
-	hub->removeClient(guid);
+	if(fd == -1){
+		//already done
+		return;
+	}
+	fprintf(stderr, "Disconnecting %d %p GUID: %s\n", fd, this, guid.c_str());
+	if(guid.size()>0){
+		//dont remove us if we werent added	
+		hub->removeClient(guid);
+	}
 	close(fd);
 	cancel(fd, OOP_READ);
 	if(writeEnabled){
@@ -231,6 +226,7 @@ void ADC::handleBCommand(int length)
 				if(state == GOT_SUP){
 					getParms(length, 1);
 					if(posParms.size()<1){
+						fprintf(stderr, "Malformed parms\n");
 						disconnect();
 						return;
 					} else {
@@ -241,12 +237,18 @@ void ADC::handleBCommand(int length)
 						guid = posParms[0];
 						//we know the guid, now register us in the hub.
 						//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
+
+						//send userlist, will buffer for us
+						hub->getUsersList(this);
+						
+						//add us later, dont want us two times
 						if(!hub->addClient(this, guid)){
+							//signal that were no in the userlist
+							guid = "";
 							disconnect();
 							return;
 						}
-						
-						hub->getUsersList(this);
+
 						//notify him that userlist is over
 						sendFullInf();
 						state = LOGGED_IN;
@@ -313,6 +315,7 @@ void ADC::handleHCommand(int length)
 			break;
 		case 'D':
 			//DSC
+			fprintf(stderr, "DSC gotten\n");
 			disconnect();
 			return;
 			break;
@@ -351,6 +354,7 @@ void ADC::handleCommand(int length)
 
 void ADC::on_read()
 {
+	fprintf(stderr, "ON_READ\n");
 	while(rbCur+READ_SIZE >= readBufferSize){
 		growBuffer();
 	}
@@ -375,6 +379,7 @@ void ADC::on_read()
 			}
 		}
 	} else if(r < 1){
+		fprintf(stderr, "Got -1 from read\n");
 		disconnect();
 	}
 	

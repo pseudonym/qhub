@@ -15,12 +15,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-//#include "Client.h"
 #include "ServerSocket.h"
 #include "InterHub.h"
 #include "ADC.h"
 #include "Hub.h"
-//#include "ClientPool.h"
 
 using namespace qhub;
 

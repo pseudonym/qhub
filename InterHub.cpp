@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 
 #define START_BUFFER 1024
-#define READ_SIZE 1024
+#define READ_SIZE 512
 
 using namespace qhub;
 
@@ -26,7 +26,8 @@ InterHub::InterHub(int fd) : state(NO_DATA), readBuffer(new unsigned char[START_
 
 void InterHub::connect()
 {
-
+	sendData(password);
+	sendData(password);
 }
 
 void InterHub::sendDData(string data, string dest)
@@ -37,6 +38,17 @@ void InterHub::sendDData(string data, string dest)
 void InterHub::sendData(string data)
 {
 	//wrap in normal header, without destination-field
+	char header[12];
+	unsigned int* i = (unsigned int*) &header[0];
+	//length
+	i[0] = htonl(12 + data.size());
+	memcpy(&header[4], "SPAS", 4);
+	//our GUID
+	i[2] = htonl(54);
+	
+	string t(header, 12);
+	t += data;
+	Socket::write(t);
 }
 
 void InterHub::growBuffer()
@@ -53,6 +65,7 @@ void InterHub::growBuffer()
 
 void InterHub::on_read()
 {
+	fprintf(stderr, "Got data\n");
 	if(rbCur+READ_SIZE >= readBufferSize){
 		growBuffer();
 	}
@@ -60,10 +73,20 @@ void InterHub::on_read()
 	if(r > 0){
 		fprintf(stderr, "Got data\n");
 		rbCur += r;
-		if(rbCur>3){
+		while(rbCur>3){
 			unsigned int l = *((int*)readBuffer);
-			l = htonl(l);
-			fprintf(stderr, "Got length %d\n", l);
+			l = ntohl(l);
+			fprintf(stderr, "Got length %d out of %d\n", l, rbCur);
+			if(rbCur>=l){
+				fprintf(stderr, "Got all data in packet\n");
+				//handle packet
+
+				//and remove it
+				rbCur -= l;
+				memmove(readBuffer, readBuffer+l, readBufferSize-l);
+			} else {
+				break;
+			}
 		}
 	} else if(r < 1){
 		cancel(fd, OOP_READ);
@@ -74,6 +97,24 @@ void InterHub::on_read()
 	}
 }
 
+void InterHub::realDisconnect()
+{
+
+}
+
 void InterHub::on_write()
 {
+	fprintf(stderr, "On_write\n");
+
+	//in Socket
+	partialWrite();
+
+	if(queue.empty()){
+		cancel(fd, OOP_WRITE);
+		writeEnabled=false;
+	}
+
+	if(disconnected){
+		realDisconnect();
+	}
 }

@@ -22,9 +22,13 @@
 using namespace std;
 using namespace xercesc;
 
+#undef HAVE_LIBOOP_EVENT
+
 extern "C" {
 #include <oop.h>
 #include <oop-read.h>
+
+
 
 #include <adns.h>
 #include <oop-adns.h>

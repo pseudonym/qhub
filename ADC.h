@@ -11,6 +11,8 @@
 
 #include "Buffer.h"
 
+
+
 namespace qhub {
 
 using namespace std;
@@ -28,11 +30,9 @@ public:
 	void sendFullInf();
 	string getFullInf();
 
-	void write(string& s);
-	void w(Buffer::writeBuffer b);
+
 
 	bool dis() { return disconnected; }
-
 private:
 	ADC(){};
 
