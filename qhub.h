@@ -17,7 +17,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <event.h>
 #include "Socket.h"
 
 #include "DNSUser.h"
