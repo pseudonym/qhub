@@ -1,0 +1,21 @@
+
+
+ADNS basically no problems? specify a --prefix to configure though
+/usr should work.
+
+liboop: works if I edit the Makefile.am slightly:
+
+
+-lib_LTLIBRARIES = liboop.la @LIBOOP_LIBS@
++lib_LTLIBRARIES = @LIBOOP_LIBS@ liboop.la 
+
+then autoreconf, configure and mak and make install. specify a prefix to configure (/usr?) 
+
+
+
+Boost: I simply extracted the appropriate directory in the archive it into /usr/include
+
+
+expat is a package in cygwin, just install
+
+
