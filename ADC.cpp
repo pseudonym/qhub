@@ -50,7 +50,7 @@ void ADC::checkParms()
 	if(INF.size() > 256){
 		state = PROTOCOL_ERROR;
 #ifdef PROTO_DEBUG
-		sendHubMsg("proto error: INF size > 256");		
+		sendHubMsg("proto error: INF size > 256");
 #endif
 		disconnect();
 	}
@@ -239,7 +239,7 @@ void ADC::handleBCommand(int length)
 					fprintf(stderr, "Malformed parms\n");
 					state = PROTOCOL_ERROR;
 #ifdef PROTO_DEBUG
-					sendHubMsg("proto error: Malformed parms in BINF");		
+					sendHubMsg("proto error: Malformed parms in BINF");
 #endif
 					disconnect();
 					return;
@@ -270,7 +270,7 @@ void ADC::handleBCommand(int length)
 					//add us later, dont want us two times
 					if(!hub->addClient(this, posParms[0])){
 #ifdef PROTO_DEBUG
-						sendHubMsg("proto error: User exists already");		
+						sendHubMsg("proto error: User exists already");
 #endif
 						disconnect();
 						return;
@@ -287,6 +287,14 @@ void ADC::handleBCommand(int length)
 				}
 			} else {
 				//regular update
+				if(posParms[0] != guid){
+#ifdef PROTO_DEBUG
+					sendHubMsg("proto error: Source GUID not correct. (Cant change this during a session)");
+#endif
+					//this should be enabled once DC++ matures a bit?
+					//disconnect();
+					//return;
+				}
 				for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
 					//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
 					INF[string(i->first)] = i->second;
@@ -366,13 +374,13 @@ void ADC::handleHCommand(int length)
 		if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
 			if(state == START) {
 				send(string("ISUP ") + hub->getCID32() + " +BASE\n"
-						"IINF " + hub->getCID32() + " NI" + escape(hub->getHubName()) +
-							" HU1 HI1 DEmajs VEqhub0.02\n");
+				     "IINF " + hub->getCID32() + " NI" + escape(hub->getHubName()) +
+				     " HU1 HI1 DEmajs VEqhub0.02\n");
 				state = GOT_SUP;
 			} else {
 				state = PROTOCOL_ERROR;
 #ifdef PROTO_DEBUG
-				sendHubMsg("proto error: ISUP not expected");		
+				sendHubMsg("proto error: ISUP not expected");
 #endif
 				disconnect();
 			}
@@ -386,7 +394,7 @@ void ADC::handleHCommand(int length)
 		} else {
 			state = PROTOCOL_ERROR;
 #ifdef PROTO_DEBUG
-			sendHubMsg("proto error: ISUP expected");		
+			sendHubMsg("proto error: ISUP expected");
 #endif
 			disconnect();
 		}
@@ -395,7 +403,7 @@ void ADC::handleHCommand(int length)
 		//DSC
 		fprintf(stderr, "DSC gotten\n");
 #ifdef PROTO_DEBUG
-		sendHubMsg("proto error: got HDSC");		
+		sendHubMsg("proto error: got HDSC");
 #endif
 		disconnect();
 		return;
