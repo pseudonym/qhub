@@ -13,3 +13,6 @@ Rate-limiting (allow bursting or not? its DDOSable.)
 Send delta-INFs
 
 Add flood protection in ADC or ADCSocket
+
+Fix that the hub can be DoS'ed by opening hundreds of connections and just
+letting them idle.
