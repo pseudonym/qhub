@@ -188,7 +188,7 @@ void FsUtil::on(UserCommand& a, ADCClient* client, string& msg) throw()
 		string::size_type i = msg.find(' ');
 		if(i == string::npos)
 			i = msg.length();
-		Aliases::const_iterator j = aliases.find(msg.substr(1, i - 1));
+		Aliases::const_iterator j = aliases.find(msg.substr(aliasPrefix.length(), i - aliasPrefix.length()));
 		if(j != aliases.end()) {
 			msg.replace(0, i, j->second);
 			a.setState(Plugin::MODIFIED);
