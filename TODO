@@ -13,6 +13,7 @@ Low-level network handling
 	Add customizable flood protection in ADC or ADCSocket
 
 Protocol stuff
+	Dont allow nick-collisions
 	Send delta-INFs
 	Check CID at logon (we never ADC::ESC it anywhere.. that might cause trouble)
 	LO1 handling (Status of this in spec?)
