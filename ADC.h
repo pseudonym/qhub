@@ -12,6 +12,7 @@
 
 #include "Buffer.h"
 #include "string8.h"
+#include "ADCInf.h"
 
 namespace qhub {
 
@@ -28,8 +29,9 @@ public:
 	virtual void on_write() { ADCSocket::on_write(); };
 
 	// Other stuff
-	string getFullInf() const { return attributes.getFullInf(); }
+	string const& getFullInf() const { return attributes.getFullInf(); }
 	string const& getCID32() const { return guid; };
+	ADCInf& getAttr() { return attributes; };
 
 	// Send-to functions
 	void sendHubMessage(string const& msg);
@@ -58,24 +60,7 @@ public:
 	virtual void onDisconnected(string const& clue);
 	
 private:
-	class Attributes {
-	public:
-		Attributes(ADC* p) : parent(p) {};
-		bool setInf(StringList const& sl);
-		bool setInf(string const& key, string const& val);
-		string const& getFullInf() const { return full; }
-		string getChangedInf();
-		
-		bool isOp() const;
-	private:
-		void updateInf();
-		typedef hash_map<string, string> Inf;
-		Inf current;
-		Inf changes;
-		string full;
-		ADC* parent;
-	} attributes;
-		
+	ADCInf attributes;	
 	Hub* hub;
 	void login();
 	void logout();

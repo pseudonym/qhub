@@ -31,6 +31,11 @@ Plugin::Plugin(const char* n, const lt_dlhandle h) : name(string(n)), handle(h)
 	fprintf(stderr, "Created module %s.\n", name.c_str());
 }
 
+Plugin::~Plugin()
+{
+	lt_dlclose(handle);
+}
+
 void qhub::Plugin::openModule(const char* filename)
 {
 	lt_dlhandle tmp = lt_dlopenext(filename);
@@ -44,10 +49,20 @@ void qhub::Plugin::openModule(const char* filename)
 	}
 }
 
+void qhub::Plugin::onLogin(ADC* client)
+{
+	for(list<Plugin*>::iterator i=modules.begin(); i!=modules.end(); i++){
+		int (*f)(ADC*) = (int(*)(ADC*))(*i)->functions["login"];
+		f(client);
+	}
+}
+
 void qhub::Plugin::load(const char* name)
 {
-	if(lt_dlsym(handle, name) != NULL){
+	lt_ptr p;
+	if((p = lt_dlsym(handle, name)) != NULL) {
 		fprintf(stderr, "Adding function '%s' to module '%s'.\n", name, this->name.c_str());
+		functions[name] = p;
 	} else {
 		fprintf(stderr, "Failed loading function %s.\n", name);
 	}
@@ -57,4 +72,5 @@ void qhub::Plugin::loadFromModule()
 {
 	//load function pointers here.
 	load("foo");
+	load("login");
 }

@@ -3,6 +3,7 @@
 #include "Hub.h"
 #include "TigerHash.h"
 #include "Encoder.h"
+#include "Plugin.h"
 
 using namespace std;
 using namespace qhub;
@@ -199,6 +200,9 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 			//entering HPAS))
 			return;
 		}
+
+		Plugin::onLogin(this);
+		/*
 		//check account (we could do this before the hasClient if we want to be able
 		//to disconnect the current online user)
 		if(guid == "665NHNIK2YPH6") {
@@ -207,6 +211,7 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 			state = VERIFY;
 			return;
 		}
+		*/
 		login();
 		state = NORMAL;
 	} else {
@@ -269,8 +274,7 @@ void ADC::handleH(StringList const& sl, string const& full)
 
 void ADC::handleHDSC(StringList const& sl, string const& full)
 {
-	// H didn't have cid...
-	if(!attributes.isOp()) {
+	if(attributes.getInf("OP").empty()) {
 		doWarning("Access denied");
 		return;
 	}
@@ -344,7 +348,6 @@ void ADC::handleHPAS(StringList const& sl, string const& full)
 	fprintf(stderr, "HisHash: %s\n", sl[2].c_str());
 	salt.clear();
 	// let through or disconnect
-	//(ugly copy-paste from BINF:)
 	if(hub->hasClient(guid)) {
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		return;

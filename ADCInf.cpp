@@ -1,10 +1,11 @@
 // vim:ts=4:sw=4:noet
+#include "ADCInf.h"
 #include "ADC.h"
 
 using namespace std;
 using namespace qhub;
 
-bool ADC::Attributes::setInf(StringList const& sl)
+bool ADCInf::setInf(StringList const& sl) throw()
 {
 	bool ret = true;
 	for(StringList::const_iterator sli = sl.begin() + 2; sli != sl.end(); ++sli) {
@@ -18,7 +19,7 @@ bool ADC::Attributes::setInf(StringList const& sl)
 	return ret;
 }
 
-bool ADC::Attributes::setInf(string const& key, string const& val)
+bool ADCInf::setInf(string const& key, string const& val) throw()
 {
 	// set to changes buffer first
 	// move to current buffer only on send (getInfs)
@@ -31,7 +32,7 @@ bool ADC::Attributes::setInf(string const& key, string const& val)
 	return true;
 }
 
-void ADC::Attributes::updateInf()
+void ADCInf::updateInf() throw()
 {
 	// update current
 	for(Inf::const_iterator i = changes.begin(); i != changes.end(); ++i) {
@@ -46,11 +47,11 @@ void ADC::Attributes::updateInf()
 	full = "BINF ";
 	full += parent->getCID32();
 	for(Inf::const_iterator i = current.begin(); i != current.end(); ++i)
-		full += ' ' + esc(i->first + i->second);
+		full += ' ' + ADCSocket::esc(i->first + i->second);
 	full += '\n';
 }
 	
-string ADC::Attributes::getChangedInf()
+string ADCInf::getChangedInf() throw()
 {
 	// iterate over current and changes to see differences
 	string partial = "BINF ";
@@ -59,17 +60,21 @@ string ADC::Attributes::getChangedInf()
 		Inf::const_iterator j = current.find(i->first);
 		bool exists = j != current.end();
 		if((!exists && !i->second.empty()) || (exists && i->second != j->second))
-			partial += ' ' + esc(i->first + i->second);
+			partial += ' ' + ADCSocket::esc(i->first + i->second);
 	}
 	// erase changes buffer and update current/full
 	updateInf();
 	return partial + '\n';
 }
 
-bool ADC::Attributes::isOp() const
+string const& ADCInf::getInf(string const& key) const throw()
 {
-	Inf::const_iterator i = current.find("OP");
-	if(i != current.end() && i->second == "1")
-		return true;
-	return false;
+	Inf::const_iterator i;
+	i = changes.find(key);
+	if(i != changes.end())
+		return i->second;
+	i = current.find(key);
+	if(i != current.end())
+		return i->second;
+	return Util::emptyString;
 }

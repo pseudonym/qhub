@@ -11,6 +11,8 @@ using namespace std;
 
 namespace qhub {
 
+class ADC;
+
 class Plugin {
 public:
 	static void init();
@@ -20,7 +22,10 @@ public:
 	static void openModule(const char* filename);
 	static void removeModule(const char* filename);
 
+	static void onLogin(ADC* client);
+
 	Plugin(const char* name, const lt_dlhandle h);
+	virtual ~Plugin();
 
 	const char* getName() { return name.c_str(); };
 
@@ -36,8 +41,8 @@ private:
 	 */
 
 	//our handle, name
-	lt_dlhandle handle;
 	string name;
+	lt_dlhandle handle;
 
 	//all our functions
 	//this should be replaces by function pointers (performance)
