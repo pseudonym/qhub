@@ -124,5 +124,29 @@ void Socket::partialWrite()
 	}
 }
 
+string Socket::getSockName() const {
+	struct sockaddr_in sa;
+	socklen_t n = sizeof(struct sockaddr_in);
+	if(getsockname(fd, (struct sockaddr*)&sa, &n) == 0) {
+		char buf[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &sa.sin_addr, buf, INET_ADDRSTRLEN);
+		return buf;
+	} else {
+		return "(error)";
+	}
+}
+ 
+string Socket::getPeerName() const {
+	struct sockaddr_in sa;
+	socklen_t n = sizeof(struct sockaddr_in);
+	if(getpeername(fd, (struct sockaddr*)&sa, &n) == 0) {
+		char buf[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &sa.sin_addr, buf, INET_ADDRSTRLEN);
+		return buf;
+	} else {
+		return "(error)";
+	}
+}
+
 }
 

@@ -52,6 +52,8 @@ public:
 	void w(Buffer::writeBuffer b);
 
 	int getFd() { return fd; };
+	string getSockName() const;
+	string getPeerName() const;
 protected:
 	int fd;
 	struct sockaddr_in saddr_in;

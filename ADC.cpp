@@ -237,7 +237,11 @@ void ADC::handleBCommand(int length)
 					} else {
 						for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
 							//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
-							INF[string(i->first)] = i->second;
+							if(i->first == "I4" && i->second == "0.0.0.0") {
+								INF[i->first] = getPeerName();
+							} else {
+								INF[i->first] = i->second;
+							}
 						}
 						//we know the guid, now register us in the hub.
 						//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
@@ -435,7 +439,7 @@ void ADC::on_read()
 		fprintf(stderr, "Got -1 from read\n");
 		disconnect();
 	}
-	
+
 	if(disconnected){
 		realDisconnect();
 	}
