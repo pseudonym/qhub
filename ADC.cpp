@@ -10,7 +10,7 @@ using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
 readBuffer(new unsigned char[START_BUFFER]),
-readBufferSize(START_BUFFER), rbCur(0)
+readBufferSize(START_BUFFER), rbCur(0), added(false)
 {
 	fprintf(stderr, "State of disconnected is %d", disconnected);
 	this->fd = fd;
@@ -202,7 +202,7 @@ void ADC::realDisconnect()
 		return;
 	}
 	fprintf(stderr, "Disconnecting %d %p GUID: %s\n", fd, this, guid.c_str());
-	if(guid.size()>0){
+	if(added){
 		//dont remove us if we werent added	
 		hub->removeClient(guid);
 	}
@@ -253,6 +253,8 @@ void ADC::handleBCommand(int length)
 						//send userlist, will buffer for us
 						hub->getUsersList(this);
 						
+						//only update this when we are SURE that were added, ie. here!
+						guid = posParms[0];
 						//add us later, dont want us two times
 						if(!hub->addClient(this, posParms[0])){
 							//signal that were no in the userlist
@@ -260,8 +262,7 @@ void ADC::handleBCommand(int length)
 							disconnect();
 							return;
 						}
-						//only update this when we are SURE that were added, ie. here!
-						guid = posParms[0];
+						added = true;
 
 						//notify him that userlist is over
 						sendFullInf();

@@ -64,6 +64,7 @@ private:
 	typedef parmMap::iterator parmMapIterator;
 
 	string guid;
+	bool added;
 	hash_map<string, string> INF;
 	typedef hash_map<string, string>::iterator INFIterator;
 	
