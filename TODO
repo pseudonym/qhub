@@ -1,6 +1,7 @@
 
 
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
+	Fix oop-adns usage.
 
 LO1 handling
 
