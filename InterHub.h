@@ -3,17 +3,32 @@
 
 #include "Socket.h"
 
+#include <string>
+
+using namespace std;
+
 namespace qhub {
 
 class InterHub : public Socket {
 public:
+	InterHub() {};
 	InterHub(int fd);
 
 	void on_read();
 	void on_write();
+
+	void setHostName(string h) { hostname = h; }
+	void setPassword(string p) { password = p; }
+	void setPort(int p) { port = p; }
+	int getPort() { return port; }
+
+	void connect();
 protected:
 	int state;
 	
+	void sendData(string data);
+	void sendDData(string data, string dest);
+
 	enum State {
 		NOT_STARTED,
 		PARTIAL_LENGTH,
@@ -28,6 +43,10 @@ protected:
 	unsigned char* readBuffer;
 	int readBufferSize;
 	int rbCur;
+
+	string hostname;
+	string password;
+	int port;
 };
 
 }

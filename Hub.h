@@ -8,6 +8,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
+#include "DNSUser.h"
+#include "InterHub.h"
 
 using namespace std;
 
@@ -15,12 +17,15 @@ namespace qhub {
 
 class ADC;
 
-class Hub {
+class Hub : public DNSUser {
 public:
 	Hub();
 
 	void openADCPort(int port);
 	void openInterPort(int port);
+	void openInterConnection(string host, int port, string password);
+	void onLookup(adns_answer *reply) const;
+
 	void setHubName(string name) { Hub::name=name; };
 	string getHubName() { return name; }
 
@@ -47,6 +52,8 @@ private:
 	//userlist-cache. this is the ones thats OUT at the clients´
 	qhub::Buffer::writeBuffer userlist;
 	list<qhub::Buffer::writeBuffer> outliers;
+
+	hash_map<string, InterHub*> interConnects;
 
 	void createCache();
 };

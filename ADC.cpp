@@ -10,8 +10,7 @@ using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
 readBuffer(new unsigned char[START_BUFFER]),
-readBufferSize(START_BUFFER), rbCur(0),
-writeEnabled(false), written(0), disconnected(false)
+readBufferSize(START_BUFFER), rbCur(0)
 {
 	this->fd = fd;
 	struct linger       so_linger;
@@ -202,10 +201,7 @@ void ADC::w(Buffer::writeBuffer b)
 	}
 }
 
-void ADC::disconnect()
-{
-	disconnected = true;
-}
+
 
 void ADC::realDisconnect()
 {
@@ -374,7 +370,7 @@ void ADC::on_read()
 				}
 			}
 			//rbCur -> 0 on handleCommand
-			if(rbCur != 0){
+			if(rbCur == 0){
 				break;
 			}
 		}
@@ -391,6 +387,7 @@ void ADC::on_write()
 {
 	fprintf(stderr, "On_write\n");
 
+	//in Socket
 	partialWrite();
 
 	if(queue.empty()){
@@ -403,34 +400,3 @@ void ADC::on_write()
 	}
 }
 
-void ADC::partialWrite()
-{
-	//only try writing _once_, think it helps fairness
-	assert(!queue.empty() && "We got a write-event though we got nothing to write");
-
-	Buffer::writeBuffer top = queue.top();
-
-	assert(written<top->getBuf().size() && "We have already written the entirety of this buffer");
-	
-	const char* d = top->getBuf().c_str();
-
-	d += written;
-
-	int w = ::write(fd, d, top->getBuf().size()-written);
-
-	if(w < 0){
-		switch(errno){
-			default:
-				disconnect();
-				return;
-				break;
-		}
-	} else {
-		written += w;
-
-		if(written == top->getBuf().size()){
-			queue.pop();
-			written = 0;
-		}
-	}
-}

@@ -66,17 +66,6 @@ private:
 	hash_map<string, string> INF;
 	typedef hash_map<string, string>::iterator INFIterator;
 	
-	//output queue
-	priority_queue<Buffer::writeBuffer> queue;
-
-	void partialWrite();
-	bool writeEnabled;
-	//how much written for topmost Buffer
-	int written;
-
-	//signals that we should die
-	bool disconnected;
-	void disconnect();
 	void realDisconnect();
 };
 

@@ -4,7 +4,7 @@ using namespace std;
 
 namespace qhub {
 
-Socket::Socket(int d, int t, int p)
+Socket::Socket(int d, int t, int p) : written(0), writeEnabled(false)
 {
 	fd = ::socket(d, t, p);
 
@@ -67,6 +67,43 @@ int Socket::accept()
 {
 	//will return -1 on error
 	return ::accept(fd, NULL,  NULL);
+}
+
+void Socket::disconnect()
+{
+	disconnected = true;
+}
+
+void Socket::partialWrite()
+{
+	//only try writing _once_, think it helps fairness
+	assert(!queue.empty() && "We got a write-event though we got nothing to write");
+
+	Buffer::writeBuffer top = queue.top();
+
+	assert(written<top->getBuf().size() && "We have already written the entirety of this buffer");
+	
+	const char* d = top->getBuf().c_str();
+
+	d += written;
+
+	int w = ::write(fd, d, top->getBuf().size()-written);
+
+	if(w < 0){
+		switch(errno){
+			default:
+				disconnect();
+				return;
+				break;
+		}
+	} else {
+		written += w;
+
+		if(written == top->getBuf().size()){
+			queue.pop();
+			written = 0;
+		}
+	}
 }
 
 }

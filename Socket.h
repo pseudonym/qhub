@@ -18,6 +18,12 @@
 #include <arpa/inet.h>
 
 #include <string>
+#include <queue>
+#include <boost/shared_ptr.hpp>
+
+#include "Buffer.h"
+
+using namespace std;
 
 namespace qhub {
 
@@ -25,7 +31,6 @@ class Socket {
 public:
 	Socket(int d=AF_INET, int t = SOCK_STREAM, int p = 0);
 
-	int socket(void) {return fd;}
 	int accept();
 
 	virtual void on_read() = 0;
@@ -40,6 +45,18 @@ public:
 protected:
 	int fd;
 	struct sockaddr_in saddr_in;
+
+	//output queue
+	priority_queue<Buffer::writeBuffer> queue;
+
+	void partialWrite();
+	bool writeEnabled;
+	//how much written for topmost Buffer
+	int written;
+
+	//signals that we should die
+	bool disconnected;
+	void disconnect();
 };
 
 }

@@ -5,11 +5,50 @@
 #include "ADC.h"
 #include "InterHub.h"
 
+#include <adns.h>
+#include <oop-adns.h>
+
 using namespace qhub;
 
-Hub::Hub() 
+Hub::Hub()
 {
 
+}
+
+void Hub::onLookup(adns_answer *reply) const
+{
+	fprintf(stderr, "Majs %s\n", reply->owner);
+	string s(reply->owner);
+	InterHub* ih = interConnects.find(s)->second;
+
+	if (adns_s_ok != reply->status) {
+		fprintf(stderr, " error: %s\n",adns_strerror(reply->status));
+	} else {
+		assert(adns_r_a == reply->type);
+		if(reply->nrrs > 0){
+			struct sockaddr_in dest_addr;
+			dest_addr.sin_family = AF_INET;
+			dest_addr.sin_port = htons(ih->getPort());
+			dest_addr.sin_addr.s_addr = inet_addr(inet_ntoa(reply->rrs.inaddr[0]));
+			memset(&(dest_addr.sin_zero), '\0', 8);
+			
+			::connect(ih->getFd(), (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
+			enable(ih->getFd(), OOP_READ, ih);
+		}
+	}
+}
+
+
+void Hub::openInterConnection(string host, int port, string password)
+{
+	//Do a DNS-lookup
+	lookup(host.c_str(), this);
+	InterHub* tmp = new InterHub();
+	tmp->setHostName(host);
+	tmp->setPort(port);
+	tmp->setPassword(password);
+	//no more than one connection per IP, sorry
+	interConnects[host] = tmp;
 }
 
 void Hub::openADCPort(int port)

@@ -43,12 +43,14 @@ static oop_adapter_adns *adns;
 
 static void *on_lookup(oop_adapter_adns *adns,adns_answer *reply,void *data)
 {
-	fprintf(stdout, "%s =>",reply->owner);
-	fflush(stdout);
+	//fprintf(stdout, "%s =>",reply->owner);
+	//fflush(stdout);
 
 	DNSUser* d = (DNSUser*) data;
 
-	if (adns_s_ok != reply->status) {
+	d->onLookup(reply);
+
+	/*if (adns_s_ok != reply->status) {
 		printf(" error: %s\n",adns_strerror(reply->status));
 	} else {
 		if (NULL != reply->cname) {
@@ -59,7 +61,7 @@ static void *on_lookup(oop_adapter_adns *adns,adns_answer *reply,void *data)
 			printf(" %d: %s",i, inet_ntoa(reply->rrs.inaddr[i]));
 		}
 		printf("\n");
-	}
+	}*/
 
 	return OOP_CONTINUE;
 }
@@ -213,6 +215,7 @@ int main()
 								a = a->getNextSibling();
 							}
 							cout << "\tConnecting to " << host << ":" << port << " pass: " << password << endl;
+							tmp->openInterConnection(host, port, password);
 					}
 
 					b = b->getNextSibling();

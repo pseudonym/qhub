@@ -3,7 +3,7 @@ Intra-server protocol
 - Binary
 - Packet-based
 - Uniform
-- Easyily distinguish malformed packets (command-prefix only has few allowed values)
+- Easily distinguish malformed packets
 - Easily ignore packets not of interest
 
 
@@ -29,7 +29,7 @@ Commands
 
 Housekeeping
 
-SPAS     Server password
+SPAS     Server password. Disconnected if incorrect. Every connection must have password protection.
 BHLO     New server announcement: Name etc?
 BQUI     Server-quit. Textual reason.
 DPIN     Ping. Data to copy.
@@ -39,3 +39,4 @@ Client
 
 DCMD    Directed Client-command. Payload to be defined.
 BCMD    Broadcasted Client-command. Payload to be defined.
+

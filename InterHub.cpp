@@ -24,6 +24,21 @@ InterHub::InterHub(int fd) : state(NO_DATA), readBuffer(new unsigned char[START_
 	enable(fd, OOP_READ, this);
 }
 
+void InterHub::connect()
+{
+
+}
+
+void InterHub::sendDData(string data, string dest)
+{
+
+}
+
+void InterHub::sendData(string data)
+{
+	//wrap in normal header, without destination-field
+}
+
 void InterHub::growBuffer()
 {
 	unsigned char* tmp = new unsigned char[readBufferSize*2];
