@@ -502,12 +502,9 @@ void ADCClient::handleDisconnect(StringList& sl) throw()
 
 void ADCClient::handlePassword(StringList& sl) throw()
 {
-	// Make CID from base32
-	u_int64_t cid;
-	Encoder::fromBase32(getCID32().c_str(), (u_int8_t*)&cid, sizeof(cid));
 	// Make hash
 	TigerHash h;
-	h.update((u_int8_t*)&cid, sizeof(cid));
+	h.update(getCID32().data(), getCID32().length());
 	h.update(password.data(), password.length());
 	h.update(salt.data(), salt.length());
 	h.finalize();
