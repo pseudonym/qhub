@@ -458,7 +458,7 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 			if(action.isSet(Plugin::DISCONNECTED))
 				return;
 			if(!action.isSet(Plugin::STOPPED)) {
-				if(full)
+				if(full && !action.isSet(Plugin::MODIFIED))
 					send(*full);
 				else
 					send(assemble(sl));

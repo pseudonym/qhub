@@ -102,7 +102,7 @@ public:
 			UserConnected;
 	typedef ActionType<USER_DISCONNECTED, HANDLE>
 			UserDisconnected;
-	typedef ActionType<USER_COMMAND, HANDLE | STOP | DISCONNECT>
+	typedef ActionType<USER_COMMAND, MODIFY | HANDLE | STOP | DISCONNECT>
 			UserCommand;
 	typedef ActionType<USER_MESSAGE, HANDLE | STOP | DISCONNECT>
 			UserMessage;

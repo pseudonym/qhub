@@ -73,10 +73,10 @@ public:
 		for(StringList::const_iterator i = sl.begin(); i != sl.end(); ++i) {
 			// find complete match
 			SubDirs::iterator j = next->subDirs.find(*i);
-			if(j != next->subDirs.end())
-				return j->second;
+			if(j != next->subDirs.end()) {
+				next = j->second;
 			// partial matches work if not ambiguous
-			if(next->partial) {
+			} else if(next->partial) {
 				SubDirs::iterator k = next->subDirs.end();
 				for(j = next->subDirs.begin(); j != next->subDirs.end(); ++j) {
 					if(j->first.length() >= i->length() && j->first.substr(0, i->length()) == *i) {
