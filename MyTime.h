@@ -4,7 +4,7 @@
 #include "config.h"
 #include "types.h"
 
-#include <assert.h>
+#include <cassert>
 
 #include "time.h"
 #if defined(HAVE_SYS_TIME_H) && defined(TIME_WITH_SYS_TIME)
