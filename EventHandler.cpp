@@ -17,7 +17,9 @@ EventHandler::~EventHandler() throw()
 	Util::log("~EventHandler\n");
 	if(ev != NULL){
 		Util::log(Util::format("Deleting EventHandler &p\n", this));
-		event_del(ev);
+		if(event_del(ev) == -1){
+			exit(1);	
+		}
 	}
 	free(ev);
 }
@@ -49,7 +51,9 @@ void EventHandler::disableMe(event e) throw()
 
 	Util::log(Util::format("enabledFlags=%d\n", enabledFlags));
 
-	event_del(ev);
+	if(event_del(ev) == -1){
+		exit(1);
+	}
 	if(enabledFlags == 0){
 		free(ev);
 		ev = NULL;
@@ -63,7 +67,9 @@ void EventHandler::disableMe(event e) throw()
 			use_flags |= EV_WRITE;
 		}
 		event_set(ev, fd, use_flags, demux, this);
-		event_add(ev, NULL);
+		if(event_add(ev, NULL) == -1){
+			exit(1);
+		}
 	}
 }
 
@@ -72,7 +78,9 @@ void EventHandler::enableMe(event e) throw()
 	Util::log(Util::format("Enabling socket %d for %d\n", fd, e), 10);
 	
 	if(enabledFlags != 0){
-		event_del(ev);
+		if(event_del(ev) == -1){
+			exit(1);
+		}
 		assert(ev != NULL && "We are enabled yet have no event-struct!");
 	}
 
@@ -91,7 +99,9 @@ void EventHandler::enableMe(event e) throw()
 		use_event |= EV_WRITE;
 	}
 	event_set(ev, fd, use_event, demux, this);
-	event_add(ev, NULL);
+	if(event_add(ev, NULL) == -1){
+		exit(1);
+	}
 }
 
 void EventHandler::init() throw()
