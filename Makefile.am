@@ -9,6 +9,7 @@ qhub_SOURCES += Buffer.h
 qhub_SOURCES += compat_hash_map.h
 qhub_SOURCES += Plugin.h Plugin.cpp
 qhub_SOURCES += Settings.h Settings.cpp
+qhub_SOURCES += foo1.c
 
 EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO Settings.xml
 EXTRA_DIST += config.sub config.guess
