@@ -77,13 +77,13 @@ static oop_source* src;
 
 void qhub::enable(int fd, oop_event ev, Socket* s)
 {
-	fprintf(stderr, "Enabling fd %d %d\n", fd, ev);
+	//fprintf(stderr, "Enabling fd %d %d\n", fd, ev);
 	src->on_fd(src, fd, ev, fd_demux, s);
 }
 
 void qhub::cancel(int fd, oop_event ev)
 {
-	fprintf(stderr, "Cancellng fd %d %d\n", fd, ev);
+	//fprintf(stderr, "Cancellng fd %d %d\n", fd, ev);
 	src->cancel_fd(src, fd, ev);
 }
 

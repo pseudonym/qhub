@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -30,13 +31,21 @@ public:
 	virtual void on_write();
 
 	void send(string const& msg) { write(msg, 0); };
+	void disconnect(string const& msg) { Socket::disconnect(); onDisconnected(msg); };
 
+	/*
+	 * Send a readable message
+	 */
+	virtual void notify(string const& msg) = 0;
+	/*
+	 * Events to be handled
+	 */
 	virtual void onLine(StringList const& sl, string const& full) = 0;
-	virtual void onLineError(string const& message) = 0;
-	virtual void onDisconnect() = 0;
+	virtual void onConnected() = 0;
+	virtual void onDisconnected(string const& clue) = 0;
 
 protected:
-	void disconnect();
+	void disconnect() { Socket::disconnect(); onDisconnected(Util::emptyString); };
 
 private:
 	StringList data;

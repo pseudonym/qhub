@@ -65,3 +65,11 @@ string ADC::Attributes::getChangedInf()
 	updateInf();
 	return partial + '\n';
 }
+
+bool ADC::Attributes::isOp() const
+{
+	Inf::const_iterator i = current.find("OP");
+	if(i != current.end() && i->second == "1")
+		return true;
+	return false;
+}

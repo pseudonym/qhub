@@ -40,6 +40,7 @@ public:
 	bool hasClient(string const& guid) const;
 	void addClient(string const& guid, ADC* client);
 	void removeClient(string const& guid);
+	ADC* getClient(string const& guid);
 
 	void broadcast(ADC* c, string data);
 	void broadcastSelf(string data);

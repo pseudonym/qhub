@@ -39,13 +39,16 @@ public:
 	void handleBINF(StringList const& sl, string const& full);
 	void handleD(StringList const& sl, string const& full);
 	void handleH(StringList const& sl, string const& full);
+	void handleHDSC(StringList const& sl, string const& full);
 	void handleHSUP(StringList const& sl, string const& full);
 	void handleP(StringList const& sl, string const& full);
 
 	// Calls from ADCSocket
+	virtual void notify(string const& msg);
 	virtual void onLine(StringList const& sl, string const& full);
-	virtual void onLineError(string const& msg);
-	virtual void onDisconnect();
+	virtual void onConnected();
+	virtual void onDisconnected(string const& clue);
+	
 private:
 	class Attributes {
 	public:
@@ -54,6 +57,8 @@ private:
 		bool setInf(string const& key, string const& val);
 		string const& getFullInf() const { return full; }
 		string getChangedInf();
+		
+		bool isOp() const;
 	private:
 		void updateInf();
 		typedef hash_map<string, string> Inf;
@@ -64,6 +69,8 @@ private:
 	} attributes;
 		
 	Hub* hub;
+	void enable();
+	void cancel();
 
 	enum State {
 		START,

@@ -1,6 +1,7 @@
 // vim:ts=4:sw=4:noet
 #include "ADCSocket.h"
 #include "qhub.h"
+#include "Util.h"
 
 // fixme, do we need a start_buffer? we're not 'growing' it
 #define START_BUFFER 512
@@ -65,11 +66,13 @@ void ADCSocket::on_read()
 	int ret = read(fd, readBuffer, readBufferSize);
 	if(ret <= 0) {
 		// we're done, either by EOF or error
-		fprintf(stderr, "[%i] Got %i from read(), errno=%d\n", fd, ret, errno);
-		perror("read");
 		while(!queue.empty())
 			queue.pop();
-		disconnect();
+		if(ret == 0) {
+			disconnect(); // normal disconnect
+		} else {
+			disconnect(Util::toString((Util::ERRNO)errno)); // error
+		}
 	} else {
 		unsigned char *p = readBuffer;	// cur
 		unsigned char *e = p + ret;		// end
@@ -79,9 +82,9 @@ void ADCSocket::on_read()
 		unsigned dataLen = data.size();
 		for(; p != e; ++p, ++lineLen) {
 			if(lineLen > MAX_LINELEN) {
-				onLineError("max input of 1024 chars in command exceeded"); // will disconnect if appropriate
-				// note that onLine will still be called, do we want this?
-				lineLen = 0; // don't send error on every char now
+				notify("Max input of 1024 chars in command exceeded");
+				disconnect("Max input of 1024 chars in command exceeded");
+				return;
 			}
 			
 			switch(*p) {
@@ -97,9 +100,9 @@ void ADCSocket::on_read()
 						s = p + 1;
 						++dataLen;
 						if(dataLen > MAX_DATALEN) {
-							onLineError("max arguments of 128 in command exceeded"); // will disconnect if appropriate
-							// note that onLine will still be called, do we want this?
-							dataLen = 0; // don't send error on every data overflow now
+							notify("Max arguments of 128 in command exceeded");
+							disconnect("Max arguments of 128 in command exceeded");
+							return;
 						}
 					} else if(state == PARTIAL) {
 						data.back().append((char const*)s, p - s);
@@ -149,7 +152,7 @@ void ADCSocket::on_read()
 
 void ADCSocket::on_write()
 {
-	fprintf(stderr, "On_write\n");
+	//fprintf(stderr, "On_write\n");
 	partialWrite();
 	if(queue.empty()){
 		cancel(fd, OOP_WRITE);
@@ -162,16 +165,11 @@ void ADCSocket::on_write()
 	}
 }
 
-void ADCSocket::disconnect()
-{
-	Socket::disconnect();
-	onDisconnect();
-}
-
 void ADCSocket::realDisconnect()
 {
-	if(!disconnected)
-		disconnect(); // if we're deleted unexpectedly, make sure everyone gets to say goodbye
+	if(!disconnected) {
+		disconnect(); // notify others that we're dying
+	}
 	
 	if(fd == -1) {
 		// if we're already disconnecting, we would loop trying to delete ourselves again

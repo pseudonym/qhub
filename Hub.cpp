@@ -150,6 +150,14 @@ void Hub::removeClient(string const& guid)
 	users.erase(guid);
 }
 
+ADC* Hub::getClient(string const& guid)
+{
+	userIter i = users.find(guid);
+	if(i != users.end())
+		return i->second;
+	return (ADC*)0;
+}
+
 void Hub::acceptInterHub(int fd)
 {
 	InterHub* tmp = new InterHub(fd);

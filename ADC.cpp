@@ -8,29 +8,50 @@ using namespace qhub;
 ADC::ADC(int fd, Hub* parent)
 : attributes(this), ADCSocket(fd), hub(parent), state(START), added(false)
 {
+	onConnected();
 }
 
 ADC::~ADC()
 {
 }
 
+void ADC::enable()
+{
+	hub->addClient(guid, this);
+	added = true;
+}
+
+void ADC::cancel()
+{
+	hub->removeClient(guid);
+	added = false;
+}
+
 void ADC::sendHubMessage(string const& msg)
 {
-	send(string("BMSG ") + hub->getCID32() + ' ' + esc(msg) + '\n');
+	send("BMSG " + hub->getCID32() + ' ' + esc(msg) + '\n');
 }
 
 
 #define PROTO_DISCONNECT(errmsg) \
 	do { \
 		state = PROTOCOL_ERROR; \
-		sendHubMessage("proto error: " errmsg); \
+		send("ISTA " + guid + " 00 " + esc(errmsg) + "\n"); \
+		if(added) { \
+			cancel(); \
+			hub->broadcastSelf("IQUI " + guid + " DI " + esc(errmsg) + '\n'); \
+		} \
 		disconnect(); \
 	} while(0)
+
+void ADC::notify(string const& msg) {
+	send("ISTA " + guid + " 00 " + msg + '\n');
+}
 
 void ADC::onLine(StringList const& sl, string const& full)
 {		
 	assert(!sl.empty());
-	fprintf(stderr, ">%s<\n", full.c_str());
+	fprintf(stderr, "<< %s", full.c_str());
 	// Do basic input checking, state and guid
 	if(sl[0].length() == 4) {
 		switch(sl[0][0]) {
@@ -82,19 +103,29 @@ void ADC::onLine(StringList const& sl, string const& full)
 	}
 }
 
-void ADC::onLineError(string const& msg) {
-	sendHubMessage(msg);
-	disconnect();
+void ADC::onConnected()
+{
+	// dunno.. do we need this? ;)
+	// plugins might.. to check IP for instance
 }
 
-void ADC::onDisconnect() {
+void ADC::onDisconnected(string const& clue)
+{
 	if(added) {
-		fprintf(stderr, "Disconnecting %d %p GUID: %s\n", fd, this, guid.c_str());
-		hub->removeClient(guid);
-		hub->broadcast(this, string("IQUI " + guid + " ND\n"));
-		added = false;
-	} 
+		// this is here so ADCSocket can safely destroy us.
+		// if we don't want a second message and our victim to get the message as well
+		// remove us when doing e.g. the Kick, so that added is false here.
+		fprintf(stderr, "onDisconnected %d %p GUID: %s\n", fd, this, guid.c_str());
+		cancel();
+		if(clue.empty())
+			hub->broadcast(this, string("IQUI " + guid + " ND\n"));
+		else
+			hub->broadcast(this, string("IQUI " + guid + " DI " + hub->getCID32() + ' ' + esc(clue) + '\n'));
+	}
 }
+
+
+
 
 void ADC::handleA(StringList const& sl, string const& full)
 {
@@ -138,10 +169,8 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 		}
 		//send infs
 		hub->getUsersList(this);
-		//add us later, dont want us two times
-		hub->addClient(guid, this);
-		//only set this when we are sure that we are added, ie. here!
-		added = true;
+
+		enable();
 		//notify him that userlist is over and notify others of his presence
 		hub->broadcastSelf(attributes.getChangedInf());
 		state = LOGGED_IN;
@@ -158,7 +187,10 @@ void ADC::handleD(StringList const& sl, string const& full)
 	
 void ADC::handleH(StringList const& sl, string const& full)
 {
-	if(sl[0] == "HSUP") {
+	// todo: state checking
+	if(sl[0] == "HDSC") {
+		handleHDSC(sl, full);
+	} else if(sl[0] == "HSUP") {
 		handleHSUP(sl, full);
 	} else {
 		// do not broadcast H
@@ -166,10 +198,70 @@ void ADC::handleH(StringList const& sl, string const& full)
 	}
 }
 
+void ADC::handleHDSC(StringList const& sl, string const& full)
+{
+	// H didn't have cid...
+	if(!attributes.isOp()) {
+		PROTO_DISCONNECT("You're not an operator");
+		return;
+	}
+	if(sl.size() >= 5) {
+		bool hide = sl[2] == "ND";
+		string const& victim = sl[3];
+		if(!hide && sl[1] != sl[2]) {
+			PROTO_DISCONNECT("DSC bc-reason must be ND or reason");
+			return;
+		}
+		ADC* victimp = hub->getClient(victim);
+		if(!victimp)
+			return;
+		bool success = false;
+		string msg = string("IQUI ") + victim;
+		if(sl.size() == 5) {
+			if(sl[1] == "DI") {
+				msg += " DI " + guid + ' ' + esc(sl[4]) + '\n';
+				victimp->send(msg);
+				success = true;
+			} else if(sl[1] == "KK") {
+				msg += " KK " + guid + ' ' + esc(sl[4]) + '\n';
+				victimp->send(msg);
+				// todo: set bantime
+				success = true;
+			}
+		} else if(sl.size() == 6) {
+			if(sl[1] == "BN") {
+				msg += " BN " + guid + ' ' + esc(sl[4]) + ' ' + esc(sl[5]) + '\n';
+				victimp->send(msg);
+				// todo: set bantime
+				success = true;
+			} else if(sl[1] == "RD") {
+				msg += " RD " + guid + ' ' + esc(sl[4]) + ' ' + esc(sl[5]) + '\n';
+				victimp->send(msg);
+				success = true;
+			}
+		}
+		if(success) {
+			// remove victim
+			cancel();
+			victimp->disconnect();
+			// notify everyone else
+			if(!hide) {
+				hub->broadcastSelf(msg);
+			} else {
+				if(this != victimp)
+					send(msg); // notify self
+				hub->broadcast(this, "IQUI " + victim + " ND\n");
+			}
+		} else {
+			// got garbage command
+		}
+	}
+}
+	
 void ADC::handleHSUP(StringList const& sl, string const& full)
 {
 	if(state == START) {
-		send(string("ISUP ") + hub->getCID32() + " +BASE\n"
+		send("ISUP " + hub->getCID32() + " +BASE\n"
 				"IINF " + hub->getCID32() + " NI" + esc(hub->getHubName()) +
 				" HU1 HI1 DEmajs VEqhub0.02\n");
 		state = GOT_SUP;
