@@ -11,7 +11,8 @@ AC_PROG_LIBTOOL
 
 AM_CONFIG_HEADER(config.h)
 
-AC_CHECK_LIB(ltdl, lt_dlinit,,[AC_MSG_ERROR([libltdl needed - lt_dlopen etc..])])
+
+AC_CHECK_LIB(dl, dlopen,,[AC_MSG_ERROR([libdl needed - should be part of libc])])
 
 # Check for libxmltok or libexpat
 ac_xmllib=""
@@ -86,6 +87,13 @@ else if test "$ac_xmllib" = "xmltok"; then
   AC_CHECK_HEADERS([xmltok/xmlparse.h],, [AC_MSG_ERROR(libxmltok header missing)])
 fi fi	
 
+AC_CHECK_HEADERS([event.h])
+AC_CHECK_HEADERS([oop.h],,[AC_MSG_ERROR([liboop required.])])
+AC_CHECK_HEADERS([oop-event.h])
+AC_CHECK_HEADERS([adns.h],,[AC_MSG_ERROR([ADNS required.])])
+AC_CHECK_HEADERS([boost/shared_ptr.hpp],,[AC_MSG_ERROR([Boost library required - http://boost.org/])])
+
+AC_CHECK_HEADERS([dlfcn.h]) 
 AC_CHECK_HEADERS([arpa/inet.h])
 AC_CHECK_HEADERS([fcntl.h]) 
 AC_CHECK_HEADERS([netdb.h])
@@ -95,12 +103,7 @@ AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([sys/socket.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([unistd.h])
-AC_CHECK_HEADERS([event.h])
-AC_CHECK_HEADERS([oop.h],,[AC_MSG_ERROR([liboop required.])])
-AC_CHECK_HEADERS([oop-event.h])
-AC_CHECK_HEADERS([adns.h],,[AC_MSG_ERROR([ADNS required.])])
 #AC_CHECK_HEADERS([oop-adns.h],,[AC_MSG_ERROR([Liboop-ADNS adapter required.])])
-AC_CHECK_HEADER(boost/shared_ptr.hpp,,[AC_MSG_ERROR([Boost library required - http://boost.org/])])
 AC_C_INLINE
 AC_C_CONST
 

@@ -3,7 +3,6 @@
 #define _INCLUDED_PLUGIN_H_
 
 #include <string>
-#include <ltdl.h>
 
 #include <compat_hash_map.h>
 #include <list>
@@ -213,7 +212,6 @@ private:
 	static Plugins plugins;
 	typedef void* (*get_plugin_t)();
 	string name;
-//	lt_dlhandle handle;
 	void* handle;
 };
 
