@@ -31,6 +31,7 @@ public:
 	string getFullInf() const;
 	string const& getCID32() const { return guid; };
 	bool setInf(StringList const& sl);
+	bool setInf(string const& key, string const& val);
 
 	// Send-to functions
 	void sendHubMessage(string const& msg);

@@ -33,7 +33,6 @@ void ADC::onLine(StringList const& sl, string const& full)
 				handleA(sl, full);
 			} else {
 				PROTO_DISCONNECT("Wrong GUID or Not logged in");
-				return;
 			}
 			break;
 		case 'B':
@@ -41,7 +40,6 @@ void ADC::onLine(StringList const& sl, string const& full)
 				handleB(sl, full);
 			} else {
 				PROTO_DISCONNECT("Wrong GUID or Not logged in");
-				return;
 			}
 			break;
 		case 'C': 
@@ -52,7 +50,6 @@ void ADC::onLine(StringList const& sl, string const& full)
 				handleD(sl, full);
 			} else {
 				PROTO_DISCONNECT("Wrong GUID or Not logged in");
-				return;
 			}
 			break;
 		case 'I':
@@ -66,19 +63,16 @@ void ADC::onLine(StringList const& sl, string const& full)
 				handleD(sl, full);
 			} else {
 				PROTO_DISCONNECT("Wrong GUID or Not logged in");
-				return;
 			}
 			break;
 		case 'U':
 			PROTO_DISCONNECT("U messages are supposed to be sent over UDP");
-			return;
+			break;
 		default:
 			PROTO_DISCONNECT("Message type unknown");
-			return;
 		}
 	} else {
 		PROTO_DISCONNECT("Illegal input");
-		return;
 	}
 }
 
@@ -105,6 +99,20 @@ void ADC::handleB(StringList const& sl, string const& full)
 {
 	if(sl[0] == "BINF") {
 		handleBINF(sl, full);
+	} else if(sl[0] == "BMSG") {
+		if(sl.size() == 3) {
+			if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
+				setInf(sl[2].substr(7, 2), sl[2].substr(9));
+				sendFullInf();
+			}
+			// default
+			hub->broadcastSelf(this, full);
+		} else {
+			PROTO_DISCONNECT("BMSG takes 2 parms only");
+		}
+	} else if(sl[0] == "BSCH") {
+		// searches do not go to self
+		hub->broadcast(this, full);	
 	} else {
 		hub->broadcastSelf(this, full);
 	}
@@ -146,7 +154,8 @@ void ADC::handleH(StringList const& sl, string const& full)
 	if(sl[0] == "HSUP") {
 		handleHSUP(sl, full);
 	} else {
-		hub->broadcastSelf(this, full);
+		// do not broadcast H
+		sendHubMessage(full);
 	}
 }
 
@@ -169,26 +178,36 @@ void ADC::handleP(StringList const& sl, string const& full)
 
 bool ADC::setInf(StringList const& sl)
 {
+	bool ret = true;
 	for(StringList::const_iterator sli = sl.begin() + 2; sli != sl.end(); ++sli) {
 		if(sli->length() < 2) {
 			sendHubMessage("BINF takes only named parameters");
 			return false;
-		} else if(sli->length() == 2) {
-			// remove empty data
-			Inf::iterator i = inf.find(*sli);
-			if(i != inf.end())
-				inf.erase(i);
 		} else {
-			string key = sli->substr(0, 2);
-			string val = sli->substr(2);
-			if(key == "I4" && val == "0.0.0.0") {
-				inf[key] = getPeerName();
-			} else {
-				inf[key] = val;
-			}
+			ret = ret && setInf(sli->substr(0, 2), sli->substr(2));
 		}
 	}
+	return ret;
+}
+
+bool ADC::setInf(string const& key, string const& val)
+{
+	if(val.empty()) {
+		// remove empty data
+		Inf::iterator i = inf.find(key);
+		if(i != inf.end())
+			inf.erase(i);
+	} else {
+		if(key == "I4" && val == "0.0.0.0") {
+			inf[key] = getPeerName();
+		} else {
+			inf[key] = val;
+		}
+	}
+	return true;
 }	
+
+	
 	
 string ADC::getFullInf() const
 {
