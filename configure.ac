@@ -26,7 +26,7 @@ if test "$ac_xmllib" = ""; then
 fi
 
 AC_CHECK_LIB(oop, oop_sys_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/])])
-AC_CHECK_LIB(oop-adns, oop_adns_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/])])
+AC_CHECK_LIB(oop-adns, oop_adns_new,,[AC_MSG_ERROR([liboop needed - http://liboop.org/ (ADNS component)])])
 AC_CHECK_LIB(adns, adns_init,,[AC_MSG_ERROR([libadns needed - http://www.chiark.greenend.org.uk/~ian/adns/])])
 
 AC_CHECK_LIB(event, event_init)
@@ -103,7 +103,26 @@ AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([sys/socket.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([unistd.h])
-#AC_CHECK_HEADERS([oop-adns.h],,[AC_MSG_ERROR([Liboop-ADNS adapter required.])])
+
+AC_CHECK_HEADERS([oop-adns.h], [], [AC_MSG_ERROR([Liboop-ADNS adapter required.])],[#include <adns.h>])
+
+#check for two different versions of oop-adns.h: 0.8/0.9 vs 1.0
+AC_MSG_CHECKING([liboop version])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adns.h>
+#include <oop.h>
+#include <oop-adns.h>]], [[
+adns_rrtype rr;
+adns_queryflags f;
+oop_adns_query * c = oop_adns_submit((oop_adapter_adns*)0,(int*)0,(const char*)0,rr,f,(oop_adns_call *)0,(void*)0);]])],
+adns="1.0", 
+adns="0.8/0.9")
+AC_MSG_RESULT([$adns])
+
+if test $adns = "1.0"; then
+   AC_DEFINE([LIBOOP_RECENT], [1], [1.0 Liboop])
+fi
+
+
 AC_C_INLINE
 AC_C_CONST
 
