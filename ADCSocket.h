@@ -41,11 +41,10 @@ public:
 	/*
 	 * Do protocol stuff / Handle events
 	 */
-	virtual void doWarning(string const& msg) = 0;
-	virtual void doError(string const& msg) = 0; // send FatalError message
-	virtual void onLine(StringList const& sl, string const& full) = 0;
-	virtual void onConnected() = 0;
-	virtual void onDisconnected(string const& clue) = 0;
+	virtual void doError(string const& msg) throw() = 0; // send FatalError message
+	virtual void onLine(StringList const& sl, string const& full) throw() = 0;
+	virtual void onConnected() throw() = 0;
+	virtual void onDisconnected(string const& clue) throw() = 0;
 
 protected:
 	void disconnect() { Socket::disconnect(); onDisconnected(Util::emptyString); };

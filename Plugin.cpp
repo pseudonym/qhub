@@ -49,10 +49,10 @@ void qhub::Plugin::openModule(const char* filename)
 	}
 }
 
-void qhub::Plugin::onLogin(ADC* client)
+void qhub::Plugin::on(string const& what, ADC* client)
 {
 	for(list<Plugin*>::iterator i=modules.begin(); i!=modules.end(); i++){
-		int (*f)(ADC*) = (int(*)(ADC*))(*i)->functions["login"];
+		int (*f)(ADC*) = (int(*)(ADC*))(*i)->functions[what];
 		f(client);
 	}
 }
@@ -73,4 +73,5 @@ void qhub::Plugin::loadFromModule()
 	//load function pointers here.
 	load("foo");
 	load("login");
+	load("authenticated");
 }

@@ -63,15 +63,27 @@ string const& ADC::getFullInf() const
 /* Calls from ADCSocket */
 /************************/
 
-void ADC::doWarning(string const& msg) {
+void ADC::doAskPassword(string const& pwd) throw()
+{
+	if(!added) {
+		password = pwd;
+		salt = Util::genRand192();
+		send("IGPA " + hub->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.length()) + '\n');
+		state = VERIFY;
+	}
+}
+
+void ADC::doWarning(string const& msg) throw()
+{
 	send("ISTA " + guid + " 10 " + esc(msg) + '\n');
 }
 
-void ADC::doError(string const& msg) {
+void ADC::doError(string const& msg) throw()
+{
 	send("ISTA " + guid + " 20 " + esc(msg) + '\n');
 }
 
-void ADC::onLine(StringList const& sl, string const& full)
+void ADC::onLine(StringList const& sl, string const& full) throw()
 {		
 	assert(!sl.empty());
 	fprintf(stderr, "<< %s", full.c_str());
@@ -130,13 +142,13 @@ void ADC::onLine(StringList const& sl, string const& full)
 	}
 }
 
-void ADC::onConnected()
+void ADC::onConnected() throw()
 {
 	// dunno.. do we need this? ;)
 	// plugins might.. to check IP for instance
 }
 
-void ADC::onDisconnected(string const& clue)
+void ADC::onDisconnected(string const& clue) throw()
 {
 	if(added) {
 		// this is here so ADCSocket can safely destroy us.
@@ -208,19 +220,11 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 			return;
 		}
 
-		Plugin::onLogin(this);
-		/*
-		//check account (we could do this before the hasClient if we want to be able
-		//to disconnect the current online user)
-		if(guid == "665NHNIK2YPH6") {
-			salt = Util::genRand192();
-			send("IGPA " + hub->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.length()) + '\n');
-			state = VERIFY;
-			return;
+		Plugin::on("login", this);
+		if(password.empty()) {
+			login();
+			state = NORMAL;
 		}
-		*/
-		login();
-		state = NORMAL;
 	} else {
 		hub->broadcastSelf(attributes->getChangedInf());
 	}
@@ -346,19 +350,27 @@ void ADC::handleHPAS(StringList const& sl, string const& full)
 	// Make hash
 	TigerHash h;
 	h.update((u_int8_t*)&cid, sizeof(cid));
-	h.update("hoi", 3);
+	h.update(password.data(), password.length());
 	h.update(salt.data(), salt.length());
 	h.finalize();
 	string8 hashed_pwd(h.getResult(), TigerHash::HASH_SIZE);
 	string hashed_pwd_b32 = Encoder::toBase32(hashed_pwd.data(), hashed_pwd.length());
-	fprintf(stderr, "MyHash: %s\n", hashed_pwd_b32.c_str());
-	fprintf(stderr, "HisHash: %s\n", sl[2].c_str());
+	if(hashed_pwd_b32 != sl[2]) {
+		send("ISTA " + sl[1] + " 23 Bad\\ username\\ or\\ password\n");
+		if(added) {
+			assert(0);
+		}
+		disconnect();
+		return;
+	}
 	salt.clear();
-	// let through or disconnect
+	password.clear();
+	// Add user
 	if(hub->hasClient(guid)) {
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		return;
 	}
+	Plugin::on("authenticated", this);
 	login();
 	state = NORMAL;
 }

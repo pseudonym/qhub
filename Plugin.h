@@ -22,7 +22,7 @@ public:
 	static void openModule(const char* filename);
 	static void removeModule(const char* filename);
 
-	static void onLogin(ADC* client);
+	static void on(string const& what, ADC* client);
 
 	Plugin(const char* name, const lt_dlhandle h);
 	virtual ~Plugin();

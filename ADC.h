@@ -51,13 +51,15 @@ public:
 	void handleP(StringList const& sl, string const& full);
 
 	/*
-	 * Calls from ADCSocket
+	 * Calls from other classes
 	 */
-	virtual void doWarning(string const& msg);
-	virtual void doError(string const& msg); // send FatalError message
-	virtual void onLine(StringList const& sl, string const& full);
-	virtual void onConnected();
-	virtual void onDisconnected(string const& clue);
+	virtual void doAskPassword(string const& pwd) throw();
+	virtual void doWarning(string const& msg) throw();
+	virtual void doError(string const& msg) throw();
+	
+	virtual void onLine(StringList const& sl, string const& full) throw();
+	virtual void onConnected() throw();
+	virtual void onDisconnected(string const& clue) throw();
 	
 private:
 	ADCInf* attributes;	
@@ -74,6 +76,7 @@ private:
 	int state;
 	string guid;
 	bool added;
+	string password;
 	string8 salt;
 	
 	// Invalid
