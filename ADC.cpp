@@ -92,7 +92,7 @@ void ADC::onDisconnect() {
 
 void ADC::handleA(StringList const& sl, string const& full)
 {
-	hub->broadcastSelf(this, full);
+	hub->broadcastSelf(full);
 }
 	
 void ADC::handleB(StringList const& sl, string const& full)
@@ -103,10 +103,10 @@ void ADC::handleB(StringList const& sl, string const& full)
 		if(sl.size() == 3) {
 			if(sl[2].length() >= 9 && sl[2].substr(0, 7) == "setInf ") {
 				setInf(sl[2].substr(7, 2), sl[2].substr(9));
-				sendFullInf();
+				hub->broadcastSelf(string("BINF ") + guid + " " + sl[2].substr(7) +   + "\n");
 			}
 			// default
-			hub->broadcastSelf(this, full);
+			hub->broadcastSelf(full);
 		} else {
 			PROTO_DISCONNECT("BMSG takes 2 parms only");
 		}
@@ -114,7 +114,7 @@ void ADC::handleB(StringList const& sl, string const& full)
 		// searches do not go to self
 		hub->broadcast(this, full);	
 	} else {
-		hub->broadcastSelf(this, full);
+		hub->broadcastSelf(full);
 	}
 }
 
@@ -140,13 +140,13 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 		hub->motd(this);
 	} else {
 		// FIXME send changed info only
-		hub->broadcastSelf(this, full);
+		hub->broadcastSelf(full);
 	}
 }
 	
 void ADC::handleD(StringList const& sl, string const& full)
 {
-	hub->broadcastSelf(this, full);
+	hub->broadcastSelf(full);
 }
 	
 void ADC::handleH(StringList const& sl, string const& full)
@@ -173,7 +173,7 @@ void ADC::handleHSUP(StringList const& sl, string const& full)
 	
 void ADC::handleP(StringList const& sl, string const& full)
 {
-	hub->broadcastSelf(this, full);
+	hub->broadcastSelf(full);
 }
 
 bool ADC::setInf(StringList const& sl)
@@ -207,8 +207,6 @@ bool ADC::setInf(string const& key, string const& val)
 	return true;
 }	
 
-	
-	
 string ADC::getFullInf() const
 {
 	string parms = "BINF ";
@@ -220,7 +218,7 @@ string ADC::getFullInf() const
 
 void ADC::sendFullInf()
 {
-	hub->broadcastSelf(this, getFullInf());
+	hub->broadcastSelf(getFullInf());
 }
 
 void ADC::sendHubMessage(string const& msg)

@@ -116,7 +116,7 @@ void Hub::broadcast(ADC* c, string data)
 	}
 }
 
-void Hub::broadcastSelf(ADC* c, string data)
+void Hub::broadcastSelf(string data)
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	for(userIter i=users.begin(); i!=users.end(); i++){

@@ -41,7 +41,7 @@ public:
 	void removeClient(string guid);
 
 	void broadcast(ADC* c, string data);
-	void broadcastSelf(ADC* c, string data);
+	void broadcastSelf(string data);
 	void direct(string guid, string data);
 
 	void motd(ADC* c);
