@@ -31,9 +31,9 @@ Liboop - liboop.org
 ADNS - www.chiark.greenend.org.uk/~ian/adns/
 Boost library - boost.org
 Xerces C++ - http://xml.apache.org/xerces-c/index.html
+Libtool (for building)
 
 Recommended
-
 
 Libevent (better performance) - monkey.org/~provos/libevent/
 (For libevent to be used you will need a not-yet released Liboop though.)
