@@ -13,10 +13,10 @@ InterHub::InterHub(int fd) : state(NO_DATA), readBuffer(new unsigned char[START_
 {
 	this->fd = fd;
 	struct linger       so_linger;
-    // Set linger to false
-    so_linger.l_onoff = false;
-    so_linger.l_linger = 0;
-    int itmp = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
+	// Set linger to false
+	so_linger.l_onoff = false;
+	so_linger.l_linger = 0;
+	int itmp = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
 	if(itmp != 0){
 		fprintf(stderr, "Error setting SO_LINGER\n");
 	}
@@ -44,7 +44,7 @@ void InterHub::sendData(string data)
 	memcpy(&header[4], "SPAS", 4);
 	//our GUID
 	i[2] = htonl(54);
-	
+
 	string t(header, 12);
 	t += data;
 	Socket::write(t);
@@ -65,13 +65,13 @@ void InterHub::growBuffer()
 void InterHub::handlePacket()
 {
 	switch(readBuffer[4]){
-		case 'S':
-			if(readBuffer[5] == 'P'){
-				//check password
-				//if(readBuffer[13] == ....
-				fprintf(stderr, "Got password from %d\n", readBuffer[8]);
-			}
-			break;
+	case 'S':
+		if(readBuffer[5] == 'P'){
+			//check password
+			//if(readBuffer[13] == ....
+			fprintf(stderr, "Got password from %d\n", readBuffer[8]);
+		}
+		break;
 	}
 }
 

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-	
+
 //Buffer for writeQueues for example.
 //Has operator<() for priority_queue() compatibility, and an associated priority
 

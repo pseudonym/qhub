@@ -29,7 +29,7 @@ public:
 protected:
 	Hub* hub;
 	int state;
-	
+
 	void sendData(string data);
 	void sendDData(string data, string dest);
 

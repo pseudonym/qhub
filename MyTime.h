@@ -27,7 +27,7 @@ static uint64_t currentTimeNanos()
 		assert(0 && "gettimeofday errored on us\n");
 		return 0;
 	}
-	
+
 	return uint64_t(tv.tv_sec)*1000000000 + uint64_t(tv.tv_usec)*1000;
 #endif //HAVE_GETTIMEOFDAY
 }
@@ -37,7 +37,7 @@ class difftimer
 public:
 	difftimer() { oldTime = currentTimeNanos(); };
 
-	uint64_t getDiff() { 
+	uint64_t getDiff() {
 		uint64_t temp = oldTime;
 		oldTime = currentTimeNanos();
 		if(oldTime < temp){
@@ -45,7 +45,7 @@ public:
 			//remember this could alse be NTPD doing dirty things to us
 			return 0;
 		}
-		return oldTime-temp; 
+		return oldTime-temp;
 	};
 private:
 	uint64_t	oldTime;
@@ -57,14 +57,14 @@ private:
 
 
 #if 0
-	timespec s, r;
-	s.tv_sec=0;
-	s.tv_nsec=100000;
-	for(int i=0; i<100; i++){
-		nanosleep(&s, &r);
-		printf("%d\n", r.tv_nsec);
-		//printf("bah\n");
-	}
+timespec s, r;
+s.tv_sec=0;
+s.tv_nsec=100000;
+for(int i=0; i<100; i++){
+	nanosleep(&s, &r);
+	printf("%d\n", r.tv_nsec);
+	//printf("bah\n");
+}
 #endif
 
 #endif //_Time_h_

@@ -25,7 +25,7 @@ int Settings::readFromXML()
 		return 1;
 	}
 
-	XercesDOMParser* parser = new XercesDOMParser();	
+	XercesDOMParser* parser = new XercesDOMParser();
 	if(parser){
 		ErrorHandler* errHandler = (ErrorHandler*) new HandlerBase();
 		parser->setErrorHandler(errHandler);
@@ -52,7 +52,7 @@ int Settings::readFromXML()
 			cout << "Unexpected Exception \n" ;
 			return -1;
 		}
-		
+
 		DOMNode *pDoc = parser->getDocument();
 		pDoc = pDoc->getFirstChild();
 		if(pDoc->getNextSibling() != NULL){
@@ -88,21 +88,21 @@ int Settings::readFromXML()
 						}
 					} else if(strcmp(XMLString::transcode(b->getNodeName()), "interconnect") == 0 && b->getFirstChild() != NULL){
 						cout << "\tInter-connecting to: " << XMLString::transcode(b->getFirstChild()->getNodeName()) << endl;
-							DOMNode*a = b->getFirstChild();
-							string host, password;
-							int port;
-							while(a){
-								if(strcmp(XMLString::transcode(a->getNodeName()), "host") == 0 && a->getFirstChild() != NULL){
-									host = XMLString::transcode(a->getFirstChild()->getNodeValue());
-								} else if(strcmp(XMLString::transcode(a->getNodeName()), "port") == 0 && a->getFirstChild() != NULL){
-									port = atoi(XMLString::transcode(a->getFirstChild()->getNodeValue()));
-								} else if(strcmp(XMLString::transcode(a->getNodeName()), "password") == 0 && a->getFirstChild() != NULL){
-									password = XMLString::transcode(a->getFirstChild()->getNodeValue());
-								}
-								a = a->getNextSibling();
+						DOMNode*a = b->getFirstChild();
+						string host, password;
+						int port;
+						while(a){
+							if(strcmp(XMLString::transcode(a->getNodeName()), "host") == 0 && a->getFirstChild() != NULL){
+								host = XMLString::transcode(a->getFirstChild()->getNodeValue());
+							} else if(strcmp(XMLString::transcode(a->getNodeName()), "port") == 0 && a->getFirstChild() != NULL){
+								port = atoi(XMLString::transcode(a->getFirstChild()->getNodeValue()));
+							} else if(strcmp(XMLString::transcode(a->getNodeName()), "password") == 0 && a->getFirstChild() != NULL){
+								password = XMLString::transcode(a->getFirstChild()->getNodeValue());
 							}
-							cout << "\tConnecting to " << host << ":" << port << " pass: " << password << endl;
-							tmp->openInterConnection(host, port, password);
+							a = a->getNextSibling();
+						}
+						cout << "\tConnecting to " << host << ":" << port << " pass: " << password << endl;
+						tmp->openInterConnection(host, port, password);
 					}
 
 					b = b->getNextSibling();

@@ -37,7 +37,7 @@ public:
 
 	bool addClient(ADC* client, string guid);
 	void removeClient(string guid);
-	
+
 	void broadcast(ADC* c, string data);
 	void broadcastSelf(ADC* c, string data);
 	void direct(string guid, string data);
@@ -51,7 +51,7 @@ private:
 	int maxPacketSize;
 
 	//this is for external users
-		
+
 	//this is for physical users
 	hash_map<string, ADC*> users;
 	typedef hash_map<string, ADC*>::iterator userIter;

@@ -100,7 +100,7 @@ void Socket::partialWrite()
 	Buffer::writeBuffer top = queue.front();
 
 	assert(written<top->getBuf().size() && "We have already written the entirety of this buffer");
-	
+
 	const char* d = top->getBuf().c_str();
 
 	d += written;
@@ -109,10 +109,10 @@ void Socket::partialWrite()
 
 	if(w < 0){
 		switch(errno){
-			default:
-				disconnect();
-				return;
-				break;
+		default:
+			disconnect();
+			return;
+			break;
 		}
 	} else {
 		written += w;
@@ -135,7 +135,7 @@ string Socket::getSockName() const {
 		return "(error)";
 	}
 }
- 
+
 string Socket::getPeerName() const {
 	struct sockaddr_in sa;
 	socklen_t n = sizeof(struct sockaddr_in);

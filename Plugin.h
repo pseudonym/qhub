@@ -15,7 +15,7 @@ class Plugin {
 public:
 	static void init();
 	static void deinit();
-	
+
 	//adds or removes modules from the module-list
 	static void openModule(const char* filename);
 	static void removeModule(const char* filename);

@@ -32,7 +32,7 @@ void Hub::onLookup(adns_answer *reply) const
 			dest_addr.sin_port = htons(ih->getPort());
 			dest_addr.sin_addr.s_addr = inet_addr(inet_ntoa(reply->rrs.inaddr[0]));
 			memset(&(dest_addr.sin_zero), '\0', 8);
-			
+
 			::connect(ih->getFd(), (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
 			enable(ih->getFd(), OOP_READ, ih);
 			ih->connect();
@@ -79,7 +79,7 @@ void Hub::createCache()
 	for(userIter i=users.begin(); i!=users.end(); i++){
 		tmp += i->second->getFullInf();
 	}
-	
+
 	userlist.reset(new Buffer(tmp, 0));
 
 	outliers.clear();
@@ -89,12 +89,12 @@ void Hub::createCache()
 
 void Hub::getUsersList(ADC* c)
 {
-//Good algorithm for this?
-//checkpointing + DIFFs could work. (Why? Limits the amount of (re-) iterating over nicks.)
-//caching this way reduces iteration over a random timeinterval from n^2 to n, where n is number of users
-//drawbacks include more small sends to do (can be easily merged though, remembering last size of "quits+joins"
-//part
-//methods to limit the amount of joins to begin with could help efficiency
+	//Good algorithm for this?
+	//checkpointing + DIFFs could work. (Why? Limits the amount of (re-) iterating over nicks.)
+	//caching this way reduces iteration over a random timeinterval from n^2 to n, where n is number of users
+	//drawbacks include more small sends to do (can be easily merged though, remembering last size of "quits+joins"
+	//part
+	//methods to limit the amount of joins to begin with could help efficiency
 	if(userlist.get() == NULL /*|| oldcache*/){
 		createCache();
 	}

@@ -9,16 +9,16 @@ using namespace std;
 using namespace qhub;
 
 ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
-readBuffer(new unsigned char[START_BUFFER]),
-readBufferSize(START_BUFFER), rbCur(0), added(false)
+		readBuffer(new unsigned char[START_BUFFER]),
+		readBufferSize(START_BUFFER), rbCur(0), added(false)
 {
 	fprintf(stderr, "State of disconnected is %d", disconnected);
 	this->fd = fd;
 	struct linger so_linger;
-    // Set linger to false
-    so_linger.l_onoff = false;
-    so_linger.l_linger = 0;
-    int itmp = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
+	// Set linger to false
+	so_linger.l_onoff = false;
+	so_linger.l_linger = 0;
+	int itmp = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
 	if(itmp != 0){
 		fprintf(stderr, "Error setting SO_LINGER\n");
 	}
@@ -65,45 +65,45 @@ void ADC::getParms(int length, int positionalParms)
 	//Retrieve all parameters in command
 
 	string current;
-		
+
 	int index=5;
 	int state=0;//0==space, 1==parameter
 	bool done=false;
 	if(positionalParms>0){
 		while(index<length-1 && !done){
 			switch(state){
-				case 0:
-					if(readBuffer[index] != ' '){
-						state = 1;
-						//this is start of new parameter
-						current.clear();
-						positionalParms--;
+			case 0:
+				if(readBuffer[index] != ' '){
+					state = 1;
+					//this is start of new parameter
+					current.clear();
+					positionalParms--;
+					current += readBuffer[index];
+				}
+				break;
+			case 1:
+				switch(readBuffer[index]){
+				case ' ':
+					state = 0;
+					//fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
+					posParms.push_back(current);
+					if(positionalParms==0){
+						//fprintf(stderr, "Aborting posparms %d\n", index);
+						done=true;
+					}
+					break;
+				case '\\':
+					current += readBuffer[index];
+					index++;
+					if(index<length){
 						current += readBuffer[index];
 					}
 					break;
-				case 1:
-					switch(readBuffer[index]){
-						case ' ':
-							state = 0;
-							//fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
-							posParms.push_back(current);
-							if(positionalParms==0){
-								//fprintf(stderr, "Aborting posparms %d\n", index);
-								done=true;
-							}
-							break;
-						case '\\':
-							current += readBuffer[index];
-							index++;
-							if(index<length){
-								current += readBuffer[index];
-							}
-							break;
-						default:
-							current += readBuffer[index];
-							break;
-					}
+				default:
+					current += readBuffer[index];
 					break;
+				}
+				break;
 			}
 			index++;
 		}
@@ -126,52 +126,52 @@ void ADC::getParms(int length, int positionalParms)
 
 	while(index<length-1){
 		switch(state){
-			case 0:
-				if(readBuffer[index] != ' '){
-					state = 1;
-					name.clear();
-					name += readBuffer[index];
-				} else {
-					//parse error
+		case 0:
+			if(readBuffer[index] != ' '){
+				state = 1;
+				name.clear();
+				name += readBuffer[index];
+			} else {
+				//parse error
+			}
+			break;
+		case 1:
+			if(readBuffer[index] != ' '){
+				state = 2;
+				name += readBuffer[index];
+			} else {
+				//parse error
+			}
+			break;
+		case 2:
+			current.clear();
+			if(readBuffer[index] != ' '){
+				state = 3;
+			} else {
+				state = 0;
+				//empty parm
+				namedParms[name] = current;
+				//fprintf(stderr, "Adding empty named parm %c%c\n", name[0], name[1]);
+			}
+		case 3:
+			switch(readBuffer[index]){
+			case ' ':
+				state = 0;
+				//fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
+				namedParms[name] = current;
+				break;
+			case '\\':
+				current += readBuffer[index];
+				index++;
+				if(index<length){
+					current += readBuffer[index];
 				}
 				break;
-			case 1:
-				if(readBuffer[index] != ' '){
-					state = 2;
-					name += readBuffer[index];
-				} else {
-					//parse error
-				}
+			default:
+				current += readBuffer[index];
 				break;
-			case 2:
-				current.clear();
-				if(readBuffer[index] != ' '){
-					state = 3;
-				} else {
-					state = 0;
-					//empty parm
-					namedParms[name] = current;
-					//fprintf(stderr, "Adding empty named parm %c%c\n", name[0], name[1]);
-				}
-			case 3:
-				switch(readBuffer[index]){
-					case ' ':
-						state = 0;
-						//fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
-						namedParms[name] = current;
-						break;
-					case '\\':
-						current += readBuffer[index];
-						index++;
-						if(index<length){
-							current += readBuffer[index];
-						}
-						break;
-					default:
-						current += readBuffer[index];
-						break;
-				}
-				break;
+			}
+			break;
 		}
 		index++;
 	}
@@ -203,7 +203,7 @@ void ADC::realDisconnect()
 	}
 	fprintf(stderr, "Disconnecting %d %p GUID: %s\n", fd, this, guid.c_str());
 	if(added){
-		//dont remove us if we werent added	
+		//dont remove us if we werent added
 		hub->removeClient(guid);
 
 		//send a QUI aswell
@@ -228,74 +228,74 @@ void ADC::handleBCommand(int length)
 	}
 
 	switch(readBuffer[1]){
-		case 'I':
-			if(readBuffer[2] == 'N' && readBuffer[3] == 'F'){
-				if(state == GOT_SUP){
-					getParms(length, 1);
-					if(posParms.size()<1){
-						fprintf(stderr, "Malformed parms\n");
+	case 'I':
+		if(readBuffer[2] == 'N' && readBuffer[3] == 'F'){
+			if(state == GOT_SUP){
+				getParms(length, 1);
+				if(posParms.size()<1){
+					fprintf(stderr, "Malformed parms\n");
+					state = PROTOCOL_ERROR;
+					disconnect();
+					return;
+				} else {
+					for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
+						//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
+						if(i->first == "I4" && i->second == "0.0.0.0") {
+							INF[i->first] = getPeerName();
+						} else {
+							INF[i->first] = i->second;
+						}
+					}
+					//we know the guid, now register us in the hub.
+					//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
+
+					//XXX: when DC++ isnt buggy
+					/*if(namedParms.find("LO") == namedParms.end() || namedParms["LO"] != "1"){
+						//no LO1 login-tag
 						state = PROTOCOL_ERROR;
 						disconnect();
 						return;
-					} else {
-						for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
-							//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
-							if(i->first == "I4" && i->second == "0.0.0.0") {
-								INF[i->first] = getPeerName();
-							} else {
-								INF[i->first] = i->second;
-							}
-						}
-						//we know the guid, now register us in the hub.
-						//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
+					}*/
 
-						//XXX: when DC++ isnt buggy
-						/*if(namedParms.find("LO") == namedParms.end() || namedParms["LO"] != "1"){
-							//no LO1 login-tag
-							state = PROTOCOL_ERROR;
-							disconnect();
-							return;
-						}*/
+					//send userlist, will buffer for us
+					hub->getUsersList(this);
 
-						//send userlist, will buffer for us
-						hub->getUsersList(this);
-						
-						guid = posParms[0];
-						//add us later, dont want us two times
-						if(!hub->addClient(this, posParms[0])){
-							//signal that were no in the userlist
-							guid = "";
-							disconnect();
-							return;
-						}
-						//only set this when we are sure that we are added, ie. here!
-						added = true;
-
-						//notify him that userlist is over
-						sendFullInf();
-						state = LOGGED_IN;
-						hub->motd(this);
-						//XXX: when DC++ isnt buggy
-						//namedParms.erase(namedParms.find("LO"));
+					guid = posParms[0];
+					//add us later, dont want us two times
+					if(!hub->addClient(this, posParms[0])){
+						//signal that were no in the userlist
+						guid = "";
+						disconnect();
+						return;
 					}
-				} else {
-					//regular update
-					for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
-						//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
-						INF[string(i->first)] = i->second;
-					}
-					//broadcast it aswell, to self?
-					string tmp((char*)readBuffer, length);
-					hub->broadcastSelf(this, tmp);
+					//only set this when we are sure that we are added, ie. here!
+					added = true;
+
+					//notify him that userlist is over
+					sendFullInf();
+					state = LOGGED_IN;
+					hub->motd(this);
+					//XXX: when DC++ isnt buggy
+					//namedParms.erase(namedParms.find("LO"));
 				}
-			}
-			break;
-		default:
-			{
+			} else {
+				//regular update
+				for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
+					//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
+					INF[string(i->first)] = i->second;
+				}
+				//broadcast it aswell, to self?
 				string tmp((char*)readBuffer, length);
 				hub->broadcastSelf(this, tmp);
 			}
-			break;
+		}
+		break;
+	default:
+		{
+			string tmp((char*)readBuffer, length);
+			hub->broadcastSelf(this, tmp);
+		}
+		break;
 	}
 
 }
@@ -308,7 +308,7 @@ void ADC::handleDCommand(int length)
 
 	//only care about guid
 	getParms(length, 2);
-	
+
 	string tmp((char*)readBuffer, length);
 	fprintf(stderr, "%d\n", posParms.size());
 	fprintf(stderr, "%s vs. %s and %s\n", posParms[1].c_str(), tmp.c_str(), posParms[0].c_str());
@@ -327,11 +327,11 @@ string ADC::escape(string in)
 	tmp.reserve(255);
 	for(int i=0; i<in.size(); i++){
 		switch(in[i]){
-			case ' ': case 0x0a: case '\\':
-				tmp += '\\'; tmp += in[i];
-				break;
-			default:
-				tmp += in[i];
+case ' ': case 0x0a: case '\\':
+			tmp += '\\'; tmp += in[i];
+			break;
+		default:
+			tmp += in[i];
 		}
 	}
 	return tmp;
@@ -344,38 +344,38 @@ void ADC::handleHCommand(int length)
 	}
 
 	switch(readBuffer[1]){
-		case 'S':
-			if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
-				if(state == START){
-					Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NI"
-						+ escape(hub->getHubName()) + " HU1 HI1 DEmajs VEqhub0.02\n"), 0));
-					w(tmp);
-					state = GOT_SUP;
-				} else {
-					state = PROTOCOL_ERROR;
-					disconnect();
-				}
-			} else if(readBuffer[2] == 'N' && readBuffer[3] == 'D'){
-			}
-			break;
-		case 'P':
-			//PAS
-			if(state == GOT_SUP){
-				//check password
+	case 'S':
+		if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
+			if(state == START){
+				Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NI"
+				                                   + escape(hub->getHubName()) + " HU1 HI1 DEmajs VEqhub0.02\n"), 0));
+				w(tmp);
+				state = GOT_SUP;
 			} else {
 				state = PROTOCOL_ERROR;
 				disconnect();
 			}
-			break;
-		case 'D':
-			//DSC
-			fprintf(stderr, "DSC gotten\n");
+		} else if(readBuffer[2] == 'N' && readBuffer[3] == 'D'){
+		}
+		break;
+	case 'P':
+		//PAS
+		if(state == GOT_SUP){
+			//check password
+		} else {
+			state = PROTOCOL_ERROR;
 			disconnect();
-			return;
-			break;
-		case 'G':
-			//GET
-			break;
+		}
+		break;
+	case 'D':
+		//DSC
+		fprintf(stderr, "DSC gotten\n");
+		disconnect();
+		return;
+		break;
+	case 'G':
+		//GET
+		break;
 	}
 }
 
@@ -389,15 +389,15 @@ void ADC::handleCommand(int length)
 	fprintf(stderr, ">\n");*/
 
 	switch(readBuffer[0]){
-		case 'H':
-			handleHCommand(length);
-			break;
-		case 'B':
-			handleBCommand(length);
-			break;
-		case 'D':
-			handleDCommand(length);
-			break;
+	case 'H':
+		handleHCommand(length);
+		break;
+	case 'B':
+		handleBCommand(length);
+		break;
+	case 'D':
+		handleDCommand(length);
+		break;
 	}
 
 	//now, this command is handled. Remove it.

@@ -62,12 +62,12 @@ void *fd_demux(oop_source *src, int fd, oop_event ev, void* usr)
 	Socket* s = (Socket*) usr;
 
 	switch(ev){
-		case OOP_READ:
-			s->on_read();
-			break;
-		case OOP_WRITE:
-			s->on_write();
-			break;
+	case OOP_READ:
+		s->on_read();
+		break;
+	case OOP_WRITE:
+		s->on_write();
+		break;
 	}
 
 	return OOP_CONTINUE;

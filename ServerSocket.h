@@ -12,15 +12,15 @@ public:
 	ServerSocket(int port, int type, Hub* h);
 
 	enum socketTypes {
-		INTER_HUB,
-		LEAF_HANDLER,
-		LAST
+	    INTER_HUB,
+	    LEAF_HANDLER,
+	    LAST
 	};
 
 protected:
-	void on_read(); 
+	void on_read();
 	void on_write();
-	
+
 	int type;
 	Hub* hub;
 };

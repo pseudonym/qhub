@@ -37,7 +37,7 @@ private:
 	ADC(){};
 
 	Hub* hub;
-	
+
 	enum State {
 		START,
 		PROTOCOL_ERROR, //has sent message to client, at next data, disconnect
@@ -45,13 +45,13 @@ private:
 		LOGGED_IN
 	};
 	int state;
-	
+
 	void growBuffer();
 	unsigned char* readBuffer;
 	int readBufferSize;
 	int rbCur;
 
-    void handleCommand(int length);
+	void handleCommand(int length);
 	void handleHCommand(int length);
 	void handleBCommand(int length);
 	void handleDCommand(int length);
@@ -67,7 +67,7 @@ private:
 	bool added;
 	hash_map<string, string> INF;
 	typedef hash_map<string, string>::iterator INFIterator;
-	
+
 	void realDisconnect();
 };
 

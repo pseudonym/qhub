@@ -23,11 +23,11 @@
 using namespace qhub;
 
 ServerSocket::ServerSocket(int port, int t, Hub* h) : hub(h), Socket(AF_INET), type(t) {
-    int yes=1;
+	int yes=1;
 
 	if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
 		printf("Error setting reuse address.\n");
-    } 
+	}
 
 	//just let the kernel handle this for us...
 	//2.6 is probably pretty good at it.
@@ -35,10 +35,10 @@ ServerSocket::ServerSocket(int port, int t, Hub* h) : hub(h), Socket(AF_INET), t
 	//yes = 1024;
 	if (setsockopt(fd,SOL_SOCKET,SO_SNDBUF,&yes,sizeof(int)) == -1) {
 		printf("Error setting send buffer.\n");
-    }
+	   }
 	if (setsockopt(fd,SOL_SOCKET,SO_RCVBUF,&yes,sizeof(int)) == -1) {
 		printf("Error setting receive buffer.\n");
-    }*/
+	   }*/
 
 	setPort(port);
 	set_bound_address(0);
@@ -53,16 +53,16 @@ void ServerSocket::on_read(){
 			fprintf(stderr, "Accepted socket %d\n", fd);
 			Socket* tmp;
 			switch(type){
-				case INTER_HUB:
-					hub->acceptInterHub(fd);
-					break;
-				case LEAF_HANDLER:
-					hub->acceptLeaf(fd);
-					break;
-				default:
-					fprintf(stderr, "Closing socket: unknown type for listening socket.\n");
-					close(fd);
-					break;
+			case INTER_HUB:
+				hub->acceptInterHub(fd);
+				break;
+			case LEAF_HANDLER:
+				hub->acceptLeaf(fd);
+				break;
+			default:
+				fprintf(stderr, "Closing socket: unknown type for listening socket.\n");
+				close(fd);
+				break;
 			}
 		} else {
 			break;
