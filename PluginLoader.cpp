@@ -79,7 +79,7 @@ void Loader::deinitVFS() throw()
 	assert(virtualfs->rmdir("/plugins"));
 }
 
-void Loader::on(PluginStarted, Plugin* p) throw()
+void Loader::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		load();
@@ -100,7 +100,7 @@ void Loader::on(PluginStarted, Plugin* p) throw()
 	}
 }
 
-void Loader::on(PluginStopped, Plugin* p) throw()
+void Loader::on(PluginStopped&, Plugin* p) throw()
 {
 	if(p == this) {
 		if(virtualfs)
@@ -112,7 +112,7 @@ void Loader::on(PluginStopped, Plugin* p) throw()
 	}
 }
 
-void Loader::on(PluginMessage, Plugin* p, void* d) throw()
+void Loader::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
 		VirtualFs::Message* m = (VirtualFs::Message*)d;

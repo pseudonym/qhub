@@ -38,24 +38,20 @@ public:
 		PLUGIN_STOPPED,
 		PLUGIN_MESSAGE,
 		// Client messages
-		CLIENT_CONNECTED,		// client connected
+		CLIENT_CONNECTED,		// client connected (not everything may be initialized??)
 		CLIENT_DISCONNECTED,	// client disconnected
 		CLIENT_LINE,			// client send data
-		CLIENT_LOGIN,			// client trieds to authenticate with first BINF
-		CLIENT_AUTHSUCCESS,		// client has sent correct authentication data
-		CLIENT_AUTHFAILED,		// client has sent false authentication data
-		CLIENT_INVALIDSTATE,	// client has sent something in an incorrect state
+		CLIENT_LOGIN,			// client tries to authenticate with first BINF
+		CLIENT_INFO,			// client has sent a BINF (called after CLIENT_LOGIN as well)
 		// Logged in client messages
 		USER_CONNECTED,			// user connected / logged in properly
 		USER_DISCONNECTED,		// user disconnected
-		USER_INFO,				// user has sent a BINF (called after CLIENT_LOGIN as well)
 		USER_COMMAND,			// user sends private message to hub bot
-		USER_CHAT,				// user sends broadcast public chat
-		USER_PRIVATECHAT,		// user sends directed private chat
-		USER_GROUPCHAT,			// user sends broadcast private group chat
+		USER_MESSAGE,			// user sends message
 		// Last
 		LAST
 	};
+	// add AUTH_FAILED
 
 	enum Action {
 		NOTHING = 0x0,
@@ -83,37 +79,34 @@ public:
 		int does;
 	};
 	
-//	template<int I>	struct X { enum { TYPE = I };  };
+	typedef ActionType<PLUGIN_STARTED, NOTHING>
+			PluginStarted;
+	typedef ActionType<PLUGIN_STOPPED, NOTHING>
+			PluginStopped;
+	typedef ActionType<PLUGIN_MESSAGE, HANDLE>
+			PluginMessage;
 	
-	typedef ActionType<PLUGIN_STARTED, NOTHING> PluginStarted;
-	typedef ActionType<PLUGIN_STOPPED, NOTHING> PluginStopped;
-	typedef ActionType<PLUGIN_MESSAGE, HANDLE> PluginMessage;
-	typedef ActionType<CLIENT_CONNECTED, HANDLE | DISCONNECT> ClientConnected;
-	typedef ActionType<CLIENT_DISCONNECTED, HANDLE> ClientDisconnected;
-	typedef ActionType<CLIENT_LINE, MODIFY | HANDLE | STOP | DISCONNECT> ClientLine;
-	typedef ActionType<PLUGIN_STARTED, NOTHING> PluginStarted;
+	typedef ActionType<CLIENT_CONNECTED, HANDLE | DISCONNECT>
+			ClientConnected;
+	typedef ActionType<CLIENT_DISCONNECTED, HANDLE>
+			ClientDisconnected;
+	typedef ActionType<CLIENT_LINE, MODIFY | HANDLE | STOP | DISCONNECT>
+			ClientLine;
+	typedef ActionType<CLIENT_LOGIN, HANDLE | DISCONNECT>
+			ClientLogin;
+	typedef ActionType<CLIENT_INFO, HANDLE | STOP | DISCONNECT>
+			ClientInfo;
+	
+	typedef ActionType<USER_CONNECTED, HANDLE | DISCONNECT>
+			UserConnected;
+	typedef ActionType<USER_DISCONNECTED, HANDLE | DISCONNECT>
+			UserDisconnected;
+	typedef ActionType<USER_COMMAND, REPLY | HANDLE | STOP | DISCONNECT>
+			UserCommand;
+	typedef ActionType<USER_MESSAGE, REPLY | HANDLE | STOP | DISCONNECT>
+			UserMessage;
 
-	/*
-	// These messages are always sent
-	typedef X<0> PluginStarted;
-	typedef X<1> PluginStopped;
-	typedef X<2> PluginMessage;
-	// These messages must be requested (FIXME.. always sent for now)
-	typedef X<3> ClientConnected;
-	typedef X<4> ClientDisconnected;
-	typedef X<5> ClientLine;
-	typedef X<6> ClientLogin;
-	typedef X<7> ClientAuthenticated;
-	typedef X<8> ClientAuthFailed;
-	typedef X<9> ClientInfo;
-	typedef X<10> ClientCommand;
-	typedef X<11> ClientMessage;
-	//typedef X<13> ClientUserDisconnect;
-	//typedef X<14> ClientUserKick;
-	//typedef X<15> ClientUserBan;
-	//typedef X<16> ClientUserRedirect;
-	*/
-
+	
 	template<typename T0>
 	static void fire(T0 type) throw() {
 		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
@@ -144,50 +137,44 @@ public:
 			(*i)->on(type, c1, c2, c3);
 		}
 	}
-/*	
+
 	// Called after construction
 	// parm: Plugin* = the plugin
-	virtual void on(PluginStarted, Plugin*) throw() {};
+	virtual void on(PluginStarted&, Plugin*) throw() {};
 	// Called before destruction
 	// parm: Plugin* = the plugin
-	virtual void on(PluginStopped, Plugin*) throw() {};
+	virtual void on(PluginStopped&, Plugin*) throw() {};
 	// Called by a plugin
 	// parm: Plugin* = the plugin
 	// parm: void* = the custom data
-	virtual void on(PluginMessage, Plugin*, void*) throw() {};
+	virtual void on(PluginMessage&, Plugin*, void*) throw() {};
 	// Called when a client connects
 	// note: not everything may be initialized
 	// parm: ADCClient* = the client
-	virtual void on(ClientConnected, ADCClient*) throw() {};
+	virtual void on(ClientConnected&, ADCClient*) throw() {};
 	// Called when a client disconnects
 	// note: the client may not have been added to the userlist
 	// parm: ADCClient* = the client
-	virtual void on(ClientDisconnected, ADCClient*) throw() {};
+	virtual void on(ClientDisconnected&, ADCClient*) throw() {};
 	// Called on every client input
 	// parm: ADCClient* = the client
-	virtual void on(ClientLine, ADCClient*) throw() {};
+	virtual void on(ClientLine&, ADCClient*) throw() {};
 	// Called when a client sends first INF (modify INF's through attributes)
 	// parm: ADCClient* = the client
-	virtual void on(ClientLogin, ADCClient*) throw() {};
-	// Called when a client sends a correct authentication token (extra parm: password)
-	// parm: ADCClient* = the client
-	// parm: string = the correctly used password
-	virtual void on(ClientAuthenticated, ADCClient*, string const&) throw() {};
-	// Called when a client sends an incorrect authentication token
-	// parm: ADCClient* = the client
-	// parm: string = the correct yet unused password
-	virtual void on(ClientAuthFailed, ADCClient*, string const&) throw() {};
-	// Called when a client sends INFs after logon
-	virtual void on(ClientInfo, ADCClient*) throw() {};
+	virtual void on(ClientLogin&, ADCClient*) throw() {};
+	// Called when a client sends INFs
+	virtual void on(ClientInfo&, ADCClient*) throw() {};
+	virtual void on(UserConnected&, ADCClient*) throw() {};
+	virtual void on(UserDisconnected&, ADCClient*) throw() {};
 	// Called when a client sends a direct PM to the hub CID
 	// parm: ADCClient* = the client
 	// parm: string = the message
-	virtual void on(ClientCommand, ADCClient*, string&) throw() {};
+	virtual void on(UserCommand&, ADCClient*, string&) throw() {};
 	// Called when a client sends a normal broadcast chat message
 	// parm: ADCClient* = the client
 	// parm: string = the message
-	virtual void on(ClientMessage, ADCClient*, string&) throw() {};
-*/
+	virtual void on(UserMessage&, ADCClient*, string&) throw() {};
+
 	/*
 	 * Static methods
 	 */

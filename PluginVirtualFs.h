@@ -38,10 +38,10 @@ public:
 	VirtualFs() throw() {};
 	virtual ~VirtualFs() throw() {};
 
-	virtual void on(PluginStarted, Plugin*) throw();
-	virtual void on(PluginStopped, Plugin*) throw();
-	virtual void on(PluginMessage, Plugin*, void*) throw();
-	virtual void on(ClientCommand, ADCClient*, string&) throw();
+	virtual void on(PluginStarted&, Plugin*) throw();
+	virtual void on(PluginStopped&, Plugin*) throw();
+	virtual void on(PluginMessage&, Plugin*, void*) throw();
+	virtual void on(UserCommand&, ADCClient*, string&) throw();
 
 	bool mkdir(string const& dir, Plugin* plugin) throw();
 	bool mknod(string const& node, Plugin* plugin) throw();

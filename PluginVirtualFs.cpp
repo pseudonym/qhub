@@ -43,7 +43,7 @@ void VirtualFs::deinit() throw()
 	Plugin::data.setVoidPtr(idVirtualFs, NULL);
 }
 
-void VirtualFs::on(PluginStarted, Plugin* p) throw()
+void VirtualFs::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		init();
@@ -51,7 +51,7 @@ void VirtualFs::on(PluginStarted, Plugin* p) throw()
 	}
 }
 
-void VirtualFs::on(PluginStopped, Plugin* p) throw()
+void VirtualFs::on(PluginStopped&, Plugin* p) throw()
 {
 	if(p == this) {
 		deinit();
@@ -59,7 +59,7 @@ void VirtualFs::on(PluginStopped, Plugin* p) throw()
 	}
 }
 
-void VirtualFs::on(PluginMessage, Plugin* p, void* d) throw()
+void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(p == this) {
 		Message* m = (Message*)d;
@@ -96,7 +96,7 @@ bool VirtualFs::rmnod(string const& path) throw()
 	return root->rmNode(path);
 }
 
-void VirtualFs::on(ClientCommand, ADCClient* client, string& msg) throw()
+void VirtualFs::on(UserCommand&, ADCClient* client, string& msg) throw()
 {
 	UserData* data = client->getData();
 	StringList sl = Util::lazyQuotedStringTokenize(msg);
@@ -140,7 +140,8 @@ void VirtualFs::on(ClientCommand, ADCClient* client, string& msg) throw()
 			Plugin* p = (Plugin*)d->getData();
 			if(p) {
 				Message m(Message::CHDIR, data->getString(idVirtualPath), client);
-				p->on(PluginMessage(), this, &m);
+				PluginMessage action;
+				p->on(action, this, &m);
 			}
 		}
 	} else if(sl[0] == "help") {
@@ -151,7 +152,8 @@ void VirtualFs::on(ClientCommand, ADCClient* client, string& msg) throw()
 		} else {
 			Plugin* p = (Plugin*)d->getData();
 			Message m(Message::HELP, pwd, client);
-			p->on(PluginMessage(), this, &m);
+			PluginMessage action;
+			p->on(action, this, &m);
 		}
 	} else {
 		Dir* d = root->cd(pwd);
@@ -159,7 +161,8 @@ void VirtualFs::on(ClientCommand, ADCClient* client, string& msg) throw()
 			Plugin* p = (Plugin*)d->getNode(sl[0]);
 			if(p) {
 				Message m(Message::EXEC, sl[0], client, sl);
-				p->on(PluginMessage(), this, &m);
+				PluginMessage action;
+				p->on(action, this, &m);
 			} else {
 				client->doPrivateMessage("NAK: Command ambiguous or not found.");
 			}

@@ -78,7 +78,7 @@ void Accounts::deinitVFS() throw()
 	assert(virtualfs->rmdir("/accounts"));
 }
 	
-void Accounts::on(PluginStarted, Plugin* p) throw()
+void Accounts::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		load();
@@ -99,7 +99,7 @@ void Accounts::on(PluginStarted, Plugin* p) throw()
 	}
 }
 
-void Accounts::on(PluginStopped, Plugin* p) throw()
+void Accounts::on(PluginStopped&, Plugin* p) throw()
 {
 	if(p == this) {
 		if(virtualfs)
@@ -112,16 +112,18 @@ void Accounts::on(PluginStopped, Plugin* p) throw()
 	}
 }
 	
-void Accounts::on(ClientLogin, ADCClient* client) throw()
+void Accounts::on(ClientLogin&, ADCClient* client) throw()
 {
 	ADCInf* attr = client->getAttr();
 	Users::const_iterator i = users.find(attr->getNewInf("NI"));
 	if(i != users.end()) {
+		UserData* data = client->getData();
+		data->setInt(idUserLevel, 1);
 		client->doAskPassword(i->second);
 	}
 }
 
-void Accounts::on(ClientInfo, ADCClient* client) throw()
+void Accounts::on(ClientInfo&, ADCClient* client) throw()
 {
 	ADCInf* attr = client->getAttr();
 	UserData* data = client->getData();
@@ -135,16 +137,16 @@ void Accounts::on(ClientInfo, ADCClient* client) throw()
 	}
 }
 
-void Accounts::on(ClientAuthenticated, ADCClient* client, string const&) throw()
+void Accounts::on(UserConnected&, ADCClient* client) throw()
 {
 	UserData* data = client->getData();
-	data->setInt(idUserLevel, 1);
-	assert(data->getInt(idUserLevel) == 1);
-	ADCInf* attr = client->getAttr();
-	attr->setInf("OP", "1");
+	if(data->getInt(idUserLevel) >= 1) {
+		ADCInf* attr = client->getAttr();
+		attr->setInf("OP", "1");
+	}
 }
 
-void Accounts::on(PluginMessage, Plugin* p, void* d) throw()
+void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
 		VirtualFs::Message* m = (VirtualFs::Message*)d;
