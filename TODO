@@ -18,8 +18,13 @@ Protocol stuff
 
 Begin work on multihub support
 
-Polish plugins (what about controlling chains of plugins? Can plugins stop following plugins
-from executing? Are plugins able to filter/suppress output from the non-plugin hubcore?
-What about filtering stuff on many outgoing clients? (think a modified list of users: the
-plugin-instance for one user wants no other users to receive his INFs, this can mean work
-if there are only hooks for incoming data?)) 
+Polish plugins 
+	what about controlling chains of plugins? Can plugins stop following plugins
+		from executing?
+	Are plugins able to filter/suppress output from the non-plugin hubcore?
+	What about filtering stuff on many outgoing clients? (think a modified list of users: the
+		plugin-instance for one user wants no other users to receive his INFs, this can mean work
+		if there are only hooks for incoming data?)) 
+	Make a clean interface for event-notification (de)registration. Make this interface
+		independent on the actual underlying method used. Try to find some kind of smallest common
+		properties of different methods.
