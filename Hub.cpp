@@ -122,6 +122,7 @@ void Hub::broadcast(string data, ADCClient* c)
 			i->second->writeb(tmp);
 		}
 	} else {
+		assert(0); // do we need this?
 		for(userIter i=users.begin(); i!=users.end(); i++) {
 			if(i->second != c)
 				i->second->writeb(tmp);
@@ -182,8 +183,6 @@ void Hub::addClient(string const& guid, ADCClient* client)
 void Hub::removeClient(string const& guid)
 {
 	assert(hasClient(guid));
-	string qui = "IQUI " + guid + " ND\n";
-	Buffer::writeBuffer tmp(new Buffer(qui, 0));
 	users.erase(guid);
 }
 

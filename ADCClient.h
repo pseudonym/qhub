@@ -23,6 +23,20 @@ class UserData;
 
 class ADCClient : public ADCSocket {
 public:
+	/*
+	 * Pseudo-FOURCC stuff
+	 */
+	static u_int32_t stringToFourCC(string const& c) {
+		return ((u_int32_t)c[0])|((u_int32_t)c[1]<<8)|((u_int32_t)c[2]<<16)|((u_int32_t)c[3]<<24);
+	}
+	enum {
+		CTM, DSC, GET, GFI, GPA, INF, MSG, NTD, PAS, QUI, RCM, RES, SCH, SND, STA, SUP, CMD_LAST
+	};
+	static u_int32_t Commands[CMD_LAST];
+
+	/*
+	 * Client states
+	 */
 	enum State {
 		START,		// HSUP
 		IDENTIFY,	// BINF
@@ -30,16 +44,9 @@ public:
 		NORMAL		// everything except HPAS
 	};
 
-	enum Action {
-		PROCEED = 0,	// proceed as normal
-		NONE = 1,		// there is no action to be taken, modifying state or lastParsed will not help
-		STOP = 2,		// don't do the usual stuff
-		MODIFIED = 4	// data has been modified, use sl, not full
-	};
-	void initAction(Action a = PROCEED) throw() { action = PROCEED | a; };
-	void setAction(Action c) throw() { assert(!getAction(NONE)); action |= c; };
-	bool getAction(Action c) const throw() { return action & c == c; };
-	
+	/*
+	 * Constructor / Destructor
+	 */
 	ADCClient(int fd, Domain fd, Hub* parent) throw();
 	virtual ~ADCClient() throw();
 
@@ -50,8 +57,6 @@ public:
 	 * ADC protocol
 	 */
 	string const& getInf() const throw();
-	string const& getFullLine() const throw() { return *lastLine; };
-	StringList& getFullInput() throw() { return *lastParsed; };
 	bool isActive() const throw();
 
 	/*
@@ -84,16 +89,13 @@ private:
 	/*
 	 * Data handlers	
 	 */
-	void handleA(StringList& sl, string const& full) throw();
-	void handleB(StringList& sl, string const& full) throw();
-	void handleBINF(StringList& sl, string const& full) throw();
-	void handleBMSG(StringList& sl, string const& full) throw();
-	void handleD(StringList& sl, string const& full) throw();
-	void handleH(StringList& sl, string const& full) throw();
-	void handleHDSC(StringList& sl, string const& full) throw();
-	void handleHPAS(StringList& sl, string const& full) throw();
-	void handleHSUP(StringList& sl, string const& full) throw();
-	void handleP(StringList& sl, string const& full) throw();
+	void handle(StringList& sl, u_int32_t const cmd, string const& full) throw();
+	void handleSupports(StringList& sl) throw();
+	void handleLogin(StringList& sl) throw();
+	void handlePassword(StringList& sl) throw();
+	void handleDisconnect(StringList& sl) throw();
+	void handleInfo(StringList& sl) throw();
+	void handleMessage(StringList& sl, u_int32_t const cmd, string const& full) throw();
 
 	void login() throw();
 	void logout() throw();
@@ -109,8 +111,16 @@ private:
 	string8 salt;
 	int action;
 
-	string const* lastLine;
-	StringList* lastParsed;
+	string const& assemble(StringList const& sl) throw() {
+		StringList::const_iterator i = sl.begin();
+		full = esc(*i);
+		for(++i; i != sl.end(); ++i) {
+			full += ' ' + esc(*i);
+		}
+		full += '\n';
+		return full;
+	}	
+	string full;
 
 	// Invalid
 	ADCClient() : ADCSocket(-1, Socket::IP4), attributes(0) {};

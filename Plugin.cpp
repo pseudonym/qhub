@@ -31,8 +31,8 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 			if(p) {
 				p->name = filename;
 				p->handle = h;
-				p->on(PluginStarted(), p); // init self before others
-				fire(PluginStarted(), p);
+//				p->on(PluginStarted(), p); // init self before others
+//				fire(PluginStarted(), p);
 				if(insertBefore.empty()) {
 					plugins.push_back(p);
 				} else {
@@ -57,14 +57,14 @@ bool Plugin::removeModule(string const& filename) throw()
 	for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i){
 		if((*i)->name == filename) {
 			// deinit self before others
-			(*i)->on(PluginStopped(), *i);
+//			(*i)->on(PluginStopped(), *i);
 			lt_dlhandle h = (*i)->handle;
 			delete *i;
 			lt_dlclose(h); // close AFTER deleting, not while
 			plugins.erase(i);
 			// fire in reverse order
-			for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
-				(*j)->on(PluginStopped(), *i);
+//			for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
+//				(*j)->on(PluginStopped(), *i);
 			return true;
 		}
 	}
@@ -79,8 +79,8 @@ void Plugin::removeAllModules() throw()
 		for(unsigned j = 1; j < plugins.size(); ++j)
 			++i;
 		// Fire in reverse order
-		for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
-			(*j)->on(PluginStopped(), *i);
+//		for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
+//			(*j)->on(PluginStopped(), *i);
 		lt_dlhandle h = (*i)->handle;
 		delete *i;
 		lt_dlclose(h); // close AFTER deleting, not while

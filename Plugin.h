@@ -31,8 +31,69 @@ public:
 	/*
 	 * Plugin calls
 	 */
-	template<int I>	struct X { enum { TYPE = I };  };
+	
+	enum {
+		// Plugin messages
+		PLUGIN_STARTED,
+		PLUGIN_STOPPED,
+		PLUGIN_MESSAGE,
+		// Client messages
+		CLIENT_CONNECTED,		// client connected
+		CLIENT_DISCONNECTED,	// client disconnected
+		CLIENT_LINE,			// client send data
+		CLIENT_LOGIN,			// client trieds to authenticate with first BINF
+		CLIENT_AUTHSUCCESS,		// client has sent correct authentication data
+		CLIENT_AUTHFAILED,		// client has sent false authentication data
+		CLIENT_INVALIDSTATE,	// client has sent something in an incorrect state
+		// Logged in client messages
+		USER_CONNECTED,			// user connected / logged in properly
+		USER_DISCONNECTED,		// user disconnected
+		USER_INFO,				// user has sent a BINF (called after CLIENT_LOGIN as well)
+		USER_COMMAND,			// user sends private message to hub bot
+		USER_CHAT,				// user sends broadcast public chat
+		USER_PRIVATECHAT,		// user sends directed private chat
+		USER_GROUPCHAT,			// user sends broadcast private group chat
+		// Last
+		LAST
+	};
 
+	enum Action {
+		NOTHING = 0x0,
+		MODIFY = 0x1,
+		MODIFIED = MODIFY, // plugin has modified the input
+		REPLY = 0x2,
+		REPLIED = REPLY, // plugin has made a reply
+		HANDLE = 0x4,
+		HANDLED = HANDLE, // plugin has done something (other plugins may choose to do nothing now)
+		STOP = 0x8,
+		STOPPED = STOP, // plugin requests that hub does not process the command/message
+		DISCONNECT = 0x16,
+		DISCONNECTED = DISCONNECT // client has been removed, do as little as possible
+	};
+
+	template<int I, int C> struct ActionType {
+		enum { actionType = I };
+		ActionType() throw() : reply(NULL), can(C), does(0) { };
+		~ActionType() throw() { if(reply) delete reply; };
+		void setState(Action d) throw() { assert((can & d) == d); does |= d; };
+		bool isSet(Action d) const throw() { return (does & d) == d; }
+		StringList* reply;
+	private:
+		int can;
+		int does;
+	};
+	
+//	template<int I>	struct X { enum { TYPE = I };  };
+	
+	typedef ActionType<PLUGIN_STARTED, NOTHING> PluginStarted;
+	typedef ActionType<PLUGIN_STOPPED, NOTHING> PluginStopped;
+	typedef ActionType<PLUGIN_MESSAGE, HANDLE> PluginMessage;
+	typedef ActionType<CLIENT_CONNECTED, HANDLE | DISCONNECT> ClientConnected;
+	typedef ActionType<CLIENT_DISCONNECTED, HANDLE> ClientDisconnected;
+	typedef ActionType<CLIENT_LINE, MODIFY | HANDLE | STOP | DISCONNECT> ClientLine;
+	typedef ActionType<PLUGIN_STARTED, NOTHING> PluginStarted;
+
+	/*
 	// These messages are always sent
 	typedef X<0> PluginStarted;
 	typedef X<1> PluginStopped;
@@ -51,6 +112,7 @@ public:
 	//typedef X<14> ClientUserKick;
 	//typedef X<15> ClientUserBan;
 	//typedef X<16> ClientUserRedirect;
+	*/
 
 	template<typename T0>
 	static void fire(T0 type) throw() {
@@ -82,7 +144,7 @@ public:
 			(*i)->on(type, c1, c2, c3);
 		}
 	}
-	
+/*	
 	// Called after construction
 	// parm: Plugin* = the plugin
 	virtual void on(PluginStarted, Plugin*) throw() {};
@@ -125,7 +187,7 @@ public:
 	// parm: ADCClient* = the client
 	// parm: string = the message
 	virtual void on(ClientMessage, ADCClient*, string&) throw() {};
-
+*/
 	/*
 	 * Static methods
 	 */
