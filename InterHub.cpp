@@ -27,7 +27,6 @@ InterHub::InterHub(int fd) : state(NO_DATA), readBuffer(new unsigned char[START_
 void InterHub::connect()
 {
 	sendData(password);
-	sendData(password);
 }
 
 void InterHub::sendDData(string data, string dest)
@@ -63,6 +62,19 @@ void InterHub::growBuffer()
 	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
 }
 
+void InterHub::handlePacket()
+{
+	switch(readBuffer[4]){
+		case 'S':
+			if(readBuffer[5] == 'P'){
+				//check password
+				//if(readBuffer[13] == ....
+				fprintf(stderr, "Got password from %d\n", readBuffer[8]);
+			}
+			break;
+	}
+}
+
 void InterHub::on_read()
 {
 	fprintf(stderr, "Got data\n");
@@ -80,7 +92,7 @@ void InterHub::on_read()
 			if(rbCur>=l){
 				fprintf(stderr, "Got all data in packet\n");
 				//handle packet
-
+				handlePacket();
 				//and remove it
 				rbCur -= l;
 				memmove(readBuffer, readBuffer+l, readBufferSize-l);

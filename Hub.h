@@ -39,6 +39,8 @@ public:
 	void broadcastSelf(ADC* c, string data);
 	void direct(string guid, string data);
 
+	void motd(ADC* c);
+
 	void getUsersList(ADC* c);
 private:
 	string name;
@@ -53,7 +55,11 @@ private:
 	qhub::Buffer::writeBuffer userlist;
 	list<qhub::Buffer::writeBuffer> outliers;
 
+	//opened connections
 	hash_map<string, InterHub*> interConnects;
+
+	//listened opened connections
+	list<InterHub*>	interConnects2;
 
 	void createCache();
 };

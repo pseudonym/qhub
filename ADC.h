@@ -11,8 +11,6 @@
 
 #include "Buffer.h"
 
-
-
 namespace qhub {
 
 using namespace std;
@@ -30,9 +28,11 @@ public:
 	void sendFullInf();
 	string getFullInf();
 
-
+	void sendHubMsg(string msg);
 
 	bool dis() { return disconnected; }
+
+	string escape(string in);
 private:
 	ADC(){};
 

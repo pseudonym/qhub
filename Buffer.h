@@ -15,7 +15,6 @@ class Buffer {
 public:
 	Buffer(Buffer& b) { buf = b.buf; prio=b.prio; };
 	Buffer(string b, int p) : buf(b), prio(p) {};
-	~Buffer() { fprintf(stderr, "Deleting me %d %d %p\n", prio, buf.size(), this); };
 	bool operator<(Buffer& b) { return prio < b.prio; };
 
 	string& getBuf() { return buf; };

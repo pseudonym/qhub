@@ -5,6 +5,7 @@
 #include "ADC.h"
 #include "InterHub.h"
 
+#include <stdlib.h>
 #include <adns.h>
 #include <oop-adns.h>
 
@@ -107,6 +108,19 @@ void Hub::getUsersList(ADC* c)
 	}
 }
 
+void Hub::motd(ADC* c)
+{
+	char t[1024];
+	sprintf(t, "%d", interConnects.size());
+	char t2[1024];
+	sprintf(t2, "%d", interConnects2.size());
+	string tmp = string("There are ") + t + " hubs connected to us and " + t2 + " connected to from us.";
+	sprintf(t2, "%d", users.size());
+	sprintf(t, "%d", 0);
+	tmp += string("\nWe have ") + t2 + " local users, and " + t + " remote users.";
+	c->sendHubMsg(tmp);
+}
+
 void Hub::direct(string guid, string data)
 {
 	userIter i = users.find(guid);
@@ -171,7 +185,8 @@ bool Hub::addClient(ADC* client, string guid)
 
 void Hub::acceptInterHub(int fd)
 {
-	Socket* tmp = new InterHub(fd);
+	InterHub* tmp = new InterHub(fd);
+	interConnects2.push_back(tmp);
 }
 
 

@@ -187,10 +187,6 @@ void ADC::sendFullInf()
 	hub->broadcastSelf(this, getFullInf());
 }
 
-
-
-
-
 void ADC::realDisconnect()
 {
 	if(fd == -1){
@@ -227,6 +223,7 @@ void ADC::handleBCommand(int length)
 					getParms(length, 1);
 					if(posParms.size()<1){
 						fprintf(stderr, "Malformed parms\n");
+						state = PROTOCOL_ERROR;
 						disconnect();
 						return;
 					} else {
@@ -252,6 +249,7 @@ void ADC::handleBCommand(int length)
 						//notify him that userlist is over
 						sendFullInf();
 						state = LOGGED_IN;
+						hub->motd(this);
 					}
 				}
 			}
@@ -280,7 +278,7 @@ void ADC::handleBCommand(int length)
 
 void ADC::handleDCommand(int length)
 {
-	if(length<5){
+	if(length<5 || state != LOGGED_IN){
 		return;
 	}
 
@@ -293,6 +291,28 @@ void ADC::handleDCommand(int length)
 	hub->direct(posParms[1], tmp);
 }
 
+void ADC::sendHubMsg(string msg)
+{
+	Buffer::writeBuffer tmp(new Buffer(string("BMSG FQI2LLF4K5W3Y " + escape(msg) + "\n"), 0));
+	w(tmp);
+}
+
+string ADC::escape(string in)
+{
+	string tmp;
+	tmp.reserve(255);
+	for(int i=0; i<in.size(); i++){
+		switch(in[i]){
+			case ' ': case 0x0a: case '\\':
+				tmp += '\\'; tmp += in[i];
+				break;
+			default:
+				tmp += in[i];
+		}
+	}
+	return tmp;
+}
+
 void ADC::handleHCommand(int length)
 {
 	if(length<5){
@@ -303,15 +323,25 @@ void ADC::handleHCommand(int length)
 		case 'S':
 			if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
 				if(state == START){
-					Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NI" + hub->getHubName() + " HU1 HI1 VEqhub0.02\n"), 0));
+					Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NI"
+						+ hub->getHubName() + " HU1 HI1 DEmajs VEqhub0.02\n"), 0));
 					w(tmp);
 					state = GOT_SUP;
+				} else {
+					state = PROTOCOL_ERROR;
+					disconnect();
 				}
 			} else if(readBuffer[2] == 'N' && readBuffer[3] == 'D'){
 			}
 			break;
 		case 'P':
 			//PAS
+			if(state == GOT_SUP){
+				//check password
+			} else {
+				state = PROTOCOL_ERROR;
+				disconnect();
+			}
 			break;
 		case 'D':
 			//DSC
@@ -328,11 +358,11 @@ void ADC::handleHCommand(int length)
 void ADC::handleCommand(int length)
 {
 	//there is a command in readBuffer, starting at index 0.
-	fprintf(stderr, "Command: %d ", length);
-	for(int i=0; i<length-1; i++){
+	//fprintf(stderr, "Command: %d ", length);
+	/*for(int i=0; i<length-1; i++){
 		fprintf(stderr, "%c", readBuffer[i]);
 	}
-	fprintf(stderr, ">\n");
+	fprintf(stderr, ">\n");*/
 
 	switch(readBuffer[0]){
 		case 'H':

@@ -52,6 +52,8 @@ protected:
 	string password;
 	int port;
 
+	void handlePacket();
+
 	void realDisconnect();
 };
 
