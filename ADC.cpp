@@ -205,6 +205,9 @@ void ADC::realDisconnect()
 	if(added){
 		//dont remove us if we werent added	
 		hub->removeClient(guid);
+
+		//send a QUI aswell
+		hub->broadcast(this, string("IQUI " + guid + " ND\n"));
 	}
 	close(fd);
 	cancel(fd, OOP_READ);
@@ -257,7 +260,6 @@ void ADC::handleBCommand(int length)
 						//send userlist, will buffer for us
 						hub->getUsersList(this);
 						
-						//only update this when we are SURE that were added, ie. here!
 						guid = posParms[0];
 						//add us later, dont want us two times
 						if(!hub->addClient(this, posParms[0])){
@@ -266,6 +268,7 @@ void ADC::handleBCommand(int length)
 							disconnect();
 							return;
 						}
+						//only set this when we are sure that we are added, ie. here!
 						added = true;
 
 						//notify him that userlist is over
