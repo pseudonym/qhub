@@ -8,7 +8,10 @@
 using namespace std;
 using namespace qhub;
 
-ADC::ADC(int fd, Hub* parent) : hub(parent), state(START), readBuffer(new unsigned char[START_BUFFER]), readBufferSize(START_BUFFER), rbCur(0)
+ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
+readBuffer(new unsigned char[START_BUFFER]),
+readBufferSize(START_BUFFER), rbCur(0),
+writeEnabled(false), written(0), disconnected(false)
 {
 	this->fd = fd;
 	struct linger       so_linger;
@@ -23,6 +26,12 @@ ADC::ADC(int fd, Hub* parent) : hub(parent), state(START), readBuffer(new unsign
 	enable(fd, OOP_READ, this);
 }
 
+ADC::~ADC()
+{
+	delete[] readBuffer;
+	close(fd);
+}
+
 void ADC::growBuffer()
 {
 	unsigned char* tmp = new unsigned char[readBufferSize*2];
@@ -35,6 +44,8 @@ void ADC::growBuffer()
 	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
 }
 
+
+//XXX: putting them ALL in a hashmap could be worth it, simpler
 void ADC::getParms(int length, int positionalParms)
 {
 	posParms.clear();
@@ -66,10 +77,10 @@ void ADC::getParms(int length, int positionalParms)
 					switch(readBuffer[index]){
 						case ' ':
 							state = 0;
-							fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
+							//fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
 							posParms.push_back(current);
 							if(positionalParms==0){
-								fprintf(stderr, "Aborting posparms %d\n", index);
+								//fprintf(stderr, "Aborting posparms %d\n", index);
 								done=true;
 							}
 							break;
@@ -91,7 +102,7 @@ void ADC::getParms(int length, int positionalParms)
 	}
 
 	if(state == 1){
-		fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
+		//fprintf(stderr, "Adding positional parm >%s<\n", current.c_str());
 		posParms.push_back(current);
 	}
 
@@ -132,13 +143,13 @@ void ADC::getParms(int length, int positionalParms)
 					state = 0;
 					//empty parm
 					namedParms[name] = current;
-					fprintf(stderr, "Adding empty named parm %c%c\n", name[0], name[1]);
+					//fprintf(stderr, "Adding empty named parm %c%c\n", name[0], name[1]);
 				}
 			case 3:
 				switch(readBuffer[index]){
 					case ' ':
 						state = 0;
-						fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
+						//fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
 						namedParms[name] = current;
 						break;
 					case '\\':
@@ -157,7 +168,7 @@ void ADC::getParms(int length, int positionalParms)
 		index++;
 	}
 	if(state == 3){
-		fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
+		//fprintf(stderr, "Adding named parm %s %s\n", name.c_str(), current.c_str());
 		namedParms[name] = current;
 	}
 }
@@ -173,10 +184,24 @@ string ADC::getFullInf()
 
 void ADC::sendFullInf()
 {
-	write(getFullInf());
-	hub->broadcast(this, getFullInf());
+	hub->broadcastSelf(this, getFullInf());
 }
 
+void ADC::write(string& s)
+{
+	Buffer::writeBuffer tmp(new Buffer(s, 0));
+	w(tmp);
+}
+
+
+void ADC::w(Buffer::writeBuffer b)
+{
+	queue.push(b);
+	if(!writeEnabled){
+		enable(fd, OOP_WRITE, this);
+		writeEnabled=true;
+	}
+}
 
 void ADC::handleBCommand(int length)
 {
@@ -192,14 +217,15 @@ void ADC::handleBCommand(int length)
 					if(posParms.size()<1){
 						cancel(fd, OOP_READ);
 						close(fd);
+						//XXX do real kill-of-self
 					} else {
 						for(parmMapIterator i = namedParms.begin(); i!=namedParms.end(); i++){
-							fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
+							//fprintf(stderr, "Name: %s Val: %s\n", i->first.c_str(), i->second.c_str());
 							INF[string(i->first)] = i->second;
 						}
 						guid = posParms[0];
 						//we know the guid, now register us in the hub.
-						fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
+						//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
 						if(!hub->addClient(this, guid)){
 							/*close(fd);
 							cancel(fd, OOP_READ);
@@ -207,6 +233,9 @@ void ADC::handleBCommand(int length)
 							return;*/
 							//XXX do real kill-of-self
 						}
+						
+						hub->getUsersList(this);
+						//notify him that userlist is over
 						sendFullInf();
 						state = LOGGED_IN;
 					}
@@ -260,7 +289,8 @@ void ADC::handleHCommand(int length)
 		case 'S':
 			if(readBuffer[2] == 'U' && readBuffer[3] == 'P'){
 				if(state == START){
-					write("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NImajs VEqhub0.02\n");
+					Buffer::writeBuffer tmp(new Buffer(string("ISUP FQI2LLF4K5W3Y +BASE\nIINF FQI2LLF4K5W3Y NImajs HU1 HI1 VEqhub0.02\n"), 0));
+					w(tmp);
 					state = GOT_SUP;
 				}
 			} else if(readBuffer[2] == 'N' && readBuffer[3] == 'D'){
@@ -271,6 +301,7 @@ void ADC::handleHCommand(int length)
 			break;
 		case 'D':
 			//DSC
+			disconnected = true;
 			break;
 		case 'G':
 			//GET
@@ -300,7 +331,7 @@ void ADC::handleCommand(int length)
 	}
 
 	//now, this command is handled. Remove it.
-	//Note: memmove could be eliminated by using a rotating buffer
+	//XXX: memmove could be eliminated by using a rotating buffer
 	memmove(readBuffer, readBuffer+length, readBufferSize-length);
 	rbCur -= length;
 }
@@ -333,13 +364,50 @@ void ADC::on_read()
 	} else if(r < 1){
 		cancel(fd, OOP_READ);
 		close(fd);
-		delete[] readBuffer;
-		//XXX someone (other than us?) also needs to deallocate us
-		delete this;
+		disconnected = true;
 	}
 }
 
 void ADC::on_write()
 {
+	fprintf(stderr, "On_write\n");
 
+	partialWrite();
+
+	if(queue.empty()){
+		cancel(fd, OOP_WRITE);
+		writeEnabled=false;
+	}
+}
+
+void ADC::partialWrite()
+{
+	//only try writing _once_, think it helps fairness
+	assert(!queue.empty() && "We got a write-event though we got nothing to write");
+
+	Buffer::writeBuffer top = queue.top();
+
+	assert(written<top->getBuf().size() && "We have already written the entirety of this buffer");
+	
+	const char* d = top->getBuf().c_str();
+
+	d += written;
+
+	int w = ::write(fd, d, top->getBuf().size()-written);
+
+	if(w < 0){
+		switch(errno){
+			default:
+				disconnected = true;
+				cancel(fd, OOP_WRITE);
+				break;
+		}
+	} else {
+		written += w;
+
+		if(written == top->getBuf().size()){
+			queue.pop();
+			written = 0;
+		}
+	}
 }

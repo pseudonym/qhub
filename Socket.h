@@ -37,9 +37,6 @@ public:
 	void listen(int backlog = 8192);
 
 	int getFd() { return fd; };
-
-	void write(const char* s, size_t length);
-	void write(std::string s);
 protected:
 	int fd;
 	struct sockaddr_in saddr_in;

@@ -5,6 +5,11 @@
 #include "compat_hash_map.h"
 #include <vector>
 #include <string>
+#include <queue>
+
+#include <boost/shared_ptr.hpp>
+
+#include "Buffer.h"
 
 namespace qhub {
 
@@ -15,12 +20,17 @@ class Hub;
 class ADC : public Socket {
 public:
 	ADC(int fd, Hub* parent);
+	~ADC();
 
 	void on_read();
 	void on_write();
 
 	void sendFullInf();
 	string getFullInf();
+
+	void write(string& s);
+	void w(Buffer::writeBuffer b);
+
 private:
 	ADC(){};
 
@@ -45,18 +55,25 @@ private:
 	void handleDCommand(int length);
 
 	void getParms(int length, int positionalParms);
-	std::vector<string> posParms;
-	
-	typedef std::hash_map<string, string> parmMap;
+	vector<string> posParms;
+	typedef hash_map<string, string> parmMap;
 	parmMap namedParms;
-	
 	typedef parmMap::iterator parmMapIterator;
 
-
-	
 	string guid;
-	std::hash_map<string, string> INF;
-	typedef std::hash_map<string, string>::iterator INFIterator;
+	hash_map<string, string> INF;
+	typedef hash_map<string, string>::iterator INFIterator;
+	
+	//output queue
+	priority_queue<Buffer::writeBuffer> queue;
+
+	void partialWrite();
+	bool writeEnabled;
+	//how much written for topmost Buffer
+	int written;
+
+	//signals that we should die
+	bool disconnected;
 };
 
 

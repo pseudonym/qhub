@@ -5,4 +5,4 @@ qhub_SOURCES += Socket.cpp ServerSocket.cpp ServerSocket.h
 qhub_SOURCES += DNSUser.h InterHub.cpp InterHub.h
 qhub_SOURCES += Hub.h Hub.cpp
 qhub_SOURCES += ADC.h ADC.cpp
-
+qhub_SOURCES += Buffer.h

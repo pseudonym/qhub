@@ -33,16 +33,6 @@ Socket::Socket(int d, int t, int p)
 	saddr_in.sin_family = d;
 }
 
-void Socket::write(const char* s, size_t length)
-{
-	::write(fd, s, strlen(s));
-}
-
-void Socket::write(string s)
-{
-	write(s.c_str(), s.length());
-}
-
 void Socket::setPort(int p)
 {
 	saddr_in.sin_port = htons(p);

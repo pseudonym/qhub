@@ -70,13 +70,13 @@ static oop_source* src;
 
 void qhub::enable(int fd, oop_event ev, Socket* s)
 {
-	fprintf(stderr, "Enabling fd %d\n", fd);
+	fprintf(stderr, "Enabling fd %d %d\n", fd, ev);
 	src->on_fd(src, fd, ev, fd_demux, s);
 }
 
 void qhub::cancel(int fd, oop_event ev)
 {
-	fprintf(stderr, "Cancellng fd %d\n", fd);
+	fprintf(stderr, "Cancellng fd %d %d\n", fd, ev);
 	src->cancel_fd(src, fd, ev);
 }
 
@@ -105,8 +105,8 @@ int main()
 		fprintf(stderr, "Malloc failure.\n");
 		exit(1);
 	}
-	oop_source* src = oop_sys_source(system);
-	fprintf(stderr, "Using liboop system event source (select() will be used)\n", src);
+	src = oop_sys_source(system);
+	fprintf(stderr, "Using liboop system event source: select() will be used.\n");
 #else
 	src = oop_event_new();
 	fprintf(stderr, "Using libevent source adapter\n", src);
@@ -114,12 +114,10 @@ int main()
 	//Set up ADNS
 	adns = oop_adns_new(src,(adns_initflags)0,NULL);
 
-
 	Hub* tmp = new Hub();
 
 #ifndef HAVE_LIBOOP_EVENT
 	oop_sys_run(system);
-	oop_event_delete();
 #else
 	event_dispatch();
 #endif
