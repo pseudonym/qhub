@@ -34,4 +34,6 @@ Xerces C++ - http://xml.apache.org/xerces-c/index.html
 
 Recommended
 
+
 Libevent (better performance) - monkey.org/~provos/libevent/
+(For libevent to be used you will need a not-yet released Liboop though.)
