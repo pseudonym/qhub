@@ -2,61 +2,79 @@
 
 using namespace qhub;
 
-list<Plugin*> Plugin::modules;
+Plugin::Plugins Plugin::modules;
 
-void qhub::Plugin::init ()
+void qhub::Plugin::init() throw()
 {
 	lt_dlinit();
-
 	//add search-dir
 	//lt_dladdsearchdir("./plugins/");
 }
 
-void qhub::Plugin::deinit()
+void qhub::Plugin::deinit() throw()
 {
 	lt_dlexit();
 }
 
-void qhub::Plugin::removeModule(const char* filename)
+Plugin::~Plugin() throw()
 {
-	for(list<Plugin*>::iterator i=modules.begin(); i!=modules.end(); i++){
-		if(strcmp((*i)->getName(), filename) == 0){
+	lt_dlclose(handle);
+}
+
+void qhub::Plugin::openModule(const char* filename) throw()
+{
+	bool success = false;
+	lt_dlhandle h = lt_dlopenext(filename);
+
+	if(h != NULL) {
+		lt_ptr ptr;
+		PLUGIN_START start = NULL;
+		PLUGIN_STOP stop = NULL;
+		if((ptr = lt_dlsym(h, "start")) != NULL)
+			start = (PLUGIN_START)ptr;
+		if(start && (ptr = lt_dlsym(h, "stop")) != NULL)
+			stop = (PLUGIN_STOP)ptr;
+		if(start && stop) {
+			fprintf(stderr, "Loading plugin %s\n", filename);
+			Plugin* p = (Plugin*)start();
+			if(p) {
+				fprintf(stderr, "Success!\n");
+				p->start = start;
+				p->stop = stop;
+				p->name = filename;
+				p->handle = h;
+				p->on(STARTED, NULL);
+				modules.push_back(p);
+				success = true;
+			}
+		}
+	}
+				
+	if(!success) {
+		fprintf(stderr, "Dynamic linking failed for %s\n", filename);
+	}
+}
+
+void qhub::Plugin::removeModule(const char* filename) throw()
+{
+	string tmp = filename;
+	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i){
+		if((*i)->name == tmp) {
+			(*i)->on(STOPPED, NULL);
+			(*i)->stop();
 			modules.erase(i);
 		}
 	}
 }
 
-Plugin::Plugin(const char* n, const lt_dlhandle h) : name(string(n)), handle(h)
+void Plugin::fire(Message m, ADC* client) throw()
 {
-	fprintf(stderr, "Created module %s.\n", name.c_str());
-}
-
-Plugin::~Plugin()
-{
-	lt_dlclose(handle);
-}
-
-void qhub::Plugin::openModule(const char* filename)
-{
-	lt_dlhandle tmp = lt_dlopenext(filename);
-
-	if(tmp != NULL){
-		Plugin* t = new Plugin(filename, tmp);
-		modules.push_back(t);
-		t->loadFromModule();
-	} else {
-		fprintf(stderr, "Dynamic linking failed for %s.\n", filename);
+	for(Plugins::iterator i = modules.begin(); i != modules.end(); ++i) {
+		(*i)->on(m, client);
 	}
 }
 
-void qhub::Plugin::on(string const& what, ADC* client)
-{
-	for(list<Plugin*>::iterator i=modules.begin(); i!=modules.end(); i++){
-		int (*f)(ADC*) = (int(*)(ADC*))(*i)->functions[what];
-		f(client);
-	}
-}
-
+/*
 void qhub::Plugin::load(const char* name)
 {
 	lt_ptr p;
@@ -75,3 +93,4 @@ void qhub::Plugin::loadFromModule()
 	load("login");
 	load("authenticated");
 }
+*/

@@ -42,7 +42,7 @@ void ADC::sendHubMessage(string const& msg)
 	send("BMSG " + hub->getCID32() + ' ' + esc(msg) + '\n');
 }
 
-string const& ADC::getFullInf() const
+string const& ADC::getInf() const
 {
 	return attributes->getFullInf();
 }
@@ -59,9 +59,9 @@ string const& ADC::getFullInf() const
 	} while(0)
 
 
-/************************/
-/* Calls from ADCSocket */
-/************************/
+/*******************************************/
+/* Calls from ADCSocket (and other places) */
+/*******************************************/
 
 void ADC::doAskPassword(string const& pwd) throw()
 {
@@ -144,8 +144,7 @@ void ADC::onLine(StringList const& sl, string const& full) throw()
 
 void ADC::onConnected() throw()
 {
-	// dunno.. do we need this? ;)
-	// plugins might.. to check IP for instance
+	Plugin::fire(Plugin::CONNECTED, this);
 }
 
 void ADC::onDisconnected(string const& clue) throw()
@@ -161,6 +160,7 @@ void ADC::onDisconnected(string const& clue) throw()
 		else
 			hub->broadcast(this, string("IQUI " + guid + " DI " + guid + ' ' + esc(clue) + '\n'));
 	}
+	Plugin::fire(Plugin::DISCONNECTED, this);
 }
 
 
@@ -204,10 +204,8 @@ void ADC::handleB(StringList const& sl, string const& full)
 
 void ADC::handleBINF(StringList const& sl, string const& full)
 {
-	if(!attributes->setInf(sl)) {
-		PROTOCOL_ERROR("setInf didn't like you very much");
-		return;
-	}
+	attributes->setInf(sl);
+
 	if(state == IDENTIFY) {
 		guid = sl[1];
 		if(hub->hasClient(guid)) {
@@ -220,12 +218,13 @@ void ADC::handleBINF(StringList const& sl, string const& full)
 			return;
 		}
 
-		Plugin::on("login", this);
+		Plugin::fire(Plugin::LOGIN, this);
 		if(password.empty()) {
 			login();
 			state = NORMAL;
 		}
 	} else {
+		Plugin::fire(Plugin::INFO, this);
 		hub->broadcastSelf(attributes->getChangedInf());
 	}
 }
@@ -285,7 +284,7 @@ void ADC::handleH(StringList const& sl, string const& full)
 
 void ADC::handleHDSC(StringList const& sl, string const& full)
 {
-	if(attributes->getInf("OP").empty()) {
+	if(attributes->getOldInf("OP").empty()) {
 		doWarning("Access denied");
 		return;
 	}
@@ -370,7 +369,7 @@ void ADC::handleHPAS(StringList const& sl, string const& full)
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		return;
 	}
-	Plugin::on("authenticated", this);
+	Plugin::fire(Plugin::AUTHENTICATED, this);
 	login();
 	state = NORMAL;
 }

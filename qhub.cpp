@@ -129,7 +129,7 @@ int main()
 
 	//try loading
 	Plugin::init();
-	Plugin::openModule("foo1");
+	Plugin::openModule("accounts");
 
 	Settings::readFromXML();
 

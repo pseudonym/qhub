@@ -76,7 +76,7 @@ void Hub::getUsersList(ADC* c)
 {
 	string tmp;
 	for(userIter i=users.begin(); i!=users.end(); i++){
-		tmp += i->second->getFullInf();
+		tmp += i->second->getInf();
 	}
 
 	Buffer::writeBuffer t(new Buffer(tmp));

@@ -29,7 +29,7 @@ public:
 	virtual void on_write() { ADCSocket::on_write(); };
 
 	// Other stuff
-	string const& getFullInf() const;
+	string const& getInf() const;
 	string const& getCID32() const { return guid; };
 	ADCInf* getAttr() { return attributes; };
 

@@ -5,21 +5,16 @@
 using namespace std;
 using namespace qhub;
 
-bool ADCInf::setInf(StringList const& sl) throw()
+void ADCInf::setInf(StringList const& sl) throw()
 {
-	bool ret = true;
 	for(StringList::const_iterator sli = sl.begin() + 2; sli != sl.end(); ++sli) {
-		if(sli->length() < 2) {
-			parent->sendHubMessage("BINF takes only named parameters");
-			return false;
-		} else {
-			ret = ret && setInf(sli->substr(0, 2), sli->substr(2));
+		if(sli->length() >= 2) {
+			setInf(sli->substr(0, 2), sli->substr(2));
 		}
 	}
-	return ret;
 }
 
-bool ADCInf::setInf(string const& key, string const& val) throw()
+void ADCInf::setInf(string const& key, string const& val) throw()
 {
 	// set to changes buffer first
 	// move to current buffer only on send (getInfs)
@@ -28,8 +23,6 @@ bool ADCInf::setInf(string const& key, string const& val) throw()
 	} else {
 		changes[key] = val;
 	}
-	// here we block illegal key/value combinations, like OP1
-	return true;
 }
 
 void ADCInf::updateInf() throw()
@@ -54,8 +47,7 @@ void ADCInf::updateInf() throw()
 string ADCInf::getChangedInf() throw()
 {
 	// iterate over current and changes to see differences
-	string partial = "BINF ";
-	partial += parent->getCID32();
+	string partial;
 	for(Inf::const_iterator i = changes.begin(); i != changes.end(); ++i) {
 		Inf::const_iterator j = current.find(i->first);
 		bool exists = j != current.end();
@@ -64,17 +56,36 @@ string ADCInf::getChangedInf() throw()
 	}
 	// erase changes buffer and update current/full
 	updateInf();
-	return partial + '\n';
+	if(partial.empty())
+		return Util::emptyString;
+	return "BINF " + parent->getCID32() + partial + '\n';
 }
 
-string const& ADCInf::getInf(string const& key) const throw()
+string const& ADCInf::getNewInf(string const& key) const throw()
 {
-	Inf::const_iterator i;
-	i = changes.find(key);
+	Inf::const_iterator i = changes.find(key);
 	if(i != changes.end())
 		return i->second;
-	i = current.find(key);
+	return Util::emptyString;
+}
+
+string const& ADCInf::getOldInf(string const& key) const throw()
+{
+	Inf::const_iterator i = current.find(key);
 	if(i != current.end())
 		return i->second;
 	return Util::emptyString;
+}
+
+bool ADCInf::newInf(string const& key) const throw()
+{
+	Inf::const_iterator i = changes.find(key);
+	Inf::const_iterator j = current.find(key);
+	if(
+			(i == current.end()) ||
+			(j == current.end() && i->second.empty()) ||
+			(j != current.end() && i->second == j->second)
+	)
+		return false;
+	return true;
 }
