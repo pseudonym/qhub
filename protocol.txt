@@ -3,11 +3,13 @@ Intra-server protocol
 - Binary
 - Packet-based
 - Uniform
+- Easyily distinguish malformed packets (command-prefix only has few allowed values)
+- Easily ignore packets not of interest
 
 
 Packet
 
-4 bytes         Length of payload
+4 bytes         Length of payload+header
 4 bytes         Command, prefix+string (ADC style)
 4 bytes         Originating GUID
 [4 bytes        Destination GUID, only if prefix/type=="D"]
