@@ -235,6 +235,13 @@ void ADC::handleBCommand(int length)
 						//we know the guid, now register us in the hub.
 						//fprintf(stderr, "Registering us with guid %s\n", guid.c_str());
 
+						if(namedParms.find("LO") == namedParms.end() || namedParms["LO"] != "1"){
+							//no LO1 login-tag
+							state = PROTOCOL_ERROR;
+							disconnect();
+							return;
+						}
+
 						//send userlist, will buffer for us
 						hub->getUsersList(this);
 						
@@ -250,6 +257,7 @@ void ADC::handleBCommand(int length)
 						sendFullInf();
 						state = LOGGED_IN;
 						hub->motd(this);
+						namedParms.erase(namedParms.find("LO"));
 					}
 				}
 			}
