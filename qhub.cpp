@@ -138,5 +138,8 @@ int main()
 #else
 	event_dispatch();
 #endif
+
+	//Init random number generator
+	srand(time(NULL));
 	return 0;
 }

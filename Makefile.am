@@ -1,7 +1,8 @@
 bin_PROGRAMS = qhub
 qhub_CXXFLAGS = -Wall
 qhub_SOURCES  = qhub.cpp qhub.h MyTime.h types.h 
-qhub_SOURCES += Util.h Util.cpp
+qhub_SOURCES += Util.h Util.cpp string8.h
+qhub_SOURCES += Encoder.h Encoder.cpp TigerHash.h TigerHash.cpp
 qhub_SOURCES += TokenBucket.h TokenBucket.cpp Socket.h
 qhub_SOURCES += Socket.cpp ServerSocket.cpp ServerSocket.h
 qhub_SOURCES += DNSUser.h InterHub.cpp InterHub.h

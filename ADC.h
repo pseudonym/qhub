@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
+#include "string8.h"
 
 namespace qhub {
 
@@ -43,6 +44,7 @@ public:
 	void handleD(StringList const& sl, string const& full);
 	void handleH(StringList const& sl, string const& full);
 	void handleHDSC(StringList const& sl, string const& full);
+	void handleHPAS(StringList const& sl, string const& full);
 	void handleHSUP(StringList const& sl, string const& full);
 	void handleP(StringList const& sl, string const& full);
 
@@ -75,8 +77,8 @@ private:
 	} attributes;
 		
 	Hub* hub;
-	void enable();
-	void cancel();
+	void login();
+	void logout();
 
 	enum State {
 		START,		// HSUP
@@ -87,6 +89,7 @@ private:
 	int state;
 	string guid;
 	bool added;
+	string8 salt;
 	
 	// Invalid
 	ADC() : ADCSocket(-1), attributes(0) {};
