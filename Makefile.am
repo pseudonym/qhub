@@ -1,6 +1,6 @@
 bin_PROGRAMS = qhub
 qhub_CXXFLAGS = -Wall
-qhub_LDFLAGS = -export-dynamic -lxmltok -lxmlparse
+qhub_LDFLAGS = -export-dynamic
 qhub_SOURCES  = qhub.cpp qhub.h MyTime.h types.h 
 qhub_SOURCES += Util.h Util.cpp string8.h
 qhub_SOURCES += Encoder.h Encoder.cpp TigerHash.h TigerHash.cpp

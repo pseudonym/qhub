@@ -18,6 +18,9 @@ AC_CHECK_LIB(resolv, getaddrinfo_a)
 
 AC_CHECK_LIB(event, event_init)
 
+AC_CHECK_LIB(xmltok, main,,[AC_MSG_ERROR([Libxmltok needed.])])
+AC_CHECK_LIB(xmlparse, XML_ParserCreate,,[AC_MSG_ERROR([Libxmlparse needed.])])
+
 AC_CHECK_LIB(oop, oop_sys_new)
 AC_CHECK_LIB(adns, adns_init)
 AC_CHECK_LIB(oop-adns, oop_adns_new)
@@ -74,7 +77,7 @@ AC_CHECK_FUNCS([inet_pton inet_ntop])
 
 
 AC_CHECK_HEADERS([xercesc/dom/DOM.hpp])
-
+AC_CHECK_HEADERS([xmltok/xmlparse.h],,[AC_MSG_ERROR([libxmltok required.])])
 AC_CHECK_HEADERS([arpa/inet.h])
 AC_CHECK_HEADERS([fcntl.h]) 
 AC_CHECK_HEADERS([netdb.h])
