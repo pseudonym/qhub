@@ -27,6 +27,15 @@ Socket::Socket(int d, int t, int p) : written(0), writeEnabled(false), disconnec
 		fprintf(stderr, "Error, couldnt fcntl().\n");
 	}
 
+	//Set timeout. Various Linux:es will refuse, but not all
+	struct timeval tv;
+	tv.tv_sec = 2;
+	tv.tv_usec = 0;
+	int ret = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+	if(ret != 0) {
+		fprintf(stderr, "Error setting SO_SNDTIMEO\n");
+	}
+
 	memset(&saddr_in, '\0', sizeof(sockaddr_in));
 
 	saddr_in.sin_family = d;
