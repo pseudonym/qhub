@@ -1,0 +1,39 @@
+Intra-server protocol
+
+- Binary
+- Packet-based
+- Uniform
+
+
+Packet
+
+4 bytes         Length of payload
+4 bytes         Command, prefix+string (ADC style)
+4 bytes         Originating GUID
+[4 bytes        Destination GUID, only if prefix/type=="D"]
+X bytes         Payload
+
+
+
+Prefixes
+
+S       Between two servers, will never traverse more than the one socket it comes in on.
+D       Directed towards some specific server.
+B       Broadcasted to every server.
+
+
+Commands
+
+
+Housekeeping
+
+SPAS     Server password
+BHLO     New server announcement: Name etc?
+BQUI     Server-quit. Textual reason.
+DPIN     Ping. Data to copy.
+DPON     Pong. Copied data.
+
+Client
+
+DCMD    Directed Client-command. Payload to be defined.
+BCMD    Broadcasted Client-command. Payload to be defined.
