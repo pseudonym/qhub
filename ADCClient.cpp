@@ -261,7 +261,12 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 	}
 
 	// All non-NORMAL states have been handled
-	if(state != NORMAL) {
+	if(state == PROTOCOL) {
+		// Do a silent disconnect, we don't want scanners to find us that easily.
+		assert(!added);
+		disconnect();
+		return;
+	} else if(state != NORMAL) {
 		PROTOCOL_ERROR("State mismatch: NORMAL expected");
 		return;
 	}
