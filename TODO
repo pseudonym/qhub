@@ -3,6 +3,7 @@ Start doing things on the TODO
 remove Liboop+ADNS, replace with selectable DNS thread(s)+poll/libevent(win32?) mechanism. 
 (I see no reason for Liboop since libevent does all and is more portable?)
 Maybe also a pure win32-solution that is not libevent.
+	Start this by removing all ADNS/Liboop traces from interfaces.
 
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
 
