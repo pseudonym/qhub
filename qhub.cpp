@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "ServerSocket.h"
+#include "DNSUser.h"
 
 extern "C" {
 #include <oop.h>
@@ -30,6 +31,8 @@ static void *on_lookup(oop_adapter_adns *adns,adns_answer *reply,void *data)
 	fprintf(stdout, "%s =>",reply->owner);
 	fflush(stdout);
 
+	DNSUser* d = (DNSUser*) data;
+
 	if (adns_s_ok != reply->status) {
 		printf(" error: %s\n",adns_strerror(reply->status));
 	} else {
@@ -43,24 +46,6 @@ static void *on_lookup(oop_adapter_adns *adns,adns_answer *reply,void *data)
 		printf("\n");
 	}
 
-	return OOP_CONTINUE;
-}
-
-void *test(oop_source *src, int fd, oop_event ev, void* usr)
-{
-	char tmp[100];
-	memset(tmp, 0, 100);
-	if(read(fd, tmp, sizeof(tmp))<1){
-		src->cancel_fd(src, fd, OOP_READ);
-	};
-	if(strlen(tmp)>0){
-		tmp[strlen(tmp)-1] = 0;
-	}
-	
-	fprintf(stdout, "looking up %s\n", tmp);
-	fflush(stdout);
-
-	oop_adns_query * qadns = oop_adns_submit(adns,NULL,tmp,adns_r_a,adns_qf_owner,on_lookup,0);
 	return OOP_CONTINUE;
 }
 
@@ -78,6 +63,22 @@ void *test2(oop_source *src, int fd, oop_event ev, void* usr)
 	}
 
 	return OOP_CONTINUE;
+}
+
+static oop_source* src;
+
+void qhub::enable(int fd, oop_event ev, Socket* s)
+{
+	src->on_fd(src, fd, ev, test2, s);
+}
+
+void qhub::cancel(int fd, oop_event ev)
+{
+	src->cancel_fd(src, fd, ev);
+}
+
+void qhub::lookup(const char* hostname, DNSUser* d){
+	oop_adns_query * qadns = oop_adns_submit(adns,NULL,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
 }
 
 int main()
@@ -102,16 +103,15 @@ int main()
 		exit(1);
 	}
 	oop_source* src = oop_sys_source(system);
+	fprintf(stderr, "Using liboop system event source (select() will be used)\n", src);
 #else
-	oop_source* src = oop_event_new();
-	fprintf(stderr, "Using libevent %p\n", src);
+	src = oop_event_new();
+	fprintf(stderr, "Using libevent source adapter\n", src);
 #endif
 	//Set up ADNS
 	adns = oop_adns_new(src,(adns_initflags)0,NULL);
-	src->on_fd(src, 0, OOP_READ, test, 0);
 
 	ServerSocket* tmp = new ServerSocket(9000, 0);
-
 	src->on_fd(src, tmp->getFd(), OOP_READ, test2, tmp);
 
 #ifndef HAVE_LIBOOP_EVENT

@@ -20,12 +20,18 @@
 #include <event.h>
 #include "Socket.h"
 
+#include "DNSUser.h"
+
+extern "C" {
+#include <oop.h>
+#include <adns.h>
+}
+
 namespace qhub {
 
-typedef struct connectionEvent {
-	struct event* ev;
-	Socket *socket;
-} cEvent;
+void enable(int fd, oop_event ev, Socket* s);
+void cancel(int fd, oop_event ev);
+void lookup(const char* hostname, DNSUser* d);
 
 }
 #endif
