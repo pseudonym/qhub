@@ -36,8 +36,12 @@ namespace qhub {
 class Socket {
 public:
 	Socket(int d=AF_INET, int t = SOCK_STREAM, int p = 0);
+	virtual ~Socket() {};
 
 	int accept();
+
+	// socket options
+	bool setNoLinger();
 
 	virtual void on_read() = 0;
 	virtual void on_write() = 0;

@@ -1,7 +1,7 @@
 #ifndef __ADC_H_
 #define __ADC_H_
 
-#include "Socket.h"
+#include "ADCSocket.h"
 #include "compat_hash_map.h"
 #include <vector>
 #include <string>
@@ -17,13 +17,13 @@ using namespace std;
 
 class Hub;
 
-class ADC : public Socket {
+class ADC : public ADCSocket {
 public:
 	ADC(int fd, Hub* parent);
-	~ADC();
+	virtual ~ADC();
 
-	void on_read();
-	void on_write();
+	virtual void on_read();
+	virtual void on_write();
 
 	void sendFullInf();
 	string getFullInf();
@@ -33,9 +33,9 @@ public:
 	void sendHubMsg(string msg);
 
 	static string escape(string in);
-private:
-	ADC(){};
 
+	virtual void onLine(StringList const& sl);
+private:
 	Hub* hub;
 
 	enum State {
@@ -69,6 +69,9 @@ private:
 	typedef hash_map<string, string>::iterator INFIterator;
 
 	void realDisconnect();
+	
+	// hidden
+	ADC() : ADCSocket(-1) {};
 protected:
 	void disconnect();
 };

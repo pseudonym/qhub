@@ -3,8 +3,7 @@
 #include "qhub.h"
 
 using namespace std;
-
-namespace qhub {
+using namespace qhub;
 
 Socket::Socket(int d, int t, int p) : written(0), writeEnabled(false), disconnected(false)
 {
@@ -151,5 +150,15 @@ string Socket::getPeerName() const {
 	}
 }
 
+bool Socket::setNoLinger() {
+	struct linger so_linger;
+	// Set linger to false
+	so_linger.l_onoff = 0;
+	so_linger.l_linger = 0;
+	int ret = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
+	if(ret != 0) {
+		fprintf(stderr, "Error setting SO_LINGER\n");
+		return false;
+	}
+	return true;
 }
-

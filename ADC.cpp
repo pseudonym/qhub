@@ -9,19 +9,10 @@
 using namespace std;
 using namespace qhub;
 
-ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
-		readBuffer(new unsigned char[START_BUFFER]),
-		readBufferSize(START_BUFFER), rbCur(0), added(false)
+ADC::ADC(int fd, Hub* parent)
+: ADCSocket(fd), hub(parent), state(START), added(false)
 {
 	this->fd = fd;
-	struct linger so_linger;
-	// Set linger to false
-	so_linger.l_onoff = false;
-	so_linger.l_linger = 0;
-	int itmp = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
-	if(itmp != 0){
-		fprintf(stderr, "Error setting SO_LINGER\n");
-	}
 
 	enable(fd, OOP_READ, this);
 }
@@ -29,20 +20,87 @@ ADC::ADC(int fd, Hub* parent) : hub(parent), state(START),
 ADC::~ADC()
 {
 	realDisconnect();
-	delete[] readBuffer;
 }
 
-void ADC::growBuffer()
-{
-	unsigned char* tmp = new unsigned char[readBufferSize*2];
-	memmove(tmp, readBuffer, readBufferSize);
-	readBufferSize *= 2;
-
-	delete[] readBuffer;
-	readBuffer = tmp;
-
-	fprintf(stderr, "Growing buffer to %d\n", readBufferSize);
+static string adc_implode(ADCSocket::StringList const& sl) {
+	string ret;
+	for(ADCSocket::StringList::const_iterator sli = sl.begin(); sli != sl.end() - 1; ++sli) {
+		ret += *sli + ' ';
+	}
+	ret += *(sl.end() - 1) + '\n';
+	return ret;
 }
+
+#define PROTO_DISCONNECT(errmsg) \
+	do { \
+		state = PROTOCOL_ERROR; \
+		sendHubMsg("proto error: " errmsg); \
+		disconnect(); \
+	} while(0)
+void ADC::onLine(StringList const& sl)
+{		
+	assert(!sl.empty());
+	fprintf(stderr, ">%s<\n", sl[0].c_str());
+	switch(sl[0][0]) {
+	case 'H':
+		if(sl[0] == "HSUP") {
+			if(state == START) {
+				send(string("ISUP ") + hub->getCID32() + " +BASE\n"
+						"IINF " + hub->getCID32() + " NI" + escape(hub->getHubName()) +
+						" HU1 HI1 DEmajs VEqhub0.02\n");
+				state = GOT_SUP;
+			} else {
+			}
+		} else {
+			fprintf(stderr, "Got H: %s\n", sl[0].c_str());
+		}
+		break;
+	case 'B':
+		if(sl[0] == "BINF") {
+			if(sl.size() >= 2) {
+				guid = sl[1];
+				for(StringList::const_iterator sli = sl.begin() + 2; sli != sl.end(); ++sli) {
+					if(sli->length() >= 2) {
+						// FIXME no excessive substr
+						INF[sli->substr(0, 2)] = sli->substr(2);
+						if(sli->substr(0, 2) == "I4" && sli->substr(2) == "0.0.0.0") {
+							INF[sli->substr(0, 2)] = getPeerName();
+						}
+					}
+				}
+				hub->getUsersList(this);
+				//add us later, dont want us two times
+				if(!hub->addClient(this, guid)) {
+					PROTO_DISCONNECT("proto error: User exists already");
+					return;
+				}
+				//only set this when we are sure that we are added, ie. here!
+				added = true;
+
+				//notify him that userlist is over
+				sendFullInf();
+				state = LOGGED_IN;
+				hub->motd(this);
+				//XXX: when DC++ isnt buggy
+				//namedParms.erase(namedParms.find("LO"));
+			} else {
+				state = PROTOCOL_ERROR;
+#ifdef PROTO_DEBUG
+				sendHubMsg("proto error: BINF: no GUID supplied");
+#endif
+				disconnect();
+			}
+		} else {
+			fprintf(stderr, "Broadcasting B: %s\n", sl[0].c_str());
+			hub->broadcastSelf(this, adc_implode(sl));
+		}
+		break;
+	default:
+		fprintf(stderr, "Broadcasting something: %s\n", sl[0].c_str());
+		hub->broadcastSelf(this, adc_implode(sl));
+	}
+}
+#undef PROTO_DISCONNECT
 
 void ADC::checkParms()
 {
@@ -421,6 +479,7 @@ void ADC::handleHCommand(int length)
 	}
 }
 
+
 void ADC::handleCommand(int length)
 {
 	//there is a command in readBuffer, starting at index 0.
@@ -450,6 +509,7 @@ void ADC::handleCommand(int length)
 
 void ADC::on_read()
 {
+	/*
 	fprintf(stderr, "ON_READ\n");
 	while(rbCur+READ_SIZE >= readBufferSize){
 		growBuffer();
@@ -493,6 +553,8 @@ void ADC::on_read()
 	if(disconnected && queue.empty()) {
 		realDisconnect();
 	}
+	*/
+	ADCSocket::on_read();
 }
 
 void ADC::on_write()
