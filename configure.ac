@@ -3,7 +3,7 @@ AC_CONFIG_SRCDIR(qhub.cpp)
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
 
-AC_LANG(C++)
+AC_LANG([C++])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -71,7 +71,12 @@ AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([sys/socket.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([unistd.h])
-AC_CHECK_HEADERS([event.h],,[AC_MSG_ERROR([Libevent is required, sorry.])])
+AC_CHECK_HEADERS([event.h])
+AC_CHECK_HEADERS([oop.h],,[AC_MSG_ERROR([Liboop required.])])
+AC_CHECK_HEADERS([oop-event.h])
+AC_CHECK_HEADERS([adns.h],,[AC_MSG_ERROR([ADNS required.])])
+#AC_CHECK_HEADERS([oop-adns.h],,[AC_MSG_ERROR([Liboop-ADNS adapter required.])])
+AC_CHECK_HEADER(boost/shared_ptr.hpp,,[AC_MSG_ERROR([Boost library required.])])
 AC_C_INLINE
 AC_C_CONST
 
