@@ -8,7 +8,7 @@ using namespace std;
 using namespace qhub;
 
 Socket::Socket(Domain d, int t, int p) throw()
-: domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
+		: domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
 {
 	create();
 
@@ -24,7 +24,7 @@ Socket::Socket(Domain d, int t, int p) throw()
 }
 
 Socket::Socket(int f, Domain d) throw()
-: fd(f), domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
+		: fd(f), domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
 {
 	create();
 	initSocketNames();
@@ -37,19 +37,23 @@ Socket::~Socket() throw()
 
 void Socket::create() throw()
 {
-	if(domain == PF_INET) {
+	if(domain == Socket::IP4) {
 		saddrp = (struct sockaddr*)new sockaddr_in;
 		saddrl = sizeof(sockaddr_in);
 		inaddrp = &((struct sockaddr_in*)saddrp)->sin_addr;
 		af = AF_INET;
 		((struct sockaddr_in*)saddrp)->sin_family = af;
-	} else if(domain == PF_INET6) {
+	}
+#ifdef ENABLE_IPV6
+	else if(domain == Socket::IP6) {
 		saddrp = (struct sockaddr*)new sockaddr_in6;
 		saddrl = sizeof(sockaddr_in6);
 		inaddrp = &((struct sockaddr_in6*)saddrp)->sin6_addr;
 		af = AF_INET6;
 		((struct sockaddr_in6*)saddrp)->sin6_family = af;
-	} else {
+	}
+#endif    
+	else {
 		assert(0);
 	}
 	memset(saddrp, '\0', saddrl);
@@ -57,41 +61,66 @@ void Socket::create() throw()
 
 void Socket::destroy() throw()
 {
-	if(domain == PF_INET) {
+	if(domain == Socket::IP4) {
 		delete (struct sockaddr_in*)saddrp;
-	} else if(domain == PF_INET6) {
+	}
+#ifdef ENABLE_IPV6    
+	else if(domain == Socket::IP6) {
 		delete (struct sockaddr_in6*)saddrp;
 	}
+#endif
 }
 
 void Socket::setPort(int p) throw()
 {
-	if(domain == PF_INET) {
+	if(domain == Socket::IP4) {
 		((struct sockaddr_in*)saddrp)->sin_port = htons(p);
-	} else if(domain == PF_INET6) {
+	}
+#ifdef ENABLE_IPV6    
+	else if(domain == Socket::IP6) {
 		((struct sockaddr_in6*)saddrp)->sin6_port = htons(p);
-	}	
+	}
+#endif
 }
 
 void Socket::setBindAddress(string const& a) throw()
 {
 #ifdef HAVE_INET_PTON
 	if(inet_pton(af, a.c_str(), inaddrp) == 0) {
-		if(domain == PF_INET) {
+		if(domain == Socket::IP4) {
 			if(inet_pton(af, "0.0.0.0", inaddrp) == 0) {
 				perror("error: setBoundAddress:inet_pton:0.0.0.0");
 				exit(1);
 			}
-		} else if(domain == PF_INET6) {
+		}
+#ifdef ENABLE_IPV6        
+		else if(domain == Socket::IP6) {
 			if(inet_pton(af, "::", inaddrp) == 0) {
 				perror("error: setBoundAddress:inet_pton:[::]");
 				exit(1);
 			}
 		}
+#endif //ENABLE_IPV6       
 	}
-#else
-# error FIXME
-#endif
+#else //HAVE_INET_PTON
+	if(inet_aton(a.c_str(), (struct in_addr *)inaddrp) == 0) {
+		if(domain == Socket::IP4) {
+			if(inet_aton("0.0.0.0", (struct in_addr *)inaddrp) == 0) {
+				perror("error: setBoundAddress:inet_pton:0.0.0.0");
+				exit(1);
+			}
+		}
+#ifdef ENABLE_IPV6        
+		else if(domain == Socket::IP6) {
+			if(inet_aton("::", (struct in_addr *)inaddrp) == 0) {
+				perror("error: setBoundAddress:inet_pton:[::]");
+				exit(1);
+			}
+		}
+#endif //ENABLE_IPV6       
+	}
+
+#endif //HAVE_INET_PTON
 }
 
 void Socket::listen(int backlog) throw()
@@ -182,31 +211,38 @@ void Socket::initSocketNames() throw()
 		struct sockaddr_in sa;
 		socklen_t n = sizeof(struct sockaddr_in);
 		memset(&sa, '\0', n); // necessary?
-		char buf[INET_ADDRSTRLEN];
-	
+#ifdef __CYGWIN__
+		getsockname(fd, (struct sockaddr*)&sa, &n);
+#else        
 		assert(getsockname(fd, (struct sockaddr*)&sa, &n) == 0);
-#ifdef HAVE_INET_NTOP
-		assert(inet_ntop(AF_INET, &sa.sin_addr, buf, INET_ADDRSTRLEN) != 0);
-#else
-# error FIXME
 #endif
+#ifdef HAVE_INET_NTOP
+		char buf[INET_ADDRSTRLEN];
+		assert(inet_ntop(AF_INET, &sa.sin_addr, buf, INET_ADDRSTRLEN) != 0);
 		sockName = buf;
-		
+#else
+		char *buf2 = inet_ntoa(sa.sin_addr);
+		sockName = buf2;
+#endif //HAVE_INET_NTOP
+
 		if(getpeername(fd, (struct sockaddr*)&sa, &n) == 0) { // socket may not be connected
 #ifdef HAVE_INET_NTOP
 			assert(inet_ntop(AF_INET, &sa.sin_addr, buf, INET_ADDRSTRLEN) != 0);
-#else
-# error FIXME
-#endif
 			peerName = buf;
+#else
+			buf2 = inet_ntoa(sa.sin_addr);
+			peerName = buf2;
+#endif //HAVE_INET_NTOP
 		}
-		
-	} else if(domain == PF_INET6) {
+
+	}
+#ifdef ENABLE_IPV6    
+	else if(domain == Socket::IP6) {
 		struct sockaddr_in6 sa;
 		socklen_t n = sizeof(struct sockaddr_in6);
 		memset(&sa, '\0', n); // necessary?
 		char buf[INET6_ADDRSTRLEN];
-		
+
 		assert(getsockname(fd, (struct sockaddr*)&sa, &n) == 0);
 #ifdef HAVE_INET_NTOP
 		assert(inet_ntop(AF_INET6, &sa.sin6_addr, buf, INET6_ADDRSTRLEN) != 0);
@@ -232,8 +268,9 @@ void Socket::initSocketNames() throw()
 				peerName = string("[") + buf + ']';
 			}
 		}
-		
-	} else {
+	}
+#endif //ENABLE_IPV6
+	else {
 		assert(0);
 	}
 }

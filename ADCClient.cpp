@@ -14,27 +14,27 @@ using namespace qhub;
 
 #define CMD(a, b, c) (((u_int32_t)a<<8) | (((u_int32_t)b)<<16) | (((u_int32_t)c)<<24))
 u_int32_t ADCClient::Commands[] = {
-		CMD('C','T','M'),
-		CMD('D','S','C'),
-		CMD('G','E','T'),
-		CMD('G','F','I'),
-		CMD('G','P','A'),
-		CMD('I','N','F'),
-		CMD('M','S','G'),
-		CMD('N','T','D'),
-		CMD('P','A','S'),
-		CMD('Q','U','I'),
-		CMD('R','C','M'),
-		CMD('R','E','S'),
-		CMD('S','C','H'),
-		CMD('S','N','D'),
-		CMD('S','T','A'),
-		CMD('S','U','P')
-};
+                                      CMD('C','T','M'),
+                                      CMD('D','S','C'),
+                                      CMD('G','E','T'),
+                                      CMD('G','F','I'),
+                                      CMD('G','P','A'),
+                                      CMD('I','N','F'),
+                                      CMD('M','S','G'),
+                                      CMD('N','T','D'),
+                                      CMD('P','A','S'),
+                                      CMD('Q','U','I'),
+                                      CMD('R','C','M'),
+                                      CMD('R','E','S'),
+                                      CMD('S','C','H'),
+                                      CMD('S','N','D'),
+                                      CMD('S','T','A'),
+                                      CMD('S','U','P')
+                                  };
 #undef CMD
 
 ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), state(PROTOCOL), udpActive(false)
+		: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), state(PROTOCOL), udpActive(false)
 {
 	onConnected();
 }
@@ -175,7 +175,7 @@ void ADCClient::doKickBy(string const& kicker, bool silent, string const& msg) t
 	}
 	disconnect();
 }
-	
+
 void ADCClient::doBanBy(string const& kicker, bool silent, u_int32_t seconds, string const& msg) throw()
 {
 	// TODO add bantime to somewhere
@@ -202,7 +202,7 @@ void ADCClient::doRedirectBy(string const& kicker, bool silent, string const& ad
 	}
 	disconnect();
 }
-	
+
 
 #define PROTOCOL_ERROR(errmsg) \
 	do { \
@@ -211,7 +211,7 @@ void ADCClient::doRedirectBy(string const& kicker, bool silent, string const& ad
 	} while(0)
 
 void ADCClient::onLine(StringList& sl, string const& full) throw()
-{		
+{
 	assert(!sl.empty());
 	fprintf(stderr, "<< %s", full.c_str());
 
@@ -273,8 +273,8 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 
 	// CID must come second (or third)
 	if(
-			!((command & 0x000000FF) != 'D' && sl.size() >= 2 && sl[1] == getCID32()) &&
-			!((command & 0x000000FF) == 'D' && sl.size() >= 3 && sl[2] == getCID32())
+	    !((command & 0x000000FF) != 'D' && sl.size() >= 2 && sl[1] == getCID32()) &&
+	    !((command & 0x000000FF) == 'D' && sl.size() >= 3 && sl[2] == getCID32())
 	) {
 		PROTOCOL_ERROR("CID mismatch: " + getCID32() + " expected");
 		return;
@@ -295,7 +295,7 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 		PROTOCOL_ERROR(string("Message type unsupported: ") + (char)(command & 0x000000FF) + " recieved");
 		return;
 	}
-	
+
 	// Woohoo! A normal message to process
 	handle(sl, command, fullmsg);
 }
@@ -334,7 +334,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) throw() {
 	u_int32_t threeCC = cmd & 0xFFFFFF00;
 	char oneCC = (char)cmd & 0x000000FF;
-	
+
 	// Check if we need to handle anything, if not, do default action.
 
 	// * HDSC *
@@ -385,7 +385,7 @@ void ADCClient::handleLogin(StringList& sl) throw()
 {
 	assert(state == IDENTIFY);
 	guid = sl[1];
-	
+
 	if(getHub()->hasClient(guid)) {
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		// Ping other user, perhaps it's a ghost
@@ -404,12 +404,12 @@ void ADCClient::handleLogin(StringList& sl) throw()
 		return;
 	}
 
-	// Broadcast	
+	// Broadcast
 	Plugin::ClientLogin action;
 	Plugin::fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
-	
+
 	if(password.empty())
 		login();
 }
@@ -444,13 +444,13 @@ void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string const* fu
 	}
 
 	// Merge new data
-	userInfo->update(newUserInfo);	
+	userInfo->update(newUserInfo);
 
 	// Did we become active/passive just now?
 	if(udpActive != userInfo->isUdpActive()) {
 		udpActive = !udpActive;
 		getHub()->switchClientMode(udpActive, getCID32(), this);
-	}	
+	}
 }
 
 void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const* full) throw()
@@ -550,12 +550,12 @@ void ADCClient::handleDisconnect(StringList& sl) throw()
 	} else if(sl[3] == "BN" && sl.size() == 7) {
 		getHub()->userBan(sl[1], sl[2], silent, Util::toInt(sl[5]), sl[6]);
 	} else if(sl[3] == "RD" && sl.size() == 7) {
-		 getHub()->userRedirect(sl[1], sl[2], silent, sl[5], sl[6]);
+		getHub()->userRedirect(sl[1], sl[2], silent, sl[5], sl[6]);
 	} else {
 		doWarning("Disconnect command corrupt");
 	}
 }
-	
+
 void ADCClient::handlePassword(StringList& sl) throw()
 {
 	// Make CID from base32
@@ -589,7 +589,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 void ADCClient::handleSupports(StringList& sl) throw()
 {
 	send("ISUP " + getHub()->getCID32() + " +BASE\n" // <-- do we need CID?
-			"IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
-			" HU1 DEmajs VEqhub0.6 OP1\n");
+	     "IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
+	     " HU1 DEmajs VEqhub0.6 OP1\n");
 	state = IDENTIFY;
 }

@@ -3,6 +3,7 @@
 #define _INCLUDED_PLUGIN_H_
 
 #include <string>
+#include <cassert>
 
 #include <compat_hash_map.h>
 #include <list>

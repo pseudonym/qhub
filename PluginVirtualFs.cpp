@@ -12,9 +12,9 @@ using namespace qhub;
  */
 
 extern "C" {
-void* getPlugin() { return new VirtualFs(); }
+	void* getPlugin() { return new VirtualFs(); }
 } //extern "C"
-	
+
 
 
 /*
@@ -102,9 +102,9 @@ void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
 	StringList sl = Util::lazyQuotedStringTokenize(msg);
 	if(sl.empty())
 		return;
-	
+
 	a.setState(Plugin::STOP);
-	
+
 	string const& pwd = data->getString(idVirtualPath);
 	size_t siz = sl.size();
 	if(siz == 1 && sl[0] == "pwd") {
@@ -115,7 +115,7 @@ void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
 			client->doPrivateMessage("ACK: " + d->toPath());
 		}
 	} else if(sl[0] == "ls" && (siz == 2 || siz == 1)) {
-		Dir* d = root->cd(pwd);	
+		Dir* d = root->cd(pwd);
 		if(d) {
 			if(siz == 1 || (d = d->cd(sl[1]))) {
 				client->doPrivateMessage("ACK: " + d->toPath() + "\r\n" + d->ls());

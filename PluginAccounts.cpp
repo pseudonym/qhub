@@ -14,9 +14,9 @@ using namespace qhub;
  */
 
 extern "C" {
-void* getPlugin() { return new Accounts(); }
+	void* getPlugin() { return new Accounts(); }
 } //extern "C"
-	
+
 
 
 /*
@@ -77,7 +77,7 @@ void Accounts::deinitVFS() throw()
 {
 	assert(virtualfs->rmdir("/accounts"));
 }
-	
+
 void Accounts::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
@@ -111,7 +111,7 @@ void Accounts::on(PluginStopped&, Plugin* p) throw()
 		virtualfs = NULL;
 	}
 }
-	
+
 void Accounts::on(ClientLogin&, ADCClient* client) throw()
 {
 	UserInfo* inf = client->getUserInfo();
@@ -136,13 +136,13 @@ void Accounts::on(ClientInfo& a, ADCClient* client, UserInfo& inf) throw()
 		if(data->getInt(idUserLevel)) {
 			inf.del(UIID('N','I'));
 			a.setState(Plugin::MODIFIED);
-		// don't allow users to change to a registered nick
+			// don't allow users to change to a registered nick
 		} else if(users.find(inf.getNick()) != users.end()) {
 			inf.del(UIID('N','I'));
 			a.setState(Plugin::MODIFIED);
 		}
 	}
-	
+
 	// Remove the OP flag
 	if(inf.del(UIID('O','P')))
 		a.setState(Plugin::MODIFIED);
@@ -166,13 +166,13 @@ void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 		} else if(m->type == VirtualFs::Message::HELP) {
 			if(m->cwd == "/accounts/") {
 				m->reply(
-						"The following commands are available to you:\r\n"
-						"load\t\t\tloads the users file from disk\r\n"
-						"save\t\t\tsaves the users file to disk\r\n"
-						"add <user> <password>\tadds a user\r\n"
-						"del <user>\t\tremoves a user\r\n"
-						"list [wildcard]\t\tshows the list of registered users\r\n"
-						"show <user>\t\tshows information about a user\r\n"
+				    "The following commands are available to you:\r\n"
+				    "load\t\t\tloads the users file from disk\r\n"
+				    "save\t\t\tsaves the users file to disk\r\n"
+				    "add <user> <password>\tadds a user\r\n"
+				    "del <user>\t\tremoves a user\r\n"
+				    "list [wildcard]\t\tshows the list of registered users\r\n"
+				    "show <user>\t\tshows information about a user\r\n"
 				);
 			}
 		} else if(m->type == VirtualFs::Message::EXEC) {

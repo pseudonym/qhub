@@ -47,7 +47,7 @@ static void dataElement(void *userData, XML_Char const* data, int length)
 char XmlTok::indentChar = '\t';
 
 XmlTok::XmlTok(string const& n, XmlTok* p) throw()
-: parent(p), name(n)
+		: parent(p), name(n)
 {
 	if(sizeof(XML_Char) != 1) {
 		fprintf(stderr, "XmlTok::XmlTok UTF8 compilation.. not supported FIXME\n");
@@ -152,12 +152,12 @@ bool XmlTok::load(string const& filename) throw()
 		perror("XmlTok::load: fopen");
 		return false;
 	}
-	
+
 	char buf[BUFSIZ];
 	XML_Parser parser = XML_ParserCreate(NULL);
 	bool done;
 	XmlTok* p = this;
-	
+
 	XML_SetUserData(parser, &p);
 	XML_SetElementHandler(parser, startElement, endElement);
 	XML_SetCharacterDataHandler(parser, dataElement);
@@ -172,8 +172,8 @@ bool XmlTok::load(string const& filename) throw()
 		done = len < sizeof(buf);
 		if(!XML_Parse(parser, buf, len, done)) {
 			fprintf(stderr, "XmlTok::load: %s at line %d\n",
-					XML_ErrorString(XML_GetErrorCode(parser)),
-					XML_GetCurrentLineNumber(parser));
+			        XML_ErrorString(XML_GetErrorCode(parser)),
+			        XML_GetCurrentLineNumber(parser));
 			fclose(fp);
 			return false;
 		}
@@ -190,7 +190,7 @@ bool XmlTok::save(string const& filename) const throw()
 		perror("XmlTok::save: fopen");
 		return false;
 	}
-	
+
 	string total = toString();
 	size_t left = total.length();
 	do {

@@ -77,7 +77,7 @@ void Hub::openInterPort(int port)
 
 void Hub::acceptLeaf(int fd, Socket::Domain d)
 {
-	Socket* tmp = new ADCClient(fd, d, this);
+	new ADCClient(fd, d, this);
 }
 
 void Hub::getUserList(ADCClient* c) throw()
@@ -96,14 +96,12 @@ void Hub::getUserList(ADCClient* c) throw()
 void Hub::motd(ADCClient* c) throw()
 {
 	char t[1024];
-	sprintf(t, "%d", interConnects.size());
-	char t2[1024];
-	sprintf(t2, "%d", interConnects2.size());
-	string tmp = string("There are ") + t + " hubs connected to us and " + t2 + " connected to from us.";
-	sprintf(t2, "%d (of which %d udp-passive)", activeUsers.size() + passiveUsers.size(), passiveUsers.size());
-	sprintf(t, "%d", 0);
-	tmp += string("\nWe have ") + t2 + " local users, and " + t + " remote users.";
-	c->doHubMessage(tmp);
+
+	int in = interConnects.size();
+	int out = interConnects2.size();
+	sprintf(t, "Hubconnections in/out/total: %d/%d/%d.\nWe have %d (of which %d are udp-passive) local users, and %d remote users.",
+	        in, out, in+out, activeUsers.size()+passiveUsers.size(),passiveUsers.size(), 0);
+	c->doHubMessage(string(t));
 }
 
 void Hub::direct(string const& guid, string const& data, ADCClient* from) throw()
@@ -184,7 +182,7 @@ void Hub::addPassiveClient(string const& guid, ADCClient* client) throw()
 void Hub::switchClientMode(bool toActive, string const& guid, ADCClient* client) throw()
 {
 	assert((!toActive && activeUsers.find(guid) != activeUsers.end()) ||
-			(toActive && passiveUsers.find(guid) != passiveUsers.end()));
+	       (toActive && passiveUsers.find(guid) != passiveUsers.end()));
 	if(!toActive) {
 		activeUsers.erase(guid);
 		passiveUsers[guid] = client;
@@ -232,7 +230,7 @@ void Hub::userBan(string const& actor, string const& victim, bool silent, u_int3
 }
 
 void Hub::userRedirect(string const& actor, string const& victim, bool silent, string const& addr, string const& msg)
-		throw()
+throw()
 {
 	Users::iterator i;
 	if((i = activeUsers.find(victim)) != activeUsers.end())

@@ -2,6 +2,7 @@
 #ifndef _INCLUDED_USERINFO_H_
 #define _INCLUDED_USERINFO_H_
 
+#include "config.h"
 #include "Util.h"
 #include "Socket.h"
 #include "ADC.h"
@@ -70,12 +71,16 @@ public:
 		modified = true;
 		// Fix I4 and I6
 		if(key == UIID('I','4') && val == "0.0.0.0") {
-			if(sock->getDomain() == PF_INET)
+			if(sock->getDomain() == Socket::IP4)
 				infMap[key] = sock->getPeerName();
-		} else if(key == UIID('I','6') && val == "[0:0:0:0:0:0:0:0]") {
-			if(sock->getDomain() == PF_INET6)
+		}
+#ifdef ENABLE_IPV6
+        	else if(key == UIID('I','6') && val == "[0:0:0:0:0:0:0:0]") {
+			if(sock->getDomain() == Socket::IP6)
 				infMap[key] = sock->getPeerName();
-		} else {
+		}
+#endif
+        	else {
 			infMap[key] = val;
 		}
 	}

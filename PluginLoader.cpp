@@ -10,9 +10,9 @@ using namespace qhub;
  */
 
 extern "C" {
-void* getPlugin() { return new Loader(); }
+	void* getPlugin() { return new Loader(); }
 } //extern "C"
-	
+
 
 
 /*
@@ -122,14 +122,14 @@ void Loader::on(PluginMessage&, Plugin* p, void* d) throw()
 		} else if(m->type == VirtualFs::Message::HELP) {
 			if(m->cwd == "/plugins/") {
 				m->reply(
-						"The following commands are available to you:\r\n"
-						"load\t\t\tloads the plugins in the settings file (done automatically at startup)\r\n"
-						"save\t\t\tsaves the plugin load order to disk (must be done manually)\r\n"
-						"list\t\t\tshows the list of loaded plugins\r\n"
-						"insert <plugin> [insertbefore]\tloads the plugin in the specified position\r\n"
-						"remove <plugin>\t\tunloads the plugin\r\n"
-						"removeall\t\t\tunloads every plugin except this one and virtualfs\r\n"
-						"restart <plugin>\t\tunloads and loads the plugin (e.g. to reload settings)\r\n"
+				    "The following commands are available to you:\r\n"
+				    "load\t\t\tloads the plugins in the settings file (done automatically at startup)\r\n"
+				    "save\t\t\tsaves the plugin load order to disk (must be done manually)\r\n"
+				    "list\t\t\tshows the list of loaded plugins\r\n"
+				    "insert <plugin> [insertbefore]\tloads the plugin in the specified position\r\n"
+				    "remove <plugin>\t\tunloads the plugin\r\n"
+				    "removeall\t\t\tunloads every plugin except this one and virtualfs\r\n"
+				    "restart <plugin>\t\tunloads and loads the plugin (e.g. to reload settings)\r\n"
 				);
 			}
 		} else if(m->type == VirtualFs::Message::EXEC) {

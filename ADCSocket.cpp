@@ -16,7 +16,7 @@ using namespace std;
 using namespace qhub;
 
 ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
-: Socket(fd, domain), readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]),
+		: Socket(fd, domain), readBufferSize(START_BUFFER), readBuffer(new unsigned char[readBufferSize]),
 		state(NORMAL), escaped(false), hub(parent)
 {
 	enable_fd(fd, OOP_READ, this);
@@ -61,11 +61,11 @@ void ADCSocket::onRead() throw()
 					realDisconnect();
 				return;
 			}
-			
+
 			switch(*p) {
 			case '\\':
-					escaped = !escaped;
-					break;
+				escaped = !escaped;
+				break;
 			case '\n':
 			case ' ':
 				if(!escaped) {
@@ -169,7 +169,7 @@ void ADCSocket::realDisconnect()
 		fprintf(stderr, "Real Disconnect %d %p !disconnected\n", fd, this);
 		disconnect(); // notify others that we're dying
 	}
-	
+
 	fprintf(stderr, "Real Disconnect %d %p\n", fd, this);
 	close(fd);
 	if(writeEnabled) {

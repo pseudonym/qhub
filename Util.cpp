@@ -1,6 +1,8 @@
 // vim:ts=4:sw=4:noet
-#include "Util.h"
 #include <string.h>
+#include <cassert>
+
+#include "Util.h"
 
 using namespace std;
 using namespace qhub;

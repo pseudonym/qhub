@@ -35,8 +35,8 @@ static oop_adapter_adns *adns;
 static oop_source* src;
 
 struct timer {
-        struct timeval tv;
-        int delay;
+	struct timeval tv;
+	int delay;
 };
 
 static void *on_lookup(oop_adapter_adns *adns, adns_answer *reply, void *data)
@@ -65,9 +65,9 @@ static void *on_lookup(oop_adapter_adns *adns, adns_answer *reply, void *data)
 }
 
 static void *on_timer(oop_source *source, struct timeval tv, void *data) {
-        struct timer *timer = (struct timer*)data;
-        timer->tv = tv;
-        timer->tv.tv_usec += timer->delay;
+	struct timer *timer = (struct timer*)data;
+	timer->tv = tv;
+	timer->tv.tv_usec += timer->delay;
 	while(timer->tv.tv_usec >= 1000000) {
 		timer->tv.tv_sec++;
 		timer->tv.tv_usec -= 1000000;
@@ -162,10 +162,10 @@ int main()
 	//Init random number generator
 	srand(time(NULL));
 
-        struct timer *timer = (struct timer*) malloc(sizeof(struct timer));
-        gettimeofday(&timer->tv, NULL);
-        timer->delay = 1000000;
-        on_timer(src, timer->tv, timer);
+	struct timer *timer = (struct timer*) malloc(sizeof(struct timer));
+	gettimeofday(&timer->tv, NULL);
+	timer->delay = 1000000;
+	on_timer(src, timer->tv, timer);
 
 
 #ifndef HAVE_LIBOOP_EVENT
