@@ -254,18 +254,11 @@ void ADC::on_read()
 		//look through data until no more left?
 		while(rbCur>0){
 			for(int i=0; i<rbCur; i++){
-				if(readBuffer[i] == 0x0a){
-					if(i>0){
-						if(readBuffer[i-1] != '\\'){
-							//not escaped
-							handleCommand(i+1);
-							break;
-						}
-					} else {
-						//not escaped
-						handleCommand(i+1);
-						break;
-					}
+				if(readBuffer[i] == '\\'){
+					i++;
+				} else if(readBuffer[i] == 0x0a){
+					handleCommand(i+1);
+					break;
 				}
 			}
 			//rbCur -> 0 on handleCommand
