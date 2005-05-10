@@ -1,5 +1,6 @@
 #include "config.h"
 #include "qhub.h"
+#include "error.h"
 
 #include <stdio.h>
 
@@ -9,6 +10,7 @@
 
 #include "Plugin.h"
 #include "Settings.h"
+#include "Util.h"
 
 #include <string>
 
@@ -119,10 +121,10 @@ void end(int)
 {
 	Plugin::deinit();
 	Hub::killAll();
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	signal(SIGINT, &end);
 	signal(SIGPIPE, SIG_IGN);
@@ -133,6 +135,10 @@ int main()
 	signal(SIGCHLD, SIG_IGN);
 #endif
 
+	//do this here so we don't wind up doing extra
+	//work if all they want is --version or --help
+	Settings::parseArgs(argc, argv);
+
 #ifdef HAVE_LIBOOP_EVENT
 	event_init();
 #endif
@@ -141,28 +147,28 @@ int main()
 	oop_source_sys* system;
 
 	if((system=oop_sys_new()) == NULL){
-		fprintf(stderr, "Malloc failure.\n");
-		exit(1);
+		log(qerr, "Malloc failure.");
+		exit(EXIT_FAILURE);
 	}
 	src = oop_sys_source(system);
-	fprintf(stderr, "Using liboop system event source: select() will be used.\n");
+	log(qstat, "Using liboop system event source: select() will be used.");
 #else
 	src = oop_event_new();
-	fprintf(stderr, "Using libevent source adapter\n", src);
+	log(qstat, "Using libevent source adapter");
 #endif
 	//Set up ADNS
 	adns = oop_adns_new(src, (adns_initflags)0, NULL);
+
+	Settings::readFromXML();
 
 	//try loading
 	Plugin::init();
 	Plugin::openModule("loader.so");
 
-	Settings::readFromXML();
-
 	//Init random number generator
 	srand(time(NULL));
 
-	struct timer *timer = (struct timer*) malloc(sizeof(struct timer));
+	struct timer *timer = new struct timer;
 	gettimeofday(&timer->tv, NULL);
 	timer->delay = 1000000;
 	on_timer(src, timer->tv, timer);

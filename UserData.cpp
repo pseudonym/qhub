@@ -13,13 +13,13 @@ UserData::Key UserData::toKey(string const& id) throw()
 	ClashMap::const_iterator i = clashMap.find(k);
 	if(i != clashMap.end()) {
 		if(i->second == id) {
-			fprintf(stderr, "UserData::toKey: %s -> %x found\n", id.c_str(), k);
+			log(qstat, format("UserData::toKey: %s -> %x found") % id % k);
 		} else {
-			fprintf(stderr, "UserData::toKey: %s -> %x clashes with %s .. FATAL\n", id.c_str(), k, i->second.c_str());
+			log(qerr, format("UserData::toKey: %s -> %x clashes with %s .. FATAL") % id % k % i->second);
 			exit(1);
 		}
 	} else {
-		fprintf(stderr, "UserData::toKey: %s -> %x created\n", id.c_str(), k);
+		log(qerr, format("UserData::toKey: %s -> %x created\n") % id % k);
 		clashMap[k] = id;
 	}
 	return k;

@@ -4,14 +4,18 @@
 
 #include <string>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
+#include "compat_hash_map.h"
+#include <boost/format.hpp>
 #include "string8.h"
+#include "error.h"
 
 namespace qhub {
 
 using namespace std;
 
 typedef vector<string> StringList;
+typedef hash_map<string,string> StringMap;
 typedef void* voidPtr;
 
 
@@ -22,8 +26,6 @@ public:
 	static voidPtr const emptyVoidPtr;
 	static StringList const emptyStringList;
 
-	static void log(int level, string const& message) throw();
-		
 	static string errnoToString(int err) throw()
 	{
 		return strerror(err);

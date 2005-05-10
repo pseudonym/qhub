@@ -3,6 +3,7 @@
 #include "qhub.h"
 
 #include "config.h"
+#include "error.h"
 
 using namespace std;
 using namespace qhub;
@@ -14,7 +15,7 @@ Socket::Socket(Domain d, int t, int p) throw()
 
 	fd = ::socket(d, t, p);
 	if(fd == -1){
-		fprintf(stderr, "Error, could not allocate socket.\n");
+		log(qerr, format("Error, %p could not allocate socket.") % this);
 		return;
 	}
 
@@ -147,8 +148,9 @@ void Socket::accept(int& f, Domain& d) throw()
 	f = ::accept(fd, NULL,  NULL); // will return -1 on error
 }
 
-void Socket::disconnect()
+void Socket::disconnect(const string& msg)
 {
+	log(qerr, Util::toString(getFd()) + " disconnected: " + msg);
 	cancel_fd(fd, OOP_READ); // stop reading immediately
 	disconnected = true;
 }
@@ -165,7 +167,9 @@ void Socket::writeb(Buffer::writeBuffer b)
 		// no 0-byte sends, please
 		return;
 	}
-	fprintf(stderr, ">> %s\n", b->getBuf().c_str());
+	log(qstat, Util::toString(getFd()) + ">> " +
+			//don't log the \n, it will get written anyway
+			b->getBuf().substr(0,b->getBuf().size()-1));
 	queue.push(b);
 	if(!writeEnabled){
 		enable_fd(fd, OOP_WRITE, this);
@@ -193,6 +197,7 @@ void Socket::partialWrite()
 		default:
 			while(!queue.empty())
 				queue.pop();
+			log(qerr,Util::toString(w) + ": write failed");
 			disconnect();
 			return;
 			break;

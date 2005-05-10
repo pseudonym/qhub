@@ -2,8 +2,9 @@
 #ifndef _INCLUDED_PLUGIN_ACCOUNTS_H_
 #define _INCLUDED_PLUGIN_ACCOUNTS_H_
 
-#include "Plugin.h"
-#include "UserData.h"
+#include "../Plugin.h"
+#include "../compat_hash_map.h"
+#include "../UserData.h"
 
 using namespace std;
 

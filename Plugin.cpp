@@ -1,6 +1,8 @@
 // vim:ts=4:sw=4:noet
 #include "Plugin.h"
+#include "Util.h"
 #include <dlfcn.h>
+#include "error.h"
 
 using namespace qhub;
 
@@ -21,7 +23,7 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 	void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
 	char const* error;
 	// !! export LD_LIBRARY_PATH=.libs !!
-	fprintf(stderr, "dlerror() = %s\n", dlerror());
+	log(qerr, string("dlerror() = ") + dlerror());
 
 	if(h != NULL) {
 		void* ptr = dlsym(h, "getPlugin");
@@ -44,14 +46,14 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 					}
 					plugins.insert(j, 1, p);
 				}
-				fprintf(stderr, "Loading plugin \"%s\" SUCCESS!\n", filename.c_str());
+				log(0, "Loading plugin \"" + filename + "\" SUCCESS!\n");
 				return true;
 			}
 		}
 	} else {
 		error = dlerror();
 	}
-	fprintf(stderr, "Loading plugin \"%s\" FAILED! %s\n", filename.c_str(), error);
+	log(qerr, "Loading plugin \"" + filename + "\" FAILED! " + (error != NULL ? error : ""));
 	return false;
 }
 

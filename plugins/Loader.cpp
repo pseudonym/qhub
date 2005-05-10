@@ -1,7 +1,8 @@
 // vim:ts=4:sw=4:noet
-#include "PluginLoader.h"
-#include "PluginVirtualFs.h"
-#include "XmlTok.h"
+#include "Loader.h"
+#include "VirtualFs.h"
+#include "../XmlTok.h"
+#include "../Util.h"
 
 using namespace qhub;
 
@@ -33,7 +34,7 @@ int Loader::load() throw()
 			while((tmp = p->getNextChild())) {
 				string const& name = tmp->getData();
 				if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
-					fprintf(stderr, "loading %s\n", name.c_str());
+					log(qstat, "loading " + name);
 					if(Plugin::openModule(name)) {
 						success++;
 					} else {
@@ -85,16 +86,16 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Loader: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin Loader: VirtualFs interface found.");
 			initVFS();
 		} else {
-			fprintf(stderr, "warning: Plugin Loader: VirtualFs interface not found.\n");
+			log(qerr, "warning: Plugin Loader: VirtualFs interface not found.");
 		}
-		fprintf(stderr, "success: Plugin Loader: Started.\n");
+		log(qstat, "success: Plugin Loader: Started.");
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Loader: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin Loader: VirtualFs interface found.");
 			initVFS();
 		}
 	}

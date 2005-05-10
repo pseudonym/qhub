@@ -1,7 +1,13 @@
 // vim:ts=4:sw=4:noet
+#include <cstdio>
+#include <cassert>
+
+#include "error.h"
+
 #include "Settings.h"
 #include "Hub.h"
 #include "XmlTok.h"
+#include "Util.h"
 
 using namespace qhub;
 using namespace std;
@@ -9,7 +15,7 @@ using namespace std;
 int Settings::readFromXML() throw()
 {
 	XmlTok root;
-	if(!root.load("Settings.xml"))
+	if(!root.load("/home/pseudo/share/qhub/Settings.xml"))
 		return 1;
 
 	XmlTok* p = &root;
@@ -24,24 +30,34 @@ int Settings::readFromXML() throw()
 
 			if(hubp->findChild("name")) {
 				string name = hubp->getNextChild()->getData();
-				fprintf(stderr, "Hubname: %s\n", name.c_str());
+				log(qstat, "Hubname: " + name);
 				hub->setHubName(name);
+			}
+			if(hubp->findChild("cid")) {
+				string cid = hubp->getNextChild()->getData();
+				log(qstat, "\tHub CID: " + cid);
+				hub->setCID32(cid);
+			}
+			if(hubp->findChild("description")) {
+				string desc = hubp->getNextChild()->getData();
+				log(qstat, "\tHub description: " + desc);
+				hub->setDescription(desc);
 			}
 			if(hubp->findChild("port")) {
 				int port = Util::toInt(hubp->getNextChild()->getData());
-				fprintf(stderr, "\tADC Port: %i\n", port);
+				log(qstat, "\tADC Port: " + Util::toString(port));
 				if(port > 0 && port <= 65535)
 					hub->openADCPort(port);
 			}
 			if(hubp->findChild("maxpacketsize")) {
 				int size = Util::toInt(hubp->getNextChild()->getData());
-				fprintf(stderr, "\tMax Packet Size: %i\n", size);
+				log(qstat, "\tMax Packet Size: " + Util::toString(size));
 				if(size > 0)
 					hub->setMaxPacketSize(size);
 			}
 			if(hubp->findChild("interport")) {
 				int port = Util::toInt(hubp->getNextChild()->getData());
-				fprintf(stderr, "\tInter-hub Port: %i\n", port);
+				log(qstat, "\tInter-hub Port: " + Util::toString(port));
 				if(port > 0 && port <= 65535)
 					hub->openInterPort(port);
 			}
@@ -49,23 +65,85 @@ int Settings::readFromXML() throw()
 			XmlTok* ichubp;
 			hubp->findChild("interconnect");
 			while((ichubp = hubp->getNextChild())) {
-				string host, password;
-				int port;
+				// we need both, so if one is missing, don't try
+				// to connect
+				if(!ichubp->findChild("host"))		continue;
+				string host = ichubp->getNextChild()->getData();
+				if(!ichubp->findChild("port"))		continue;
+				int port = Util::toInt(ichubp->getNextChild()->getData());
 
-				if(ichubp->findChild("host"))
-					host = ichubp->getNextChild()->getData();
-				if(ichubp->findChild("port"))
-					port = Util::toInt(ichubp->getNextChild()->getData());
-				if(ichubp->findChild("password"))
-					password = ichubp->getNextChild()->getData();
-
-				fprintf(stderr, "\tConnecting to %s:%i pass:%s\n", host.c_str(), port, password.c_str());
-				hub->openInterConnection(host, port, password);
+				log(qstat, "\tConnecting to " + host + ':' + 
+						Util::toString(port));
+				hub->openInterConnection(host, port);
 			}
+		}
+		XmlTok* passp;
+		p->findChild("ihubpass");
+		while((passp = p->getNextChild())) {
+			InterHub::addPass(passp->getAttr("cid"),passp->getData());
 		}
 	}
 	return 0;
 }
 
 
+static const char*const _help_str =
+	"qhub is a distributed hub for the ADC protocol.\n"
+	"Current command line parameters are limited because we are lazy.\n"
+	"For hub settings, see Settings.xml, which should have been installed\n"
+	"to $(prefix)/share/qhub\n"
+	"\t--help\t\tprint this help and exit\n"
+	"\t--version\tprint version information and exit\n"
+	"\t--errfile=FILE\terrors will be appended to FILE (default stderr)\n"
+	"\t--statfile=FILE\tstatus messages appeneded to FILE (default stdout)\n"
+	"\t-q\t\tquiet mode; equivalent to --errfile=/dev/null --statfile=/dev/null\n";
+static const char*const _version_str =
+	PACKAGE "/" VERSION " written by Walter Doekes (Sedulus),\n"
+	"\tJohn Backstrand (sandos), and Matt Pearson (Pseudo)\n"
+	"Homepage: http://ddc.berlios.de\n"
+	"SVN:      svn://svn.berlios.de/ddc/qhub\n";
+
+int Settings::parseArgs(int argc, char **argv) throw()
+{
+	StringList sl(argv+1, argv+argc);
+	for(StringList::iterator i = sl.begin(); i < sl.end(); ++i) {
+		if(*i == "--help") {
+			//these two options should only appear as the sole argument
+			assert(i == sl.begin() && sl.size() == 1);
+			log(qstat, _help_str);
+			exit(EXIT_SUCCESS);
+		}
+		if(*i == "--version") {
+			assert(i == sl.begin() && sl.size() == 1);
+			log(qstat, _version_str);
+			exit(EXIT_SUCCESS);
+		}
+		if(!i->compare(0,11,"--statfile=")) {
+			string tmp = i->substr(11);
+			FILE* fp = fopen(tmp.c_str(), "at");
+			if(!fp) {
+				log(qerr, "could not open statfile \"" + tmp + '"');
+				log(qerr, "\t" + Util::errnoToString(errno));
+				continue;
+			}
+			qstat = fp;
+		}
+		if(!i->compare(0,10,"--errfile=")) {
+			string tmp = i->substr(10);
+			FILE* fp = fopen(tmp.c_str(), "at");
+			if(!fp) {
+				log(qerr, "could not open errfile \"" + tmp + '"');
+				log(qerr, "\t" + Util::errnoToString(errno));
+				continue;
+			}
+			qerr = fp;
+		}
+		if(*i == "-q") {
+			qstat = fopen("/dev/null", "w");
+			qerr = fopen("/dev/null", "w");
+			assert(qstat && qerr);
+		}
+	}
+	return 0;
+}
 

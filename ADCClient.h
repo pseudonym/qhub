@@ -25,37 +25,11 @@ class UserInfo;
 
 class ADCClient : public ADCSocket {
 public:
-	
-	/*
-	 * Pseudo-FOURCC stuff
-	 */
-	static u_int32_t stringToFourCC(string const& c) {
-		return ((u_int32_t)c[0])|((u_int32_t)c[1]<<8)|((u_int32_t)c[2]<<16)|((u_int32_t)c[3]<<24);
-	}
-	enum {
-		CTM, DSC, GET, GFI, GPA, INF, MSG, NTD, PAS, QUI, RCM, RES, SCH, SND, STA, SUP, CMD_LAST
-	};
-	static u_int32_t Commands[CMD_LAST];
-
-	/*
-	 * Client states
-	 */
-	enum State {
-		PROTOCOL,	// HSUP
-		IDENTIFY,	// BINF
-		VERIFY,		// HPAS
-		NORMAL		// everything except HPAS
-	};
-
 	/*
 	 * Constructor / Destructor
 	 */
-	ADCClient(int fd, Domain fd, Hub* parent) throw();
+	ADCClient(int fd, Domain domain, Hub* parent) throw();
 	virtual ~ADCClient() throw();
-
-	virtual void onRead() throw() { ADCSocket::onRead(); };
-	virtual void onWrite() throw() { ADCSocket::onWrite(); };
-	virtual void onAlarm() throw();
 
 	/*
 	 * ADC protocol
@@ -65,25 +39,24 @@ public:
 	/*
 	 * Object information
 	 */
-	State getState() const throw() { return state; };
 	UserData* getUserData() throw();
 	UserInfo* getUserInfo() throw() { return userInfo; };
-	string const& getCID32() const throw() { return guid; };
+	string const& getCID32() const throw() { return cid; };
 
 	/*
 	 * Various calls (don't send in bad states!)
 	 */
 	// Special login call
-	virtual void doAskPassword(string const& pwd) throw(); // send at LOGIN only!
+	void doAskPassword(string const& pwd) throw(); // send at LOGIN only!
 	// Error types
 	virtual void doWarning(string const& msg) throw();
 	virtual void doError(string const& msg) throw();
 	virtual void doDisconnect(string const& msg = Util::emptyString) throw();
 	// Message types
-	virtual void doHubMessage(string const& msg) throw();
-	virtual void doPrivateMessage(string const& msg) throw();
+	void doHubMessage(string const& msg) throw();
+	void doPrivateMessage(string const& msg) throw();
 	// Disconnect
-	virtual void doDisconnectBy(string const& kicker, string const& msg) throw();
+	void doDisconnectBy(string const& kicker, string const& msg) throw();
 
 protected:
 	/*
@@ -112,8 +85,7 @@ private:
 	UserData* userData;
 	UserInfo* userInfo;
 
-	State state;
-	string guid;
+	string cid;
 	string password;
 	string8 salt;
 	bool active;

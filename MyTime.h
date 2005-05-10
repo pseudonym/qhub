@@ -6,9 +6,9 @@
 
 #include <cassert>
 
-#include "time.h"
+#include <time.h>
 #if defined(HAVE_SYS_TIME_H) && defined(TIME_WITH_SYS_TIME)
-#include "sys/time.h"
+#include <sys/time.h>
 #endif
 
 namespace qhub {
@@ -25,7 +25,6 @@ static uint64_t currentTimeNanos()
 	struct timeval tv;
 	if(gettimeofday(&tv, NULL) == -1){
 		assert(0 && "gettimeofday errored on us\n");
-		return 0;
 	}
 
 	return uint64_t(tv.tv_sec)*1000000000 + uint64_t(tv.tv_usec)*1000;

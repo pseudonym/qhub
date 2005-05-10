@@ -15,11 +15,12 @@ Low-level network handling
 Protocol stuff
 	Dont allow nick-collisions
 	Send delta-INFs
-	Check CID at logon (we never ADC::ESC it anywhere.. that might cause trouble)
 	LO1 handling (Status of this in spec?)
 
-Begin work on multihub support
+More work on multihub support (much has been accomplished however)
+	automatically try reconnecting every few minutes if an interhub connection fails
 
+get plugins actually working (causes segfault on load...)
 Polish plugins 
 	what about controlling chains of plugins? Can plugins stop following plugins
 		from executing?

@@ -1,9 +1,9 @@
 // vim:ts=4:sw=4:noet
-#include "PluginVirtualFs.h"
+#include "VirtualFs.h"
 
-#include "ADCClient.h"
-#include "UserData.h"
-#include "PluginVirtualFsDir.h"
+#include "../ADCClient.h"
+#include "../UserData.h"
+#include "VirtualFsDir.h"
 
 using namespace qhub;
 

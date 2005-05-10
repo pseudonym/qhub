@@ -12,29 +12,8 @@
 using namespace std;
 using namespace qhub;
 
-#define CMD(a, b, c) (((u_int32_t)a<<8) | (((u_int32_t)b)<<16) | (((u_int32_t)c)<<24))
-u_int32_t ADCClient::Commands[] = {
-	CMD('C','T','M'),
-	CMD('D','S','C'),
-	CMD('G','E','T'),
-	CMD('G','F','I'),
-	CMD('G','P','A'),
-	CMD('I','N','F'),
-	CMD('M','S','G'),
-	CMD('N','T','D'),
-	CMD('P','A','S'),
-	CMD('Q','U','I'),
-	CMD('R','C','M'),
-	CMD('R','E','S'),
-	CMD('S','C','H'),
-	CMD('S','N','D'),
-	CMD('S','T','A'),
-	CMD('S','U','P')
-};
-#undef CMD
-
 ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-		: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), state(PROTOCOL), active(false)
+		: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), active(false)
 {
 	onConnected();
 }
@@ -55,18 +34,6 @@ UserData* ADCClient::getUserData() throw()
 	return userData;
 }
 
-void ADCClient::onAlarm() throw()
-{
-	if(!disconnected) {
-		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
-		//(we could try sending an NMDC-style message here)
-		disconnect();
-	} else {
-		//last thing before we return control to event-system: the right thing to do! :)
-		realDisconnect();
-	}
-}
-
 void ADCClient::login() throw()
 {
 	alarm(0); // Stop alarm. Else we'd get booted.
@@ -80,7 +47,7 @@ void ADCClient::login() throw()
 	// Add user
 	active = userInfo->isActive();
 	if(getCID32() == getHub()->getCID32()){
-		send("ISTA " + getHub()->getCID32() + " 224 CID taken\n");
+		send("ISTA " + getHub()->getCID32() + " 224 " + ADC::ESC("CID taken") + '\n');
 		disconnect();
 		return;		
 	}
@@ -141,28 +108,29 @@ void ADCClient::doDisconnect(string const& msg) throw()
 	if(added) {
 		logout();
 		if(msg.empty())
-			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ND\n");
+			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + '\n');
 		else
-			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " DI " +
-					getHub()->getCID32() + ' ' + ADC::ESC(msg) + '\n');
+			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ID" +
+					getHub()->getCID32() + " MS" + ADC::ESC(msg) + '\n');
 	}
 	disconnect();
 }
 
 void ADCClient::doHubMessage(string const& msg) throw()
 {
-	send("BMSG " + getHub()->getCID32() + ' ' + ADC::ESC(msg) + '\n');
+	send("IMSG " + getHub()->getCID32() + ' ' + ADC::ESC(msg) + '\n');
 }
 
 void ADCClient::doPrivateMessage(string const& msg) throw()
 {
-	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + ADC::ESC(msg) + " PM\n");
+	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + ADC::ESC(msg)
+			+ " PM" + getCID32() + '\n');
 }
 
 void ADCClient::doDisconnectBy(string const& kicker, string const& msg) throw()
 {
-	getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " DI " + kicker +
-			' ' + ADC::ESC(msg) + '\n');
+	getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ID" + kicker +
+			" MS" + ADC::ESC(msg) + '\n');
 	logout();
 	disconnect();
 }
@@ -177,7 +145,6 @@ void ADCClient::doDisconnectBy(string const& kicker, string const& msg) throw()
 void ADCClient::onLine(StringList& sl, string const& full) throw()
 {
 	assert(!sl.empty());
-	fprintf(stderr, "<< %s", full.c_str());
 
 	// Totally crappy data is rewarded with a silent disconnect
 	if(sl[0].size() != 4) {
@@ -205,17 +172,17 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 	switch(command & 0x000000FF) {
 	case 'H':
 		// ? do we wish supports to happen just whenever or at PROTOCOL only ?
-		if(state == PROTOCOL && (command & 0xFFFFFF00) == Commands[SUP]) {
+		if(state == PROTOCOL && (command & 0xFFFFFF00) == SUP) {
 			handleSupports(sl);
 			return;
 		// ? same with HPAS ?
-		} else if(state == VERIFY && (command & 0xFFFFFF00) == Commands[PAS] && sl.size() == 3 && sl[1] == getCID32()) {
+		} else if(state == VERIFY && (command & 0xFFFFFF00) == PAS && sl.size() == 3 && sl[1] == getCID32()) {
 			handlePassword(sl);
 			return;
 		}
 		break;
 	case 'B':
-		if(state == IDENTIFY && (command & 0xFFFFFF00) == Commands[INF] && sl.size() >= 2) {
+		if(state == IDENTIFY && (command & 0xFFFFFF00) == INF && sl.size() >= 2) {
 			handleLogin(sl);
 			return;
 		}
@@ -275,13 +242,13 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
 		// remove us when doing e.g. the Kick, so that added is false here.
-		fprintf(stderr, "onDisconnected %d %p GUID: %s\n", fd, this, getCID32().c_str());
+		log(qerr, format("onDisconnected %d %p GUID: %s") % fd % this % getCID32());
 		logout();
 		if(clue.empty())
-			getHub()->broadcast(string("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ND\n"));
+			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + '\n');
 		else
-			getHub()->broadcast(string("IQUI " + getHub()->getCID32() + ' ' + getCID32() +
-					" DI " + getCID32() + ' ' + ADC::ESC(clue) + '\n'));
+			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() +
+					" MS" + ADC::ESC(clue) + '\n');
 	}
 	Plugin::ClientDisconnected action;
 	Plugin::fire(action, this);
@@ -301,7 +268,7 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) 
 
 	// * HDSC *
 	if(oneCC == 'H') {
-		if(threeCC == Commands[DSC]) {
+		if(threeCC == DSC) {
 			handleDisconnect(sl);
 			return;
 		} else {
@@ -309,7 +276,7 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) 
 			return;
 		}
 	// * BINF *
-	} else if(threeCC == Commands[INF]) {
+	} else if(threeCC == INF) {
 		if(oneCC == 'B') {
 			handleInfo(sl, cmd, full);
 			return;
@@ -318,7 +285,7 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) 
 			return;
 		}
 	// * ?MSG *
-	} else if(threeCC == Commands[MSG]) {
+	} else if(threeCC == MSG) {
 		handleMessage(sl, cmd, full);
 		return;
 	// * Everything else *
@@ -346,13 +313,18 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) 
 void ADCClient::handleLogin(StringList& sl) throw()
 {
 	assert(state == IDENTIFY);
-	guid = sl[1];
+	if(!ADC::checkCID(sl[1])) {
+		doError("invalid CID: " + sl[1]);
+		disconnect("invalid CID: " + sl[1]);
+		return;
+	}
+	cid = sl[1];
 
-	if(getHub()->hasClient(guid)) {
+	if(getHub()->hasClient(cid)) {
 		
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		// Ping other user, perhaps it's a ghost
-		getHub()->direct(guid, "\n");
+		//getHub()->direct(cid, "\n");
 		// Note: Don't forget to check again at HPAS.. perhaps someone beat us to it.
 		return;
 	}
@@ -497,7 +469,7 @@ void ADCClient::handleDisconnect(StringList& sl) throw()
 		return;
 	}
 	if(!userInfo->getOp()) {
-		send("ISTA " + getHub()->getCID32() + " 225 HDSC Access denied\n");
+		send("ISTA " + getHub()->getCID32() + " 225 " + ADC::ESC("Access denied") + " FCHDSC\n");
 		doDisconnect("Access denied");
 		return;
 	}
@@ -516,7 +488,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	string8 hashed_pwd(h.getResult(), TigerHash::HASH_SIZE);
 	string hashed_pwd_b32 = Encoder::toBase32(hashed_pwd.data(), hashed_pwd.length());
 	if(hashed_pwd_b32 != sl[2]) {
-		send("ISTA " + getHub()->getCID32() + " 223 Bad\\ username\\ or\\ password\n");
+		send("ISTA " + getHub()->getCID32() + " 223 " + ADC::ESC("Bad username or password") + '\n');
 		assert(!added);
 		disconnect();
 		return;
@@ -524,7 +496,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	salt.clear();
 	// Add user
 	if(getHub()->hasClient(getCID32())) {
-		send("ISTA " + getHub()->getCID32() + " 224 CID taken\n");
+		send("ISTA " + getHub()->getCID32() + " 224 " + ADC::ESC("CID taken") + '\n');
 		assert(!added);
 		disconnect();
 		return;
@@ -538,6 +510,6 @@ void ADCClient::handleSupports(StringList& sl) throw()
 {
 	send("ISUP " + getHub()->getCID32() + " +BASE\n" // <-- do we need CID?
 	     "IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
-	     " HU1 DEmajs VEqhub" VERSION " OP1\n");
+	     " HU1 DE" + ADC::ESC(getHub()->getDescription()) + " VE" PACKAGE "/" VERSION " OP1\n");
 	state = IDENTIFY;
 }

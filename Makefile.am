@@ -11,31 +11,15 @@ qhub_SOURCES += Hub.h Hub.cpp
 qhub_SOURCES += ADCSocket.h ADCSocket.cpp ADCClient.h ADCClient.cpp
 qhub_SOURCES += UserInfo.h ADC.h ADC.cpp
 qhub_SOURCES += Buffer.h
-qhub_SOURCES += compat_hash_map.h
+qhub_SOURCES += compat_hash_map.h error.h error.cpp
 qhub_SOURCES += Plugin.h Plugin.cpp
 qhub_SOURCES += UserData.h UserData.cpp XmlTok.h XmlTok.cpp
 qhub_SOURCES += Settings.h Settings.cpp
 qhub_SOURCES += Timer.h Timer.cpp
 
-EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO Settings.xml
-EXTRA_DIST += config.sub config.guess foo1.c
-EXTRA_DIST += etc/qhub/plugins.xml etc/qhub/accounts.xml etc/qhub/fsutil.xml README.cygwin
+EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO
+EXTRA_DIST += config.sub config.guess foo1.c README.cygwin
 
+dist_pkgdata_DATA = Settings.xml plugins.xml
 
-lib_LTLIBRARIES = foo1.la accounts.la virtualfs.la fsutil.la loader.la
-AM_CXXFLAGS = -Wall -DDEBUG -g
-
-foo1_la_SOURCES = foo1.c
-foo1_la_LDFLAGS = -module
-
-accounts_la_SOURCES = PluginAccounts.h PluginAccounts.cpp
-accounts_la_LDFLAGS = -module
-
-virtualfs_la_SOURCES = PluginVirtualFsDir.h PluginVirtualFs.h PluginVirtualFs.cpp
-virtualfs_la_LDFLAGS = -module
-
-fsutil_la_SOURCES = PluginFsUtil.h PluginFsUtil.cpp
-fsutil_la_LDFLAGS = -module
-
-loader_la_SOURCES = PluginLoader.h PluginLoader.cpp
-loader_la_LDFLAGS = -module
+SUBDIRS = plugins

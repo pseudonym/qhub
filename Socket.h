@@ -65,7 +65,7 @@ public:
 	void write(string const& s, int prio = PRIO_NORM);
 	void writeb(Buffer::writeBuffer b);
 
-	int getFd() { return fd; };
+	int getFd() const { return fd; };
 	Domain getDomain() const throw() { return ip4OverIp6 ? IP4 : domain; };
 	string const& getSockName() const throw() { return sockName; };
 	string const& getPeerName() const throw() { return peerName; };
@@ -92,7 +92,7 @@ protected:
 
 	//signals that we should die
 	bool disconnected;
-	void disconnect();
+	virtual void disconnect(const string& msg = Util::emptyString);
 
 private:
 	void create() throw();

@@ -14,21 +14,25 @@ namespace qhub {
 class UserInfo {
 public:
 	typedef map<u_int16_t, string> InfMap;
-	typedef map<u_int16_t, string>::const_iterator const_iterator;
+	typedef InfMap::const_iterator const_iterator;
 	const_iterator begin() throw() { return infMap.begin(); };
 	const_iterator end() throw() { return infMap.end(); };
 
 	// Constructor
-	UserInfo(Socket* p) : sock(p) {};
+	UserInfo(Socket* p, const StringList& sl = Util::emptyStringList) : sock(p) {
+		if(sl.size() > 2)
+			fromADC(sl);
+	}
 	
 	// ADC
-	void fromADC(StringList& sl) throw() {
+	void fromADC(const StringList& sl) throw() {
 		for(StringList::const_iterator sli = sl.begin() + 2; sli != sl.end(); ++sli) {
 			if(sli->length() >= 2) {
 				set(*sli);
 			}
 		}
 	}
+
 	string const& toADC(string const& cid32) throw() {
 		if(modified) {
 			adcString = "BINF ";
@@ -55,14 +59,11 @@ public:
 			infMap[i->first] = i->second;
 		}
 		// Remove all empty keys
-		for(bool done = false; !done && (done = true);) {
-			for(InfMap::iterator i = infMap.begin(); i != infMap.end(); ++i) {
-				if(i->second.empty()) {
-					infMap.erase(i);
-					done = false;
-					break;
-				}
-			}
+		for(InfMap::iterator i = infMap.begin(); i != infMap.end(); ) {
+			if(i->second.empty())
+				infMap.erase(i++);
+			else
+				i++;
 		}
 	}
 
@@ -75,12 +76,12 @@ public:
 				infMap[key] = sock->getPeerName();
 		}
 #ifdef ENABLE_IPV6
-        	else if(key == UIID('I','6') && val == "[0:0:0:0:0:0:0:0]") {
+       	else if(key == UIID('I','6') && val == "[0:0:0:0:0:0:0:0]") {
 			if(sock->getDomain() == Socket::IP6)
 				infMap[key] = sock->getPeerName();
 		}
 #endif
-        	else {
+       	else {
 			infMap[key] = val;
 		}
 	}
@@ -156,7 +157,7 @@ public:
 	bool const isActive() const throw() {
 		return has(UIID('U','4')) || has(UIID('U','6'));
 	}
-		
+
 private:
 	Socket* sock;
 	InfMap infMap;

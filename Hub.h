@@ -4,22 +4,23 @@
 
 #include "compat_hash_map.h"
 
-#include <list>
 #include <string>
+#include <list>
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
 #include "DNSUser.h"
 #include "InterHub.h"
+#include "UserInfo.h"
 #include "Socket.h"
+#include "ADCSocket.h"
+#include "ADCClient.h"
 
 using namespace std;
 
 namespace qhub {
 
-class ADCClient;
-
-class Hub : public DNSUser {
+class Hub {
 public:
 	static void killAll() throw();
 
@@ -28,13 +29,16 @@ public:
 
 	void openADCPort(int port);
 	void openInterPort(int port);
-	void openInterConnection(string host, int port, string password);
-	void onLookup(adns_answer *reply) const;
+	void openInterConnection(const string& host, int port) throw();
 
-	string getCID32() const { return "FQI2LLF4K5W3Y"; };
+	void setCID32(const string& c) { cid32 = c; };
+	const string& getCID32() const { return cid32; };
 
-	void setHubName(string name) { Hub::name=name; };
-	string getHubName() const { return name; };
+	void setHubName(const string& n) { name = n; };
+	const string& getHubName() const { return name; };
+
+	void setDescription(const string& d) { description = d; };
+	const string& getDescription() const { return description; };
 
 	void setMaxPacketSize(int s);
 	int getMaxPacketSize() const { return maxPacketSize; };
@@ -42,44 +46,53 @@ public:
 	void acceptLeaf(int fd, Socket::Domain d);
 	void acceptInterHub(int fd, Socket::Domain d);
 
-	bool hasClient(string const& guid) const throw();
-	void addActiveClient(string const& guid, ADCClient* client) throw();
-	void addPassiveClient(string const& guid, ADCClient* client) throw();
-	void removeClient(string const& guid) throw();
-	void switchClientMode(bool toActive, string const& guid, ADCClient* client) throw();
+	void activate(InterHub* ih) throw();
+	void deactivate(InterHub* ih) throw();
 
-	void broadcast(string const& data, ADCClient* except = NULL) throw();
-	void broadcastActive(string const& data) throw();
-	void broadcastPassive(string const& data) throw();
-	void direct(string const& data, string const& guid, ADCClient* from = NULL) throw();
+	bool hasClient(string const& cid, bool localonly = false) const throw();
+	void addActiveClient(string const& cid, ADCClient* client) throw();
+	void addPassiveClient(string const& cid, ADCClient* client) throw();
+	void removeClient(string const& cid) throw();
+	void switchClientMode(bool toActive, string const& cid, ADCClient* client) throw();
+
+	void broadcast(string const& data, ADCClient* except = NULL, bool localonly = false) throw();
+	void broadcastActive(string const& data, bool localonly = false) throw();
+	void broadcastPassive(string const& data, bool localonly = false) throw();
+	void direct(string const& data, string const& cid, ADCClient* from = NULL) throw();
 
 	void motd(ADCClient* c) throw();
 
-	void getUserList(ADCClient* c) throw();
+	void getUserList(ADCSocket* c, bool localonly = false) throw();
 
 	void userDisconnect(string const& actor, string const& victim, string const& msg) throw();
 private:
 	static void add(Hub* h) throw();
 	static void remove(Hub* h) throw();
+	inline size_t motdHelper();
+
 	typedef list<Hub*> Hubs;
 	static Hubs hubs;
-	
-	string name;
 
 	int maxPacketSize;
-
+	
+	string name;
+	string cid32;
+	string description;
+	
+	typedef hash_map<string, ADCClient*> Users;
 	//this is for external users
+	//Users remoteUsers;
 
 	//this is for physical users
-	typedef hash_map<string, ADCClient*> Users;
 	Users passiveUsers;
 	Users activeUsers;
 
-	//opened connections
-	hash_map<string, InterHub*> interConnects;
-
-	//listened opened connections
-	list<InterHub*>	interConnects2;
+	typedef list<InterHub*> Interhubs;
+	//working connections
+	Interhubs interhubs;
+	//waiting for handshake
+	//Interhubs pendingInterhubs;
+	//it will add itself when it's ready to handle data, otherwise, it's on its own
 };
 
 }

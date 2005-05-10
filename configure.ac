@@ -1,12 +1,17 @@
-AC_INIT(qhub, 0.8)
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.59)
+AC_INIT(qhub, 0.9)
 AC_CONFIG_SRCDIR(qhub.cpp)
-AM_INIT_AUTOMAKE(qhub, 0.8)
+AM_INIT_AUTOMAKE
 AC_PROG_CXX
 
 AC_LANG([C++])
 
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
+AC_PROG_RANLIB
 
 
 AM_CONFIG_HEADER(config.h)
@@ -140,7 +145,7 @@ fi
 ##check for functions
 
 AC_CHECK_FUNCS([gethostname strtol gettimeofday gethostbyname inet_ntoa memmove memset socket getaddrinfo_a])
-AC_CHECK_FUNCS([nanosleep])
+AC_CHECK_FUNCS([nanosleep strerror])
 AC_CHECK_FUNCS([inet_pton inet_ntop])
 
 if test "$ac_xmllib" = "expat"; then
@@ -153,7 +158,8 @@ AC_CHECK_HEADERS([event.h])
 AC_CHECK_HEADERS([oop.h],,[AC_MSG_ERROR([liboop required.])])
 AC_CHECK_HEADERS([oop-event.h])
 AC_CHECK_HEADERS([adns.h],,[AC_MSG_ERROR([ADNS required.])])
-AC_CHECK_HEADERS([boost/shared_ptr.hpp],,[AC_MSG_ERROR([Boost library required - http://boost.org/])])
+AC_CHECK_HEADERS([boost/shared_ptr.hpp boost/format.hpp],
+		,[AC_MSG_ERROR([Boost library required - http://boost.org/])])
 
 AC_CHECK_HEADERS([dlfcn.h]) 
 AC_CHECK_HEADERS([arpa/inet.h])
@@ -184,6 +190,8 @@ if test $adns = "1.0"; then
    AC_DEFINE([LIBOOP_RECENT], [1], [1.0 Liboop])
 fi
 
+AC_CONFIG_SUBDIRS([plugins])
+
 
 AC_C_INLINE
 AC_C_CONST
@@ -193,9 +201,10 @@ AC_FUNC_VPRINTF
 
 AC_STRUCT_TM
 AC_TYPE_SIGNAL
+AC_TYPE_SIZE_T
 AC_HEADER_TIME
-#AC_HEADER_STDBOOL
+AC_HEADER_STDBOOL
 AC_HEADER_STDC
 
-AC_OUTPUT(Makefile)
-
+AC_CONFIG_FILES([Makefile plugins/Makefile])
+AC_OUTPUT

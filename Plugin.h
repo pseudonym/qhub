@@ -5,7 +5,7 @@
 #include <string>
 #include <cassert>
 
-#include <compat_hash_map.h>
+#include "compat_hash_map.h"
 #include <list>
 
 #include "Util.h"
@@ -167,6 +167,8 @@ public:
 	virtual void on(ClientDisconnected&, ADCClient*) throw() {};
 	// Called on every client input
 	// parm: ADCClient* = the client
+	// parm: u_int32_t = FOURCC of command
+	// parm: StringList: list of command arguments
 	virtual void on(ClientLine&, ADCClient*, u_int32_t const, StringList) throw() {};
 	// Called when a client sends first BINF
 	// parm: ADCClient* = the client

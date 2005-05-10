@@ -1,24 +1,27 @@
 <?xml version="1.0" ?>
 
 <!DOCTYPE config [
-  <!ELEMENT config (hub)+>
-  <!ELEMENT hub	(name, maxpacketsize?, 
+  <!ELEMENT config (hub+, ihubpass*)>
+  <!ELEMENT hub	(name, cid, maxpacketsize?, 
 	startBufferSize?, readSize?, port+, interport*, interconnect*)>
   <!ELEMENT startBufferSize (#PCDATA)>
   <!ELEMENT readSize (#PCDATA)>
   <!ELEMENT maxpacketsize (#PCDATA)>
   <!ELEMENT name (#PCDATA)>
+  <!ELEMENT cid (#PCDATA)>
   <!ELEMENT port (#PCDATA)>
   <!ELEMENT interport (#PCDATA)>
-  <!ELEMENT interconnect (host, port, password)>
+  <!ELEMENT interconnect (host, port)>
   <!ELEMENT host (#PCDATA)>
   <!ELEMENT port (#PCDATA)>
   <!ELEMENT password (#PCDATA)> <!-- Might want to go un-encoded here?-->
+  <!ELEMENT ihubpass (#PCDATA)>
 ]>
 
 <config>
 	<hub>
 		<name>-= qhub =-</name>
+		<cid>FQI2LLF4K5W3Y</cid>
 		<maxpacketsize>65536</maxpacketsize>
 		<port>9001</port>
 		<!--<port>9002</port>
@@ -29,12 +32,14 @@
 	<hub>
 		<name>skit</name>
 		<port>8001</port>
-		<!--<interport>8000</interport>-->
-			<interconnect>
+		<cid>THEHUBOFPSEU2</cid>
+		<description>Pseu, you da man!</description>
+		<interconnect>
 			<host>localhost</host>
 			<port>9000</port>
-			<password>mdsadss</password>
 		</interconnect>
 	</hub>
+	<ihubpass cid="FQI2LLF4K5W3Y">mdsadss</ihubpass>
+	<ihubpass cid="THEHUBOFPSEU2">majs</ihubpass>
 </config>
 

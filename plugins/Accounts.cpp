@@ -1,11 +1,11 @@
 // vim:ts=4:sw=4:noet
-#include "PluginAccounts.h"
+#include "Accounts.h"
 
-#include "ADCClient.h"
-#include "UserInfo.h"
-#include "UserData.h"
-#include "XmlTok.h"
-#include "PluginVirtualFs.h"
+#include "../ADCClient.h"
+#include "../UserInfo.h"
+#include "../UserData.h"
+#include "../XmlTok.h"
+#include "VirtualFs.h"
 
 using namespace qhub;
 

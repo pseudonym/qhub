@@ -1,2 +1,20 @@
+- 0.9 -
+* Pseudo is now in charge :)
+* upgraded to ADC 0.9
+* switched interhub code to use ADC
+* interhubs are now stored in a much more useful way
+* moved plugins to separate directory
+* started use of exceptions (error.h)
+* log(<qerr|qstat>,<msg>) in "error.h" can be used to log messages (fprintf 
+use almost totally removed) (yes,, I know we have std::log in <cmath>, but
+overloads should take care of that
+* added command line arguments. Use qhub --help to view
+* rewrote ADCSocket parsing code -- now much, much simpler (might fail on big
+reads, though... haven't tested)
+* plugins currently don't work and cause a segfault :)
+* CIDs are checked for validity on login (ie, that they represent a 64-bit
+value... untested, but shouldn't break anything)
+
+- pre-0.9 -
 20050107 Dont allow users to steal the CID of the hub itself.
 

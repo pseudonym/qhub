@@ -28,7 +28,7 @@ void Timer::tick() throw() {
 	for(Alarms::iterator i = alarms.begin(); i != alarms.end(); ++i) {
 		i->second--;
 		if(i->second == 0)
-			(i->first)->onAlarm();
+			i->first->onAlarm();
 	}
 }
 
