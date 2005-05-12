@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 
 	//try loading
 	Plugin::init();
-	Plugin::openModule("loader.so");
+	Plugin::openModule("qhub-loader.so");
 
 	//Init random number generator
 	srand(time(NULL));

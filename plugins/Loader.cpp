@@ -27,7 +27,7 @@ int Loader::load() throw()
 	int success = 0;
 	int failure = 0;
 	XmlTok root;
-	if(root.load("etc/qhub/plugins.xml")) {
+	if(root.load(CONFIGDIR "/plugins.xml")) {
 		XmlTok* p = &root;
 		if(p->findChild("plugins") && (p = p->getNextChild()) && p->findChild("plugin")) {
 			XmlTok* tmp;
@@ -60,7 +60,7 @@ bool Loader::save() const throw()
 		tmp->setData((*i)->getId());
 	}
 	p = p->getParent();
-	return root.save("etc/qhub/plugins.xml");
+	return root.save(CONFIGDIR "/plugins.xml");
 }
 
 void Loader::initVFS() throw()

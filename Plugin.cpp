@@ -22,7 +22,6 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 {
 	void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
 	char const* error;
-	// !! export LD_LIBRARY_PATH=.libs !!
 	log(qerr, string("dlerror() = ") + dlerror());
 
 	if(h != NULL) {
@@ -46,7 +45,7 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 					}
 					plugins.insert(j, 1, p);
 				}
-				log(0, "Loading plugin \"" + filename + "\" SUCCESS!\n");
+				log(qstat, "Loading plugin \"" + filename + "\" SUCCESS!\n");
 				return true;
 			}
 		}

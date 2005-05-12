@@ -1,3 +1,11 @@
+- 0.10 -
+* various autoconf/automake fixes
+* moved a few files around
+* added a way to pass configure's --prefix option to the C++ files... isn't
+counted in dependencies, though... need to add it to config.h
+* above feature is used when opening config files
+
+
 - 0.9 -
 * Pseudo is now in charge :)
 * upgraded to ADC 0.9
@@ -6,7 +14,7 @@
 * moved plugins to separate directory
 * started use of exceptions (error.h)
 * log(<qerr|qstat>,<msg>) in "error.h" can be used to log messages (fprintf 
-use almost totally removed) (yes,, I know we have std::log in <cmath>, but
+use almost totally removed) (yes, I know we have std::log in <cmath>, but
 overloads should take care of that
 * added command line arguments. Use qhub --help to view
 * rewrote ADCSocket parsing code -- now much, much simpler (might fail on big

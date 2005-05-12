@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 
-SOURCES = $(accounts_la_SOURCES) $(fsutil_la_SOURCES) $(loader_la_SOURCES) $(virtualfs_la_SOURCES)
+SOURCES = $(qhub_accounts_la_SOURCES) $(qhub_fsutil_la_SOURCES) $(qhub_loader_la_SOURCES) $(qhub_virtualfs_la_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -40,7 +40,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = plugins
-DIST_COMMON = README $(dist_pkgdata_DATA) $(srcdir)/Makefile.am \
+DIST_COMMON = README $(dist_pkgsysconf_DATA) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in AUTHORS COPYING ChangeLog INSTALL NEWS
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -55,21 +55,21 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(plugindir)" "$(DESTDIR)$(pkgdatadir)"
-pluginLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(plugin_LTLIBRARIES)
-accounts_la_LIBADD =
-am_accounts_la_OBJECTS = Accounts.lo
-accounts_la_OBJECTS = $(am_accounts_la_OBJECTS)
-fsutil_la_LIBADD =
-am_fsutil_la_OBJECTS = FsUtil.lo
-fsutil_la_OBJECTS = $(am_fsutil_la_OBJECTS)
-loader_la_LIBADD =
-am_loader_la_OBJECTS = Loader.lo
-loader_la_OBJECTS = $(am_loader_la_OBJECTS)
-virtualfs_la_LIBADD =
-am_virtualfs_la_OBJECTS = VirtualFs.lo
-virtualfs_la_OBJECTS = $(am_virtualfs_la_OBJECTS)
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgsysconfdir)"
+libLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(lib_LTLIBRARIES)
+qhub_accounts_la_LIBADD =
+am_qhub_accounts_la_OBJECTS = Accounts.lo
+qhub_accounts_la_OBJECTS = $(am_qhub_accounts_la_OBJECTS)
+qhub_fsutil_la_LIBADD =
+am_qhub_fsutil_la_OBJECTS = FsUtil.lo
+qhub_fsutil_la_OBJECTS = $(am_qhub_fsutil_la_OBJECTS)
+qhub_loader_la_LIBADD =
+am_qhub_loader_la_OBJECTS = Loader.lo
+qhub_loader_la_OBJECTS = $(am_qhub_loader_la_OBJECTS)
+qhub_virtualfs_la_LIBADD =
+am_qhub_virtualfs_la_OBJECTS = VirtualFs.lo
+qhub_virtualfs_la_OBJECTS = $(am_qhub_virtualfs_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -89,12 +89,12 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(accounts_la_SOURCES) $(fsutil_la_SOURCES) \
-	$(loader_la_SOURCES) $(virtualfs_la_SOURCES)
-DIST_SOURCES = $(accounts_la_SOURCES) $(fsutil_la_SOURCES) \
-	$(loader_la_SOURCES) $(virtualfs_la_SOURCES)
-dist_pkgdataDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(dist_pkgdata_DATA)
+SOURCES = $(qhub_accounts_la_SOURCES) $(qhub_fsutil_la_SOURCES) \
+	$(qhub_loader_la_SOURCES) $(qhub_virtualfs_la_SOURCES)
+DIST_SOURCES = $(qhub_accounts_la_SOURCES) $(qhub_fsutil_la_SOURCES) \
+	$(qhub_loader_la_SOURCES) $(qhub_virtualfs_la_SOURCES)
+dist_pkgsysconfDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_pkgsysconf_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -192,21 +192,20 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
-subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-plugindir = $(libdir)/qhub
-plugin_LTLIBRARIES = accounts.la virtualfs.la fsutil.la loader.la
-AM_CXXFLAGS = -Wall -DDEBUG -g
-accounts_la_SOURCES = Accounts.h Accounts.cpp
-accounts_la_LDFLAGS = -module
-dist_pkgdata_DATA = accounts.xml
-virtualfs_la_SOURCES = VirtualFsDir.h VirtualFs.h VirtualFs.cpp
-virtualfs_la_LDFLAGS = -module
-fsutil_la_SOURCES = FsUtil.h FsUtil.cpp
-fsutil_la_LDFLAGS = -module
-loader_la_SOURCES = Loader.h Loader.cpp
-loader_la_LDFLAGS = -module
+lib_LTLIBRARIES = qhub-accounts.la qhub-virtualfs.la qhub-fsutil.la qhub-loader.la
+AM_CXXFLAGS = -Wall -DDEBUG -g -DCONFIGDIR=\"$(pkgsysconfdir)\"
+pkgsysconfdir = $(sysconfdir)/$(PACKAGE)
+qhub_accounts_la_SOURCES = Accounts.h Accounts.cpp
+qhub_accounts_la_LDFLAGS = -module
+qhub_virtualfs_la_SOURCES = VirtualFsDir.h VirtualFs.h VirtualFs.cpp
+qhub_virtualfs_la_LDFLAGS = -module
+qhub_fsutil_la_SOURCES = FsUtil.h FsUtil.cpp
+qhub_fsutil_la_LDFLAGS = -module
+qhub_loader_la_SOURCES = Loader.h Loader.cpp
+qhub_loader_la_LDFLAGS = -module
+dist_pkgsysconf_DATA = accounts.xml plugins.xml
 all: all-am
 
 .SUFFIXES:
@@ -240,41 +239,41 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-pluginLTLIBRARIES: $(plugin_LTLIBRARIES)
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(plugindir)" || $(mkdir_p) "$(DESTDIR)$(plugindir)"
-	@list='$(plugin_LTLIBRARIES)'; for p in $$list; do \
+	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(pluginLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(plugindir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(pluginLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(plugindir)/$$f"; \
+	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-pluginLTLIBRARIES:
+uninstall-libLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(plugin_LTLIBRARIES)'; for p in $$list; do \
+	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(plugindir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(plugindir)/$$p"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
 	done
 
-clean-pluginLTLIBRARIES:
-	-test -z "$(plugin_LTLIBRARIES)" || rm -f $(plugin_LTLIBRARIES)
-	@list='$(plugin_LTLIBRARIES)'; for p in $$list; do \
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-accounts.la: $(accounts_la_OBJECTS) $(accounts_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(plugindir) $(accounts_la_LDFLAGS) $(accounts_la_OBJECTS) $(accounts_la_LIBADD) $(LIBS)
-fsutil.la: $(fsutil_la_OBJECTS) $(fsutil_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(plugindir) $(fsutil_la_LDFLAGS) $(fsutil_la_OBJECTS) $(fsutil_la_LIBADD) $(LIBS)
-loader.la: $(loader_la_OBJECTS) $(loader_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(plugindir) $(loader_la_LDFLAGS) $(loader_la_OBJECTS) $(loader_la_LIBADD) $(LIBS)
-virtualfs.la: $(virtualfs_la_OBJECTS) $(virtualfs_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(plugindir) $(virtualfs_la_LDFLAGS) $(virtualfs_la_OBJECTS) $(virtualfs_la_LIBADD) $(LIBS)
+qhub-accounts.la: $(qhub_accounts_la_OBJECTS) $(qhub_accounts_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(qhub_accounts_la_LDFLAGS) $(qhub_accounts_la_OBJECTS) $(qhub_accounts_la_LIBADD) $(LIBS)
+qhub-fsutil.la: $(qhub_fsutil_la_OBJECTS) $(qhub_fsutil_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(qhub_fsutil_la_LDFLAGS) $(qhub_fsutil_la_OBJECTS) $(qhub_fsutil_la_LIBADD) $(LIBS)
+qhub-loader.la: $(qhub_loader_la_OBJECTS) $(qhub_loader_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(qhub_loader_la_LDFLAGS) $(qhub_loader_la_OBJECTS) $(qhub_loader_la_LIBADD) $(LIBS)
+qhub-virtualfs.la: $(qhub_virtualfs_la_OBJECTS) $(qhub_virtualfs_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(qhub_virtualfs_la_LDFLAGS) $(qhub_virtualfs_la_OBJECTS) $(qhub_virtualfs_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -317,22 +316,22 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
+install-dist_pkgsysconfDATA: $(dist_pkgsysconf_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(pkgdatadir)" || $(mkdir_p) "$(DESTDIR)$(pkgdatadir)"
-	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
+	test -z "$(pkgsysconfdir)" || $(mkdir_p) "$(DESTDIR)$(pkgsysconfdir)"
+	@list='$(dist_pkgsysconf_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(dist_pkgdataDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgdatadir)/$$f'"; \
-	  $(dist_pkgdataDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgdatadir)/$$f"; \
+	  echo " $(dist_pkgsysconfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgsysconfdir)/$$f'"; \
+	  $(dist_pkgsysconfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgsysconfdir)/$$f"; \
 	done
 
-uninstall-dist_pkgdataDATA:
+uninstall-dist_pkgsysconfDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
+	@list='$(dist_pkgsysconf_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(pkgdatadir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(pkgdatadir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(pkgsysconfdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pkgsysconfdir)/$$f"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -414,7 +413,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(plugindir)" "$(DESTDIR)$(pkgdatadir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgsysconfdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -443,7 +442,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-pluginLTLIBRARIES \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -462,9 +461,9 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_pkgdataDATA install-pluginLTLIBRARIES
+install-data-am: install-dist_pkgsysconfDATA
 
-install-exec-am:
+install-exec-am: install-libLTLIBRARIES
 
 install-info: install-info-am
 
@@ -490,22 +489,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_pkgdataDATA uninstall-info-am \
-	uninstall-pluginLTLIBRARIES
+uninstall-am: uninstall-dist_pkgsysconfDATA uninstall-info-am \
+	uninstall-libLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-pluginLTLIBRARIES ctags distclean \
+	clean-libLTLIBRARIES clean-libtool ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am \
-	install-dist_pkgdataDATA install-exec install-exec-am \
-	install-info install-info-am install-man \
-	install-pluginLTLIBRARIES install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-dist_pkgdataDATA \
-	uninstall-info-am uninstall-pluginLTLIBRARIES
+	install-dist_pkgsysconfDATA install-exec install-exec-am \
+	install-info install-info-am install-libLTLIBRARIES \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-dist_pkgsysconfDATA uninstall-info-am \
+	uninstall-libLTLIBRARIES
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

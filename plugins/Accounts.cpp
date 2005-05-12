@@ -30,7 +30,7 @@ bool Accounts::load() throw()
 {
 	bool success = false;
 	XmlTok root;
-	if(root.load("etc/qhub/accounts.xml")) {
+	if(root.load(CONFIGDIR "/accounts.xml")) {
 		XmlTok* p = &root;
 		if(p->findChild("accounts")) {
 			users.clear(); // clean old users
@@ -59,7 +59,7 @@ bool Accounts::save() const throw()
 		tmp->setAttr("password", i->second);
 	}
 	p = p->getParent();
-	return root.save("etc/qhub/accounts.xml");
+	return root.save(CONFIGDIR "/accounts.xml");
 }
 
 void Accounts::initVFS() throw()

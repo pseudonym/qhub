@@ -15,7 +15,7 @@ using namespace std;
 int Settings::readFromXML() throw()
 {
 	XmlTok root;
-	if(!root.load("/home/pseudo/share/qhub/Settings.xml"))
+	if(!root.load(CONFIGDIR "/Settings.xml"))
 		return 1;
 
 	XmlTok* p = &root;
@@ -91,14 +91,15 @@ static const char*const _help_str =
 	"qhub is a distributed hub for the ADC protocol.\n"
 	"Current command line parameters are limited because we are lazy.\n"
 	"For hub settings, see Settings.xml, which should have been installed\n"
-	"to $(prefix)/share/qhub\n"
-	"\t--help\t\tprint this help and exit\n"
-	"\t--version\tprint version information and exit\n"
-	"\t--errfile=FILE\terrors will be appended to FILE (default stderr)\n"
-	"\t--statfile=FILE\tstatus messages appeneded to FILE (default stdout)\n"
-	"\t-q\t\tquiet mode; equivalent to --errfile=/dev/null --statfile=/dev/null\n";
+	"to $(prefix)/etc/qhub\n"
+	"Options:\n"
+	"  --help            print this help and exit\n"
+	"  --version         print version information and exit\n"
+	"  --errfile=FILE    errors will be appended to FILE (default stderr)\n"
+	"  --statfile=FILE   status messages appeneded to FILE (default stdout)\n"
+	"  -q                quiet mode; equivalent to --errfile=/dev/null --statfile=/dev/null\n";
 static const char*const _version_str =
-	PACKAGE "/" VERSION " written by Walter Doekes (Sedulus),\n"
+	PACKAGE "/" VERSION ", written by Walter Doekes (Sedulus),\n"
 	"\tJohn Backstrand (sandos), and Matt Pearson (Pseudo)\n"
 	"Homepage: http://ddc.berlios.de\n"
 	"SVN:      svn://svn.berlios.de/ddc/qhub\n";

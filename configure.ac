@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(qhub, 0.9)
-AC_CONFIG_SRCDIR(qhub.cpp)
+AC_INIT([qhub], [0.9.1])
+AC_CONFIG_SRCDIR([qhub.cpp])
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
 
@@ -134,7 +134,7 @@ AC_CACHE_CHECK(whether any hash_map header works,
  done)
 
 if test "$cvc_cv_hash_map_works" = "no"; then
-  AC_MSG_ERROR(working hash_map header is not found)
+  AC_MSG_ERROR(working hash_map header not found)
 else
   CPPFLAGS="$CPPFLAGS -DHAVE_"`echo $cvc_cv_hash_map_works | sed 'y%abcdefghijklmnopqrstuvwxyz.:/-%ABCDEFGHIJKLMNOPQRSTUVWXYZ____%'`
 fi
@@ -190,8 +190,6 @@ AC_MSG_RESULT([$adns])
 if test $adns = "1.0"; then
    AC_DEFINE([LIBOOP_RECENT], [1], [1.0 Liboop])
 fi
-
-AC_CONFIG_SUBDIRS([plugins])
 
 
 AC_C_INLINE

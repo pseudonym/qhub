@@ -30,7 +30,7 @@ bool FsUtil::load() throw()
 	bool success = false;
 	aliases.clear(); // clean old data
 	XmlTok root;
-	if(root.load("etc/qhub/fsutil.xml")) {
+	if(root.load(CONFIGDIR "/fsutil.xml")) {
 		XmlTok* p = &root;
 		if(p->findChild("fsutil")) {
 			success = true;
@@ -68,7 +68,7 @@ bool FsUtil::save() const throw()
 	}
 	p = p->getParent();
 	p = p->getParent();
-	return root.save("etc/qhub/fsutil.xml");
+	return root.save(CONFIGDIR "/fsutil.xml");
 }
 
 void FsUtil::initVFS() throw()
