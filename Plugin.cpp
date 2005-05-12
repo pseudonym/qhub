@@ -22,7 +22,7 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 {
 	void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
 	char const* error;
-	log(qerr, string("dlerror() = ") + dlerror());
+	log(qerr, format("dlerror() = %s") % dlerror());
 
 	if(h != NULL) {
 		void* ptr = dlsym(h, "getPlugin");

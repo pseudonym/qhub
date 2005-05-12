@@ -91,15 +91,15 @@ void Socket::setBindAddress(string const& a) throw()
 	if(inet_pton(af, a.c_str(), inaddrp) == 0) {
 		if(domain == Socket::IP4) {
 			if(inet_pton(af, "0.0.0.0", inaddrp) == 0) {
-				perror("error (pton+ipv4): setBoundAddress:inet_pton:0.0.0.0");
-				exit(1);
+				log(qerr, "error (pton+ipv4): setBoundAddress:inet_pton:0.0.0.0");
+				exit(EXIT_FAILURE);
 			}
 		}
 #ifdef ENABLE_IPV6        
 		else if(domain == Socket::IP6) {
 			if(inet_pton(af, "::", inaddrp) == 0) {
-				perror("error (pton+ipv6): setBoundAddress:inet_pton:[::]");
-				exit(1);
+				log(qerr,"error (pton+ipv6): setBoundAddress:inet_pton:[::]");
+				exit(EXIT_FAILURE);
 			}
 		}
 #endif //ENABLE_IPV6       
@@ -108,15 +108,15 @@ void Socket::setBindAddress(string const& a) throw()
 	if(inet_aton(a.c_str(), (struct in_addr *)inaddrp) == 0) {
 		if(domain == Socket::IP4) {
 			if(inet_aton("0.0.0.0", (struct in_addr *)inaddrp) == 0) {
-				perror("error (aton+ipv4): setBoundAddress:inet_aton:0.0.0.0");
-				exit(1);
+				log(qerr,"error (aton+ipv4): setBoundAddress:inet_aton:0.0.0.0");
+				exit(EXIT_FAILURE);
 			}
 		}
 #ifdef ENABLE_IPV6        
 		else if(domain == Socket::IP6) {
 			if(inet_aton("::", (struct in_addr *)inaddrp) == 0) {
-				perror("error (aton+ipv6): setBoundAddress:inet_aton:[::]");
-				exit(1);
+				log(qerr,"error (aton+ipv6): setBoundAddress:inet_aton:[::]");
+				exit(EXIT_FAILURE);
 			}
 		}
 #endif //ENABLE_IPV6       
@@ -137,8 +137,8 @@ void Socket::bind() throw()
 {
 	int ret = ::bind(fd, saddrp, saddrl);
 	if(ret == -1) {
-		perror("error: bind");
-		exit(1);
+		log(qerr, "error: bind" + Util::errnoToString(errno));
+		exit(EXIT_FAILURE);
 	}
 }
 
@@ -167,7 +167,7 @@ void Socket::writeb(Buffer::writeBuffer b)
 		// no 0-byte sends, please
 		return;
 	}
-	log(qstat, Util::toString(getFd()) + ">> " +
+	log(qline, Util::toString(getFd()) + ">> " +
 			//don't log the \n, it will get written anyway
 			b->getBuf().substr(0,b->getBuf().size()-1));
 	queue.push(b);
@@ -197,8 +197,7 @@ void Socket::partialWrite()
 		default:
 			while(!queue.empty())
 				queue.pop();
-			log(qerr,Util::toString(w) + ": write failed");
-			disconnect();
+			disconnect(Util::toString(w) + ": write failed: " + Util::errnoToString(errno));
 			return;
 			break;
 		}
@@ -289,7 +288,7 @@ bool Socket::setNoLinger() throw()
 	so_linger.l_linger = 0;
 	int ret = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
 	if(ret != 0) {
-		perror("warning: setsockopt:SO_LINGER");
+		log(qerr, "warning: setsockopt:SO_LINGER: " + Util::errnoToString(errno));
 		return false;
 	}
 	return true;
@@ -299,12 +298,12 @@ bool Socket::setNonBlocking() throw()
 {
 	int f;
 	if((f = fcntl(fd, F_GETFL, 0)) < 0){
-		perror("warning: fcntl:F_GETFL");
+		log(qerr, "warning: fcntl:F_GETFL: " + Util::errnoToString(errno));
 		return false;
 	}
 	f |= O_NONBLOCK;
 	if(fcntl(fd, F_SETFL, f) < 0){
-		perror("warning: fcntl:F_SETFL");
+		log(qerr, "warning: fcntl:F_SETFL: " + Util::errnoToString(errno));
 		return false;
 	}
 	return true;
@@ -318,7 +317,7 @@ bool Socket::setSendTimeout(size_t seconds) throw()
 	tv.tv_usec = 0;
 	int ret = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 	if(ret != 0) {
-		perror("warning: setsockopt:SO_SNDTIMEO");
+		log(qerr, "warning: setsockopt:SO_SNDTIMEO: " + Util::errnoToString(errno));
 		return false;
 	}
 	return true;

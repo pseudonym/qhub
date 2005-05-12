@@ -84,16 +84,16 @@ void Accounts::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Accounts: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin Accounts: VirtualFs interface found.");
 			initVFS();
 		} else {
-			fprintf(stderr, "warning: Plugin Accounts: VirtualFs interface not found.\n");
+			log(qerr, "warning: Plugin Accounts: VirtualFs interface not found.");
 		}
-		fprintf(stderr, "success: Plugin Accounts: Started.\n");
+		log(qstat, "success: Plugin Accounts: Started.");
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Accounts: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin Accounts: VirtualFs interface found.");
 			initVFS();
 		}
 	}
@@ -105,9 +105,9 @@ void Accounts::on(PluginStopped&, Plugin* p) throw()
 		if(virtualfs)
 			deinitVFS();
 		save();
-		fprintf(stderr, "success: Plugin Accounts: Stopped.\n");
+		log(qstat, "success: Plugin Accounts: Stopped.");
 	} else if(virtualfs && p == virtualfs) {
-		fprintf(stderr, "warning: Plugin Accounts: VirtualFs interface disabled.\n");
+		log(qerr, "warning: Plugin Accounts: VirtualFs interface disabled.");
 		virtualfs = NULL;
 	}
 }

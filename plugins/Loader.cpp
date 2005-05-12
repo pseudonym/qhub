@@ -106,9 +106,9 @@ void Loader::on(PluginStopped&, Plugin* p) throw()
 	if(p == this) {
 		if(virtualfs)
 			deinitVFS();
-		fprintf(stderr, "success: Plugin Loader: Stopped.\n");
+		log(qstat, "success: Plugin Loader: Stopped.\n");
 	} else if(virtualfs && p == virtualfs) {
-		fprintf(stderr, "warning: Plugin Loader: VirtualFs interface disabled.\n");
+		log(qerr, "warning: Plugin Loader: VirtualFs interface disabled.\n");
 		virtualfs = NULL;
 	}
 }

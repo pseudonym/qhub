@@ -47,7 +47,7 @@ void VirtualFs::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		init();
-		fprintf(stderr, "success: Plugin VirtualFs: Started.\n");
+		log(qstat, "success: Plugin VirtualFs: Started.\n");
 	}
 }
 
@@ -55,7 +55,7 @@ void VirtualFs::on(PluginStopped&, Plugin* p) throw()
 {
 	if(p == this) {
 		deinit();
-		fprintf(stderr, "success: Plugin VirtualFs: Stopped.\n");
+		log(qstat, "success: Plugin VirtualFs: Stopped.\n");
 	}
 }
 
@@ -63,7 +63,7 @@ void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(p == this) {
 		Message* m = (Message*)d;
-		assert(d);
+		assert(m);
 		if(m->cwd == "" && m->type == Message::HELP) {
 			m->reply("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");
 		}

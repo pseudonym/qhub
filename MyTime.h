@@ -54,16 +54,4 @@ private:
 
 } //namespace qhub
 
-
-#if 0
-timespec s, r;
-s.tv_sec=0;
-s.tv_nsec=100000;
-for(int i=0; i<100; i++){
-	nanosleep(&s, &r);
-	printf("%d\n", r.tv_nsec);
-	//printf("bah\n");
-}
-#endif
-
 #endif //_Time_h_

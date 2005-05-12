@@ -23,6 +23,7 @@ private:
 
 extern std::FILE* qerr;
 extern std::FILE* qstat;
+extern std::FILE* qline;
 
 template<typename CharT, typename Traits, typename Alloc>
 inline void log(std::FILE* stream, const std::basic_string<CharT,Traits,Alloc>& msg)

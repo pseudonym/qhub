@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "error.h"
 #include "ServerSocket.h"
 #include "InterHub.h"
 #include "Hub.h"
@@ -25,7 +26,7 @@ ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(doma
 	int yes = 1;
 
 	if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-		perror("warning: setsockopt:SO_REUSEADDR");
+		log(qerr, format("warning: setsockopt:SO_REUSEADDR: %s") % Util::errnoToString(errno));
 	}
 
 	//just let the kernel handle this for us...

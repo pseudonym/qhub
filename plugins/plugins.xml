@@ -1,5 +1,5 @@
 <plugins>
-	<plugin>fsutil.so</plugin>
-	<plugin>virtualfs.so</plugin>
-	<plugin>accounts.so</plugin>
+	<plugin>qhub-fsutil.so</plugin>
+	<plugin>qhub-virtualfs.so</plugin>
+	<plugin>qhub-accounts.so</plugin>
 </plugins>

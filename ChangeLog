@@ -4,7 +4,9 @@
 * added a way to pass configure's --prefix option to the C++ files... isn't
 counted in dependencies, though... need to add it to config.h
 * above feature is used when opening config files
-
+* removed some old commented test code
+* added qline for logging ADC lines in/out
+* plugins actually work now :)
 
 - 0.9 -
 * Pseudo is now in charge :)

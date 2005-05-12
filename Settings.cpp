@@ -97,6 +97,7 @@ static const char*const _help_str =
 	"  --version         print version information and exit\n"
 	"  --errfile=FILE    errors will be appended to FILE (default stderr)\n"
 	"  --statfile=FILE   status messages appeneded to FILE (default stdout)\n"
+	"  --linefile=FILE   all protocol lines appended to FILE (default stdout)\n"
 	"  -q                quiet mode; equivalent to --errfile=/dev/null --statfile=/dev/null\n";
 static const char*const _version_str =
 	PACKAGE "/" VERSION ", written by Walter Doekes (Sedulus),\n"
@@ -129,6 +130,17 @@ int Settings::parseArgs(int argc, char **argv) throw()
 			}
 			qstat = fp;
 		}
+		if(!i->compare(0,11,"--linefile=")) {
+			string tmp = i->substr(11);
+			FILE* fp = fopen(tmp.c_str(), "at");
+			if(!fp) {
+				log(qerr, "could not open linefile \"" + tmp + '"');
+				log(qerr, "\t" + Util::errnoToString(errno));
+				continue;
+			}
+			qline = fp;
+		}
+
 		if(!i->compare(0,10,"--errfile=")) {
 			string tmp = i->substr(10);
 			FILE* fp = fopen(tmp.c_str(), "at");
@@ -140,9 +152,8 @@ int Settings::parseArgs(int argc, char **argv) throw()
 			qerr = fp;
 		}
 		if(*i == "-q") {
-			qstat = fopen("/dev/null", "w");
-			qerr = fopen("/dev/null", "w");
-			assert(qstat && qerr);
+			qline = qerr = qstat = fopen("/dev/null", "w");
+			assert(qstat);
 		}
 	}
 	return 0;

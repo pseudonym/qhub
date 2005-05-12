@@ -54,7 +54,7 @@ void ADCSocket::handleOnRead()
 		StringList sl = Util::stringTokenize(line);
 		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i)
 			*i = ADC::CSE(*i);
-		log(qstat, format("%d<< %s") % getFd() % line);
+		log(qline, format("%d<< %s") % getFd() % line);
 		onLine(sl, line + '\n');
 		if(disconnected)
 			return;

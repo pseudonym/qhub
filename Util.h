@@ -39,14 +39,10 @@ public:
 	};
 
 	static string toString(void* p) throw() {
-		char buf[32];
-		snprintf(buf, 32, "%p", p);
-		return buf;
+		return (format("%p") % p).str();
 	};
 	static string toString(int i) throw() {
-		char buf[32];
-		snprintf(buf, 32, "%i", i);
-		return buf;
+		return (format("%i") % i).str();
 	};
 
 	static string8 genRand192() throw() {

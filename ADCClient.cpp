@@ -123,8 +123,8 @@ void ADCClient::doHubMessage(string const& msg) throw()
 
 void ADCClient::doPrivateMessage(string const& msg) throw()
 {
-	send("DMSG " + getCID32() + ' ' + getHub()->getCID32() + ' ' + ADC::ESC(msg)
-			+ " PM" + getCID32() + '\n');
+	send("DMSG " + getHub()->getCID32() + ' ' + getCID32() + ' ' + ADC::ESC(msg)
+			+ " PM" + getHub()->getCID32() + '\n');
 }
 
 void ADCClient::doDisconnectBy(string const& kicker, string const& msg) throw()
@@ -242,7 +242,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
 		// remove us when doing e.g. the Kick, so that added is false here.
-		log(qerr, format("onDisconnected %d %p GUID: %s") % fd % this % getCID32());
+		log(qstat, format("onDisconnected %d %p GUID: %s") % fd % this % getCID32());
 		logout();
 		if(clue.empty())
 			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + '\n');
