@@ -88,22 +88,23 @@ int Settings::readFromXML() throw()
 
 
 static const char*const _help_str =
-	"qhub is a distributed hub for the ADC protocol.\n"
-	"Current command line parameters are limited because we are lazy.\n"
-	"For hub settings, see Settings.xml, which should have been installed\n"
-	"to $(prefix)/etc/qhub\n"
-	"Options:\n"
-	"  --help            print this help and exit\n"
-	"  --version         print version information and exit\n"
-	"  --errfile=FILE    errors will be appended to FILE (default stderr)\n"
-	"  --statfile=FILE   status messages appeneded to FILE (default stdout)\n"
-	"  --linefile=FILE   all protocol lines appended to FILE (default stdout)\n"
-	"  -q                quiet mode; equivalent to --errfile=/dev/null --statfile=/dev/null\n";
+"qhub is a distributed hub for the ADC protocol.\n"
+"Current command line parameters are limited because we are lazy.\n"
+"For hub settings, see Settings.xml, which should have been installed\n"
+"to $(prefix)/etc/qhub\n"
+"Options:\n"
+"  --help            print this help and exit\n"
+"  --version         print version information and exit\n"
+"  --errfile=FILE    errors will be appended to FILE (default stderr)\n"
+"  --statfile=FILE   status messages appeneded to FILE (default stdout)\n"
+"  --linefile=FILE   protocol lines appended to FILE (default /dev/null, '-'=same as statfile)\n"
+"  -q                quiet mode; equivalent to --errfile=/dev/null --statfile=/dev/null\n";
+
 static const char*const _version_str =
-	PACKAGE "/" VERSION ", written by Walter Doekes (Sedulus),\n"
-	"\tJohn Backstrand (sandos), and Matt Pearson (Pseudo)\n"
-	"Homepage: http://ddc.berlios.de\n"
-	"SVN:      svn://svn.berlios.de/ddc/qhub\n";
+PACKAGE "/" VERSION ", written by Walter Doekes (Sedulus),\n"
+"\tJohn Backstrand (sandos), and Matt Pearson (Pseudo)\n"
+"Homepage: http://ddc.berlios.de\n"
+"SVN:      svn://svn.berlios.de/ddc/qhub\n";
 
 int Settings::parseArgs(int argc, char **argv) throw()
 {
@@ -122,37 +123,41 @@ int Settings::parseArgs(int argc, char **argv) throw()
 		}
 		if(!i->compare(0,11,"--statfile=")) {
 			string tmp = i->substr(11);
-			FILE* fp = fopen(tmp.c_str(), "at");
+			FILE* fp = freopen(tmp.c_str(), "at", qstat);
 			if(!fp) {
 				log(qerr, "could not open statfile \"" + tmp + '"');
 				log(qerr, "\t" + Util::errnoToString(errno));
-				continue;
+				exit(EXIT_FAILURE);
 			}
 			qstat = fp;
 		}
 		if(!i->compare(0,11,"--linefile=")) {
 			string tmp = i->substr(11);
-			FILE* fp = fopen(tmp.c_str(), "at");
+			if(tmp == "-") {
+				qline = qstat;
+				continue;
+			}
+			FILE* fp = freopen(tmp.c_str(), "at", qline);
 			if(!fp) {
 				log(qerr, "could not open linefile \"" + tmp + '"');
 				log(qerr, "\t" + Util::errnoToString(errno));
-				continue;
+				exit(EXIT_FAILURE);
 			}
 			qline = fp;
 		}
 
 		if(!i->compare(0,10,"--errfile=")) {
 			string tmp = i->substr(10);
-			FILE* fp = fopen(tmp.c_str(), "at");
+			FILE* fp = freopen(tmp.c_str(), "at", qerr);
 			if(!fp) {
 				log(qerr, "could not open errfile \"" + tmp + '"');
 				log(qerr, "\t" + Util::errnoToString(errno));
-				continue;
+				exit(EXIT_FAILURE);
 			}
 			qerr = fp;
 		}
 		if(*i == "-q") {
-			qline = qerr = qstat = fopen("/dev/null", "w");
+			qstat = qerr = qline;
 			assert(qstat);
 		}
 	}
