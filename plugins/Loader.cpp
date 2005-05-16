@@ -34,7 +34,7 @@ int Loader::load() throw()
 			while((tmp = p->getNextChild())) {
 				string const& name = tmp->getData();
 				if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
-					log(qstat, "loading " + name);
+					log(qstat, "loading plugin " + name);
 					if(Plugin::openModule(name)) {
 						success++;
 					} else {

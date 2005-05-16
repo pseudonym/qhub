@@ -53,8 +53,6 @@ protected:
 	virtual void onConnected() throw();
 	virtual void onDisconnected(string const& clue) throw();
 
-	virtual void disconnect(const string& msg = Util::emptyString);
-
 private:
 	void doSupports() throw();
 	void doInf() throw();

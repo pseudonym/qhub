@@ -8,6 +8,7 @@ using namespace qhub;
 
 UserData Plugin::data;
 Plugin::Plugins Plugin::plugins;
+const string Plugin::PLUGIN_EXTENSION = ".so";
 
 void Plugin::init() throw()
 {
@@ -18,8 +19,9 @@ void Plugin::deinit() throw()
 	removeAllModules();
 }
 
-bool Plugin::openModule(string const& filename, string const& insertBefore) throw()
+bool Plugin::openModule(string const& name, string const& insertBefore) throw()
 {
+	string filename = "qhub-" + name + PLUGIN_EXTENSION;
 	void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
 	char const* error;
 
@@ -29,7 +31,7 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 			get_plugin_t getPlugin = (get_plugin_t)ptr;
 			Plugin* p = (Plugin*)getPlugin();
 			if(p) {
-				p->name = filename;
+				p->name = name;
 				p->handle = h;
 				PluginStarted action;
 				p->on(action, p); // init self before others
@@ -44,21 +46,21 @@ bool Plugin::openModule(string const& filename, string const& insertBefore) thro
 					}
 					plugins.insert(j, 1, p);
 				}
-				log(qstat, "Loading plugin \"" + filename + "\" SUCCESS!\n");
+				log(qstat, "Loading plugin \"" + name + "\" SUCCESS!\n");
 				return true;
 			}
 		}
 	} else {
 		error = dlerror();
 	}
-	log(qerr, "Loading plugin \"" + filename + "\" FAILED! " + (error != NULL ? error : ""));
+	log(qerr, "Loading plugin \"" + name + "\" FAILED! " + (error != NULL ? error : ""));
 	return false;
 }
 
-bool Plugin::removeModule(string const& filename) throw()
+bool Plugin::removeModule(string const& name) throw()
 {
 	for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i){
-		if((*i)->name == filename) {
+		if((*i)->name == name) {
 			// deinit self before others
 			PluginStopped action;
 			(*i)->on(action, *i);
@@ -93,10 +95,10 @@ void Plugin::removeAllModules() throw()
 	}
 }
 
-bool Plugin::hasModule(string const& filename) throw()
+bool Plugin::hasModule(string const& name) throw()
 {
 	for(iterator i = begin(); i != end(); ++i) {
-		if((*i)->getId() == filename)
+		if((*i)->getId() == name)
 			return true;
 	}
 	return false;

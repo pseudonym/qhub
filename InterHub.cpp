@@ -47,10 +47,10 @@ void InterHub::onLookup(adns_answer* reply)
 			struct sockaddr_in dest_addr;
 			dest_addr.sin_family = AF_INET;
 			dest_addr.sin_port = htons(getPort());
-			dest_addr.sin_addr.s_addr = inet_addr(inet_ntoa(reply->rrs.inaddr[0]));
+			dest_addr.sin_addr = reply->rrs.inaddr[0];
 			memset(&(dest_addr.sin_zero), '\0', 8);
 
-			::connect(getFd(), (struct sockaddr*)&dest_addr, sizeof(struct sockaddr));
+			::connect(getFd(), reinterpret_cast<struct sockaddr*>(&dest_addr), sizeof(struct sockaddr));
 			enable_fd(getFd(), OOP_READ, this);
 			doSupports();
 		}
@@ -64,14 +64,16 @@ void InterHub::onConnected() throw()
 
 void InterHub::onDisconnected(const string& clue) throw()
 {
-	if(getState() == NORMAL)
-		getHub()->deactivate(this);
+	if(getState() != NORMAL)
+		return;
+	getHub()->deactivate(this);
 	for(Users::iterator i = users.begin(); i != users.end(); ++i) {
 		getHub()->broadcast(
 				"IQUI " + getHub()->getCID32() + ' ' + i->first + '\n',
 				NULL, true);
 		delete i->second;
 	}
+	users.clear();
 }
 
 bool InterHub::hasClient(const string& cid) const
@@ -94,11 +96,6 @@ void InterHub::doError(const string& msg) throw()
 		// silent disconnect... we don't want probes
 		return;
 	send("SSTA " + getHub()->getCID32() + " 200 " + ADC::ESC(msg) + '\n');
-}
-
-void InterHub::disconnect(const string& msg)
-{
-	ADCSocket::disconnect(msg);
 }
 
 void InterHub::onLine(StringList& sl, const string& full) throw()
@@ -192,7 +189,7 @@ void InterHub::doAskPassword() throw()
 void InterHub::doPassword(const StringList& sl) throw()
 {
 	assert(state == VERIFY);
-	size_t len = sl[2].size() * 5 / 8; // shouldn't need all of it, but not important
+	size_t len = sl[2].size() * 5 / 8;
 	uint8_t* s = new uint8_t[len];
 	Encoder::fromBase32(sl[2].data(), s, len);
 	TigerHash h;
@@ -228,7 +225,7 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 			doError("CID mismatch");
 			disconnect("CID mismatch");
 		}
-		if(sl[0] == "SQUI") {
+		if(command == ('S' | QUI)) {
 			Users::iterator i;
 			if((i = users.find(sl[2])) != users.end()) {
 				delete i->second;

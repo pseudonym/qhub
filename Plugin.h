@@ -21,6 +21,7 @@ class UserInfo;
 class Plugin {
 public:
 	static UserData data;
+	static const string PLUGIN_EXTENSION;
 	
 	/*
 	 * Some stuff
@@ -198,10 +199,10 @@ public:
 	 */
 	static void init() throw();
 	static void deinit() throw();
-	static bool openModule(string const& filename, string const& insertBefore = Util::emptyString) throw();
-	static bool removeModule(string const& filename) throw();
+	static bool openModule(string const& name, string const& insertBefore = Util::emptyString) throw();
+	static bool removeModule(string const& name) throw();
 	static void removeAllModules() throw();
-	static bool hasModule(string const& filename) throw();
+	static bool hasModule(string const& name) throw();
 
 	/*
 	 * Iterators

@@ -29,7 +29,8 @@ template<typename CharT, typename Traits, typename Alloc>
 inline void log(std::FILE* stream, const std::basic_string<CharT,Traits,Alloc>& msg)
 {
 	fwrite(msg.data(), msg.size(), sizeof(CharT), stream);
-	fwrite("\n", 1, sizeof(char), stream);
+	if(msg[msg.size()-1] != '\n')
+		fwrite("\n", 1, sizeof(char), stream);
 }
 
 template<typename CharT, typename Traits, typename Alloc>

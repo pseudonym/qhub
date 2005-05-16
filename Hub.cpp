@@ -100,9 +100,10 @@ void Hub::direct(string const& cid, string const& data, ADCClient* from) throw()
 			from->writeb(tmp);
 		i->second->writeb(tmp);
 	} else {
-		//send it along to connected hubs, maybe they have the user
+		//send it along to the correct connected hub
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i)
-			(*i)->writeb(tmp);
+			if((*i)->hasClient(cid))
+				(*i)->writeb(tmp);
 	}
 }
 

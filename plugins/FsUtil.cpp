@@ -127,11 +127,11 @@ void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 		} else if(m->type == VirtualFs::Message::HELP) {
 			if(m->cwd == "/fsutil/") {
 				m->reply(
-				    "The following commands are available to you:\r\n"
-				    "load\t\t\tloads settings\r\n"
-				    "save\t\t\tsaves settings\r\n"
-				    "alias [alias] [command]\t\tlist/add aliases\r\n"
-				    "unalias <alias>\t\tremoves an alias\r\n"
+				    "The following commands are available to you:\n"
+				    "load\t\t\tloads settings\n"
+				    "save\t\t\tsaves settings\n"
+				    "alias [alias] [command]\tlist/add aliases\n"
+				    "unalias <alias>\t\tremoves an alias"
 				);
 			}
 		} else if(m->type == VirtualFs::Message::EXEC) {

@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
 	//try loading
 	Plugin::init();
-	Plugin::openModule("qhub-loader.so");
+	Plugin::openModule("loader");
 
 	//Init random number generator
 	srand(time(NULL));
