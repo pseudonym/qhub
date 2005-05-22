@@ -70,6 +70,8 @@ public:
 	string const& getSockName() const throw() { return sockName; };
 	string const& getPeerName() const throw() { return peerName; };
 
+	bool error() { return err; };
+
 protected:
 	int fd;
 	Domain domain;
@@ -80,6 +82,8 @@ protected:
 
 	string sockName, peerName;
 	bool ip4OverIp6;
+	
+	bool err;
 
 	//output queue
 	//priority_queue<Buffer::writeBuffer> queue;

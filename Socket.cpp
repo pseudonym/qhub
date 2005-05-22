@@ -9,13 +9,14 @@ using namespace std;
 using namespace qhub;
 
 Socket::Socket(Domain d, int t, int p) throw()
-		: domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
+		: domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false), err(false)
 {
 	create();
 
 	fd = ::socket(d, t, p);
 	if(fd == -1){
 		log(qerr, format("Error, %p could not allocate socket.") % this);
+		err = true;
 		return;
 	}
 
@@ -25,7 +26,7 @@ Socket::Socket(Domain d, int t, int p) throw()
 }
 
 Socket::Socket(int f, Domain d) throw()
-		: fd(f), domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false)
+		: fd(f), domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false), err(false)
 {
 	create();
 	initSocketNames();

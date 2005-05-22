@@ -23,6 +23,9 @@
 using namespace qhub;
 
 ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(domain), type(t), hub(h) {
+	if(error()){
+		return;
+	}
 	int yes = 1;
 
 	if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
