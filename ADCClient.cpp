@@ -463,8 +463,8 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 
 void ADCClient::handleDisconnect(StringList& sl) throw()
 {
-	// HDSC myCID hisCID LL LL params
-	if(sl.size() != 4) {
+	// HDSC myCID hisCID
+	if(sl.size() < 3) {
 		PROTOCOL_ERROR("Disconnect command corrupt");
 		return;
 	}
@@ -474,7 +474,7 @@ void ADCClient::handleDisconnect(StringList& sl) throw()
 		return;
 	}
 	// TODO add plugin stuff
-	getHub()->userDisconnect(sl[1], sl[2], sl[3]);
+	getHub()->userDisconnect(sl[1], sl[2], Util::emptyString);
 }
 
 void ADCClient::handlePassword(StringList& sl) throw()
@@ -508,8 +508,8 @@ void ADCClient::handlePassword(StringList& sl) throw()
 
 void ADCClient::handleSupports(StringList& sl) throw()
 {
-	send("ISUP " + getHub()->getCID32() + " +BASE\n" // <-- do we need CID?
+	send("ISUP " + getHub()->getCID32() + " +BASE\n"
 	     "IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
-	     " HU1 DE" + ADC::ESC(getHub()->getDescription()) + " VE" PACKAGE "/" VERSION " OP1\n");
+	     " HU1 BO1 OP1 DE" + ADC::ESC(getHub()->getDescription()) + " VE" PACKAGE "/" VERSION "\n");
 	state = IDENTIFY;
 }

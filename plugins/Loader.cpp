@@ -3,6 +3,7 @@
 #include "VirtualFs.h"
 #include "../XmlTok.h"
 #include "../Util.h"
+#include "../Logs.h"
 
 using namespace qhub;
 
@@ -34,7 +35,7 @@ int Loader::load() throw()
 			while((tmp = p->getNextChild())) {
 				string const& name = tmp->getData();
 				if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
-					log(qstat, "loading plugin " + name);
+					Logs::stat << "\nloading plugin \"" << name << "\"\n";
 					if(Plugin::openModule(name)) {
 						success++;
 					} else {
@@ -86,12 +87,12 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			log(qstat, "success: Plugin Loader: VirtualFs interface found.");
+			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
 		} else {
 			log(qerr, "warning: Plugin Loader: VirtualFs interface not found.");
 		}
-		log(qstat, "success: Plugin Loader: Started.");
+		Logs::stat << "success: Plugin Loader: Started." << endl;
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {

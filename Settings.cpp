@@ -8,6 +8,7 @@
 #include "Hub.h"
 #include "XmlTok.h"
 #include "Util.h"
+#include "Logs.h"
 
 using namespace qhub;
 using namespace std;
@@ -30,13 +31,21 @@ int Settings::readFromXML() throw()
 
 			if(hubp->findChild("name")) {
 				string name = hubp->getNextChild()->getData();
-				log(qstat, "Hubname: " + name);
+				Logs::stat << "Hubname: " << name << endl;
 				hub->setHubName(name);
+			} else {
+				Logs::err << "All hubs must have names: skipping one\n";
+				delete hub;
+				continue;
 			}
 			if(hubp->findChild("cid")) {
 				string cid = hubp->getNextChild()->getData();
 				log(qstat, "\tHub CID: " + cid);
 				hub->setCID32(cid);
+			} else {
+				Logs::err << "All hubs must have CIDs: skipping one\n";
+				delete hub;
+				continue;
 			}
 			if(hubp->findChild("description")) {
 				string desc = hubp->getNextChild()->getData();
@@ -61,26 +70,28 @@ int Settings::readFromXML() throw()
 				if(port > 0 && port <= 65535)
 					hub->openInterPort(port);
 			}
+			if(hubp->findChild("interpass")) {
+				string pass = hubp->getNextChild()->getData();
+				log(qstat, "\tInter-hub Pass: " + pass);
+				hub->setInterPass(pass);
+			}
 
 			XmlTok* ichubp;
 			hubp->findChild("interconnect");
 			while((ichubp = hubp->getNextChild())) {
 				// we need both, so if one is missing, don't try
 				// to connect
-				if(!ichubp->findChild("host"))		continue;
+				if(!ichubp->findChild("host")) {
+					Logs::err << "Interconnect host not specified.. skipping\n";
+					continue;
+				}
 				string host = ichubp->getNextChild()->getData();
 				if(!ichubp->findChild("port"))		continue;
 				int port = Util::toInt(ichubp->getNextChild()->getData());
 
-				log(qstat, "\tConnecting to " + host + ':' + 
-						Util::toString(port));
+				Logs::stat << "\tConnecting to " << host << ':' << port << endl; 
 				hub->openInterConnection(host, port);
 			}
-		}
-		XmlTok* passp;
-		p->findChild("ihubpass");
-		while((passp = p->getNextChild())) {
-			InterHub::addPass(passp->getAttr("cid"),passp->getData());
 		}
 	}
 	return 0;
@@ -88,10 +99,10 @@ int Settings::readFromXML() throw()
 
 
 static const char*const _help_str =
-"qhub is a distributed hub for the ADC protocol.\n"
+PACKAGE " is a distributed hub for the ADC protocol.\n"
 "Current command line parameters are limited because we are lazy.\n"
 "For hub settings, see Settings.xml, which should have been installed\n"
-"to $(prefix)/etc/qhub\n"
+"to " CONFIGDIR "\n"
 "Options:\n"
 "  --help            print this help and exit\n"
 "  --version         print version information and exit\n"
@@ -113,52 +124,31 @@ int Settings::parseArgs(int argc, char **argv) throw()
 		if(*i == "--help") {
 			//these two options should only appear as the sole argument
 			assert(i == sl.begin() && sl.size() == 1);
-			log(qstat, _help_str);
+			Logs::stat << _help_str;
 			exit(EXIT_SUCCESS);
 		}
 		if(*i == "--version") {
 			assert(i == sl.begin() && sl.size() == 1);
-			log(qstat, _version_str);
+			Logs::stat << _version_str;
 			exit(EXIT_SUCCESS);
 		}
 		if(!i->compare(0,11,"--statfile=")) {
-			string tmp = i->substr(11);
-			FILE* fp = freopen(tmp.c_str(), "at", qstat);
-			if(!fp) {
-				log(qerr, "could not open statfile \"" + tmp + '"');
-				log(qerr, "\t" + Util::errnoToString(errno));
-				exit(EXIT_FAILURE);
-			}
-			qstat = fp;
+			Logs::setStat(i->substr(11));
 		}
 		if(!i->compare(0,11,"--linefile=")) {
-			string tmp = i->substr(11);
+			string tmp(*i, 11);
 			if(tmp == "-") {
-				qline = qstat;
-				continue;
+				Logs::copy(Logs::stat, Logs::line);
+			} else {
+				Logs::setLine(tmp);
 			}
-			FILE* fp = freopen(tmp.c_str(), "at", qline);
-			if(!fp) {
-				log(qerr, "could not open linefile \"" + tmp + '"');
-				log(qerr, "\t" + Util::errnoToString(errno));
-				exit(EXIT_FAILURE);
-			}
-			qline = fp;
 		}
-
 		if(!i->compare(0,10,"--errfile=")) {
-			string tmp = i->substr(10);
-			FILE* fp = freopen(tmp.c_str(), "at", qerr);
-			if(!fp) {
-				log(qerr, "could not open errfile \"" + tmp + '"');
-				log(qerr, "\t" + Util::errnoToString(errno));
-				exit(EXIT_FAILURE);
-			}
-			qerr = fp;
+			Logs::setErr(i->substr(10));
 		}
 		if(*i == "-q") {
-			qstat = qerr = qline;
-			assert(qstat);
+			Logs::copy(Logs::line, Logs::stat);
+			Logs::copy(Logs::line, Logs::err);
 		}
 	}
 	return 0;

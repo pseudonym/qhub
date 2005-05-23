@@ -23,17 +23,13 @@ public:
 	InterHub(Hub* h, int fd, Domain d) throw();
 	virtual ~InterHub() throw() {};
 
-	static void addPass(const string& cid, const string& pass) throw()
-	{ passes[cid] = pass; }
-	static const string& getPass(const string& cid) throw();
-
 	//we have nothing to add to onWrite() and onRead(),
 	//so just let them fall through to ADCSocket
 
 	//from DNSUser
 	virtual void onLookup(adns_answer* reply);
 
-	void setHostName(string h) { hostname = h; }
+	void setHostName(const string& h) { hostname = h; }
 	void setPort(short p) { port = p; }
 	short getPort() const { return port; }
 	const string& getCID32() const { return cid; }
@@ -61,8 +57,6 @@ private:
 
 	void handle(const StringList& sl, const string& full, uint32_t command) throw();
 	void handlePassword(const StringList& sl) throw();
-
-	static StringMap passes;
 
 	string cid;
 	string hostname;

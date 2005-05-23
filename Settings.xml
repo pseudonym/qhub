@@ -11,11 +11,10 @@
   <!ELEMENT cid (#PCDATA)>
   <!ELEMENT port (#PCDATA)>
   <!ELEMENT interport (#PCDATA)>
+  <!ELEMENT interpass (#PCDATA)>
   <!ELEMENT interconnect (host, port)>
   <!ELEMENT host (#PCDATA)>
   <!ELEMENT port (#PCDATA)>
-  <!ELEMENT password (#PCDATA)> <!-- Might want to go un-encoded here?-->
-  <!ELEMENT ihubpass (#PCDATA)>
 ]>
 
 <config>
@@ -28,18 +27,18 @@
 		<port>9003</port>
 		<port>9004</port>-->
 		<interport>9000</interport>
+		<interpass>majs</interpass>
 	</hub>
 	<hub>
 		<name>skit</name>
 		<port>8001</port>
 		<cid>THEHUBOFPSEU2</cid>
 		<description>Pseu, you da man!</description>
+		<interpass>majs</interpass>
 		<interconnect>
 			<host>localhost</host>
 			<port>9000</port>
 		</interconnect>
 	</hub>
-	<ihubpass cid="FQI2LLF4K5W3Y">mdsadss</ihubpass>
-	<ihubpass cid="THEHUBOFPSEU2">majs</ihubpass>
 </config>
 

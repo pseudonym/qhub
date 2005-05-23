@@ -12,7 +12,7 @@ struct Exception : public std::exception
 	Exception(const std::string& m) : msg(m) {}
 	~Exception() throw() {}
 	
-	virtual const char* what()
+	virtual const char* what() const throw()
 	{
 		return msg.c_str();
 	}

@@ -118,7 +118,7 @@ void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
 		Dir* d = root->cd(pwd);
 		if(d) {
 			if(siz == 1 || (d = d->cd(sl[1]))) {
-				client->doPrivateMessage("ACK: " + d->toPath() + "\r\n" + d->ls());
+				client->doPrivateMessage("ACK: " + d->toPath() + "\n" + d->ls());
 			} else {
 				client->doPrivateMessage("NAK: Path ambiguous or not found.");
 			}

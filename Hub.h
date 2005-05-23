@@ -40,6 +40,9 @@ public:
 	void setDescription(const string& d) { description = d; };
 	const string& getDescription() const { return description; };
 
+	void setInterPass(const string& p) { interPass = p; }
+	const string& getInterPass() const { return interPass; }
+
 	void setMaxPacketSize(int s);
 	int getMaxPacketSize() const { return maxPacketSize; };
 
@@ -55,14 +58,15 @@ public:
 	void removeClient(string const& cid) throw();
 	void switchClientMode(bool toActive, string const& cid, ADCClient* client) throw();
 
-	void broadcast(string const& data, ADCClient* except = NULL, bool localonly = false) throw();
-	void broadcastActive(string const& data, bool localonly = false) throw();
-	void broadcastPassive(string const& data, bool localonly = false) throw();
+	void broadcast(string const& data, ADCSocket* except = NULL) throw();
+	void broadcastActive(string const& data, ADCSocket* except = NULL) throw();
+	void broadcastPassive(string const& data, ADCSocket* except = NULL) throw();
+	void broadcastInter(string const& data, InterHub* except = NULL) throw();
 	void direct(string const& data, string const& cid, ADCClient* from = NULL) throw();
 
 	void motd(ADCClient* c) throw();
 
-	void getUserList(ADCSocket* c, bool localonly = false) throw();
+	void getUserList(ADCSocket* c) throw();
 
 	void userDisconnect(string const& actor, string const& victim, string const& msg) throw();
 private:
@@ -78,6 +82,7 @@ private:
 	string name;
 	string cid32;
 	string description;
+	string interPass;
 	
 	typedef hash_map<string, ADCClient*> Users;
 	//this is for external users

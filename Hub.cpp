@@ -59,7 +59,7 @@ void Hub::acceptLeaf(int fd, Socket::Domain d)
 	new ADCClient(fd, d, this);
 }
 
-void Hub::getUserList(ADCSocket* c, bool localonly) throw()
+void Hub::getUserList(ADCSocket* c) throw()
 {
 	string tmp;
 	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); i++) {
@@ -68,10 +68,9 @@ void Hub::getUserList(ADCSocket* c, bool localonly) throw()
 	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); i++) {
 		tmp += i->second->getAdcInf();
 	}
-	if(!localonly)
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); i++) {
-			(*i)->appendUserList(tmp);
-		}
+	for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); i++) {
+		(*i)->appendUserList(tmp);
+	}
 	Buffer::writeBuffer t(new Buffer(tmp));
 	c->writeb(t);
 }
@@ -107,7 +106,7 @@ void Hub::direct(string const& cid, string const& data, ADCClient* from) throw()
 	}
 }
 
-void Hub::broadcast(string const& data, ADCClient* except/* = NULL*/, bool localonly) throw()
+void Hub::broadcast(string const& data, ADCSocket* except/* = NULL*/) throw()
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
@@ -116,6 +115,9 @@ void Hub::broadcast(string const& data, ADCClient* except/* = NULL*/, bool local
 		}
 		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			i->second->writeb(tmp);
+		}
+		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
+			(*i)->writeb(tmp);
 		}
 	} else {
 		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
@@ -126,52 +128,62 @@ void Hub::broadcast(string const& data, ADCClient* except/* = NULL*/, bool local
 			if(i->second != except)
 				i->second->writeb(tmp);
 		}
-	}
-	if(!localonly) {
-		Buffer::writeBuffer tmp2 = tmp;
-		if(data[0] == 'I') {
-			tmp2 = Buffer::writeBuffer(new Buffer(*tmp));
-			tmp2->getBuf()[0] = 'S';
-		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->writeb(tmp2);
+			if(*i != except)
+				(*i)->writeb(tmp);
 		}
 	}
 }
 
-void Hub::broadcastActive(string const& data, bool localonly) throw()
+void Hub::broadcastActive(string const& data, ADCSocket* except/* = NULL*/) throw()
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
-		i->second->writeb(tmp);
-	}
-	if(!localonly) {
-		Buffer::writeBuffer tmp2 = tmp;
-		if(data[0] == 'I') {
-			tmp2 = Buffer::writeBuffer(new Buffer(*tmp));
-			tmp2->getBuf()[0] = 'S';
+	if(!except) {
+		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+			i->second->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->writeb(tmp2);
+			(*i)->writeb(tmp);
+		}
+	} else {
+		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+			if(i->second != except)
+				i->second->writeb(tmp);
+		}
+		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
+			if(*i != except)
+				(*i)->writeb(tmp);
 		}
 	}
 }
 
-void Hub::broadcastPassive(string const& data, bool localonly) throw()
+void Hub::broadcastPassive(string const& data, ADCSocket* except/* = NULL*/) throw()
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
-	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
-		i->second->writeb(tmp);
-	}
-	if(!localonly) {
-		Buffer::writeBuffer tmp2 = tmp;
-		if(data[0] == 'I') {
-			tmp2 = Buffer::writeBuffer(new Buffer(*tmp));
-			tmp2->getBuf()[0] = 'S';
+	if(!except) {
+		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+			i->second->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->writeb(tmp2);
+			(*i)->writeb(tmp);
 		}
+	} else {
+		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+			if(i->second != except)
+				i->second->writeb(tmp);
+		}
+		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
+			if(*i != except)
+				(*i)->writeb(tmp);
+		}
+	}
+}
+
+void Hub::broadcastInter(string const& data, InterHub* except/* = NULL*/) throw()
+{
+	for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
+		if(*i != except)
+			(*i)->send(data);
 	}
 }
 

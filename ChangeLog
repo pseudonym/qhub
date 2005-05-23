@@ -2,11 +2,17 @@
 * various autoconf/automake fixes
 * moved a few files around
 * added a way to pass configure's --prefix option to the C++ files... isn't
-counted in dependencies, though... need to add it to config.h
+counted in dependencies, though... need to firgure out how to add it to config.h
 * above feature is used when opening config files
 * removed some old commented test code
 * added qline for logging ADC lines in/out
 * plugins actually work now :)
+* moving logging facility to use iostreams library... I think I spend more
+time on the logging than anything else :)
+* logging facilities are actually part of class Logs now
+* interhub protocol now needs to be a spanning tree like in the IRC protocol,
+rather than each hub having a direct connection to all its peers... not sure
+how well this works, though....
 
 - 0.9 -
 * Pseudo is now in charge :)

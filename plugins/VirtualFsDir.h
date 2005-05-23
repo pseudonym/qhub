@@ -27,23 +27,25 @@ public:
 	string toString(int indent = 0) const throw() {
 		string ret;
 		for(SubDirs::const_iterator i = subDirs.begin(); i != subDirs.end(); ++i) {
-			ret += string(indent, ' ') + i->first + "/\r\n";
+			ret += string(indent, ' ') + i->first + "/\n";
 			if(i->first != "..")
 				ret += i->second->toString(indent + 1);
 		}
 		for(Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
-			ret += string(indent, ' ') + i->first + "\r\n";
+			ret += string(indent, ' ') + i->first + "\n";
 		}
+		ret.erase(ret.end()-1);
 		return ret;
 	}
 	string ls() const throw() {
 		string ret;
 		for(SubDirs::const_iterator i = subDirs.begin(); i != subDirs.end(); ++i) {
-			ret += i->first + "/\r\n";
+			ret += i->first + "/\n";
 		}
 		for(Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
-			ret += i->first + "\r\n";
+			ret += i->first + "\n";
 		}
+		ret.erase(ret.end()-1);
 		return ret;
 	}	
 	string toPath() const throw() {

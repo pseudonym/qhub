@@ -15,8 +15,6 @@
 using namespace std;
 using namespace qhub;
 
-StringMap InterHub::passes;
-
 InterHub::InterHub(Hub* h, const string& hn, short p) throw()
 		: ADCSocket(h), hostname(hn), port(p), outgoing(true)
 {
@@ -25,14 +23,6 @@ InterHub::InterHub(Hub* h, const string& hn, short p) throw()
 
 InterHub::InterHub(Hub* h, int fd, Domain d) throw()
 		: ADCSocket(fd, d, h), outgoing(false) {}
-
-const string& InterHub::getPass(const string& cid) throw()
-{
-	StringMap::iterator i = passes.find(cid);
-	if(i != passes.end())
-		return i->second;
-	return Util::emptyString;
-}
 
 void InterHub::onLookup(adns_answer* reply)
 {
@@ -68,9 +58,7 @@ void InterHub::onDisconnected(const string& clue) throw()
 		return;
 	getHub()->deactivate(this);
 	for(Users::iterator i = users.begin(); i != users.end(); ++i) {
-		getHub()->broadcast(
-				"IQUI " + getHub()->getCID32() + ' ' + i->first + '\n',
-				NULL, true);
+		getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + i->first + '\n');
 		delete i->second;
 	}
 	users.clear();
@@ -119,15 +107,6 @@ void InterHub::onLine(StringList& sl, const string& full) throw()
 			disconnect("InterHub::onLine invalid supports");
 			return;
 		}
-		if(!ADC::checkCID(sl[1])) {
-			disconnect("InterHub::onLine invalid CID: " + sl[1]);
-			return;
-		}
-		cid = sl[1];
-		if(getPass(cid).empty()) {
-			//we don't know this hub, so disconnect
-			disconnect("unauthorized CID");
-		}
 		if(!outgoing)
 			doSupports();
 		state = IDENTIFY;
@@ -137,6 +116,11 @@ void InterHub::onLine(StringList& sl, const string& full) throw()
 		if(command != (INF | 'S')) {
 			doError("bad command type");
 			disconnect("InterHub::onLine bad command type in state IDENTIFY");
+			return;
+		}
+		cid = sl[1];
+		if(!ADC::checkCID(cid)) {
+			disconnect("InterHub::onLine invalid CID: " + sl[1]);
 			return;
 		}
 		//TODO: verify INF stuff
@@ -154,7 +138,7 @@ void InterHub::onLine(StringList& sl, const string& full) throw()
 		} else if((command & 0xFFFFFF00) == PAS) {
 			handlePassword(sl);
 			state = NORMAL;
-			getHub()->getUserList(this, true);
+			getHub()->getUserList(this);
 			getHub()->activate(this);
 		} else
 			assert(0 && "bad command type slipped through");
@@ -194,7 +178,7 @@ void InterHub::doPassword(const StringList& sl) throw()
 	Encoder::fromBase32(sl[2].data(), s, len);
 	TigerHash h;
 	h.update(getHub()->getCID32().data(), getHub()->getCID32().size());
-	h.update(getPass(getCID32()).data(), getPass(getCID32()).size());
+	h.update(getHub()->getInterPass().data(), getHub()->getInterPass().size());
 	h.update(s, len);
 	delete[] s;
 	send("SPAS " + getHub()->getCID32() + ' ' +
@@ -205,7 +189,7 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 {
 	switch(full[0]) {
 	case 'B':
-		getHub()->broadcast(full, NULL, true);
+		getHub()->broadcast(full, this);
 		if(command == (INF | 'B')) {
 			if(users.find(sl[1]) == users.end()) {
 				users.insert(make_pair(sl[1], new UserInfo(this, sl)));
@@ -215,25 +199,28 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 		}
 		break;
 	case 'A':
-		getHub()->broadcastActive(full, true);
+		getHub()->broadcastActive(full, this);
 		break;
 	case 'P':
-		getHub()->broadcastPassive(full, true);
+		getHub()->broadcastPassive(full, this);
 		break;
 	case 'S':
 		if(sl[1] != cid) {
 			doError("CID mismatch");
 			disconnect("CID mismatch");
 		}
-		if(command == ('S' | QUI)) {
-			Users::iterator i;
-			if((i = users.find(sl[2])) != users.end()) {
+		break;
+	case 'I':
+		{
+			string tmp(full);
+			tmp.replace(5, 13, getHub()->getCID32());
+			getHub()->broadcast(tmp, this);
+			if(command == ('I' | QUI)) {
+				Users::iterator i = users.find(sl[2]);
+				if(i == users.end())
+					break;
 				delete i->second;
 				users.erase(i);
-				string tmp(full);
-				tmp.replace(5,13,getHub()->getCID32());
-				tmp[0] = 'I';
-				getHub()->broadcast(tmp, NULL, true);
 			}
 		}
 		break;
@@ -251,7 +238,7 @@ void InterHub::handlePassword(const StringList& sl) throw()
 {
 	TigerHash h;
 	h.update(getCID32().data(), getCID32().size());
-	h.update(getPass(getHub()->getCID32()).data(), getPass(getHub()->getCID32()).size());
+	h.update(getHub()->getInterPass().data(), getHub()->getInterPass().size());
 	h.update(salt.data(), salt.size());
 	h.finalize();
 	string result32 = Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE);

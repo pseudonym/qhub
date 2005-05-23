@@ -11,6 +11,7 @@
 #include "Plugin.h"
 #include "Settings.h"
 #include "Util.h"
+#include "Logs.h"
 
 #include <string>
 
@@ -118,6 +119,9 @@ int main(int argc, char **argv)
 #else
 	signal(SIGCHLD, SIG_IGN);
 #endif
+
+	ios::sync_with_stdio();
+	Logs::stat << "starting " PACKAGE "/" VERSION << endl;
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help
