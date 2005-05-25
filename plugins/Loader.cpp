@@ -1,7 +1,9 @@
 // vim:ts=4:sw=4:noet
-#include "PluginLoader.h"
-#include "PluginVirtualFs.h"
-#include "XmlTok.h"
+#include "Loader.h"
+#include "VirtualFs.h"
+#include "../XmlTok.h"
+#include "../Util.h"
+#include "../Logs.h"
 
 using namespace qhub;
 
@@ -26,14 +28,14 @@ int Loader::load() throw()
 	int success = 0;
 	int failure = 0;
 	XmlTok root;
-	if(root.load("etc/qhub/plugins.xml")) {
+	if(root.load(CONFIGDIR "/plugins.xml")) {
 		XmlTok* p = &root;
 		if(p->findChild("plugins") && (p = p->getNextChild()) && p->findChild("plugin")) {
 			XmlTok* tmp;
 			while((tmp = p->getNextChild())) {
 				string const& name = tmp->getData();
 				if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
-					fprintf(stderr, "loading %s\n", name.c_str());
+					Logs::stat << "\nloading plugin \"" << name << "\"\n";
 					if(Plugin::openModule(name)) {
 						success++;
 					} else {
@@ -59,7 +61,7 @@ bool Loader::save() const throw()
 		tmp->setData((*i)->getId());
 	}
 	p = p->getParent();
-	return root.save("etc/qhub/plugins.xml");
+	return root.save(CONFIGDIR "/plugins.xml");
 }
 
 void Loader::initVFS() throw()
@@ -85,16 +87,16 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Loader: VirtualFs interface found.\n");
+			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
 		} else {
-			fprintf(stderr, "warning: Plugin Loader: VirtualFs interface not found.\n");
+			log(qerr, "warning: Plugin Loader: VirtualFs interface not found.");
 		}
-		fprintf(stderr, "success: Plugin Loader: Started.\n");
+		Logs::stat << "success: Plugin Loader: Started." << endl;
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Loader: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin Loader: VirtualFs interface found.");
 			initVFS();
 		}
 	}
@@ -105,9 +107,9 @@ void Loader::on(PluginStopped&, Plugin* p) throw()
 	if(p == this) {
 		if(virtualfs)
 			deinitVFS();
-		fprintf(stderr, "success: Plugin Loader: Stopped.\n");
+		log(qstat, "success: Plugin Loader: Stopped.\n");
 	} else if(virtualfs && p == virtualfs) {
-		fprintf(stderr, "warning: Plugin Loader: VirtualFs interface disabled.\n");
+		log(qerr, "warning: Plugin Loader: VirtualFs interface disabled.\n");
 		virtualfs = NULL;
 	}
 }

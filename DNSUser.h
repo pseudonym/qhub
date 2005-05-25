@@ -10,7 +10,7 @@ namespace qhub {
 class DNSUser {
 public:
 	//XXX: need to get rid of ADNS here.
-	virtual void onLookup(adns_answer *reply) const = 0;
+	virtual void onLookup() = 0;
 
 	void lookup(const char* hostname) { qhub::lookup(hostname, this); };
 };

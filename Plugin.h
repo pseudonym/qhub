@@ -5,7 +5,7 @@
 #include <string>
 #include <cassert>
 
-#include <compat_hash_map.h>
+#include "compat_hash_map.h"
 #include <list>
 
 #include "Util.h"
@@ -21,6 +21,7 @@ class UserInfo;
 class Plugin {
 public:
 	static UserData data;
+	static const string PLUGIN_EXTENSION;
 	
 	/*
 	 * Some stuff
@@ -167,6 +168,8 @@ public:
 	virtual void on(ClientDisconnected&, ADCClient*) throw() {};
 	// Called on every client input
 	// parm: ADCClient* = the client
+	// parm: u_int32_t = FOURCC of command
+	// parm: StringList: list of command arguments
 	virtual void on(ClientLine&, ADCClient*, u_int32_t const, StringList) throw() {};
 	// Called when a client sends first BINF
 	// parm: ADCClient* = the client
@@ -196,10 +199,10 @@ public:
 	 */
 	static void init() throw();
 	static void deinit() throw();
-	static bool openModule(string const& filename, string const& insertBefore = Util::emptyString) throw();
-	static bool removeModule(string const& filename) throw();
+	static bool openModule(string const& name, string const& insertBefore = Util::emptyString) throw();
+	static bool removeModule(string const& name) throw();
 	static void removeAllModules() throw();
-	static bool hasModule(string const& filename) throw();
+	static bool hasModule(string const& name) throw();
 
 	/*
 	 * Iterators

@@ -1,8 +1,8 @@
 // vim:ts=4:sw=4:noet
-#include <string.h>
+#include <cstring>
 #include <cassert>
-#include <stdio.h>
 #include <stdarg.h>
+#include <cstdio>
 
 #include "Util.h"
 
@@ -13,25 +13,6 @@ string const Util::emptyString;
 int const Util::emptyInt = 0;
 voidPtr const Util::emptyVoidPtr = NULL;
 StringList const Util::emptyStringList;
-
-void Util::log(string const& message, int level) throw()
-{
-	fprintf(stderr, "%s", message.c_str());
-}
-
-string Util::format(const char* msg, ...)
-{
-	va_list args;
-	va_start(args, msg);
-
-	char buf[2048];
-
-	vsnprintf(buf, sizeof(buf), msg, args);
-
-	va_end(args);
-
-	return string(buf);
-}
 
 StringList Util::stringTokenize(string const& msg, char token /*= ' '*/) throw()
 {

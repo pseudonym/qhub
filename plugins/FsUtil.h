@@ -2,8 +2,8 @@
 #ifndef _INCLUDED_PLUGIN_FSUTIL_H_
 #define _INCLUDED_PLUGIN_FSUTIL_H_
 
-#include "Plugin.h"
-#include "UserData.h"
+#include "../Plugin.h"
+#include "../UserData.h"
 
 using namespace std;
 

@@ -1,4 +1,5 @@
-
+This info is old, but I don't know what to change it to;
+you're on your own		//Pseudo
 
 ADNS basically no problems? specify a --prefix to configure though
 /usr should work.
@@ -9,7 +10,7 @@ liboop: works if I edit the Makefile.am slightly:
 -lib_LTLIBRARIES = liboop.la @LIBOOP_LIBS@
 +lib_LTLIBRARIES = @LIBOOP_LIBS@ liboop.la 
 
-then autoreconf, configure and mak and make install. specify a prefix to configure (/usr?) 
+then autoreconf, configure and make and make install. specify a prefix to configure (/usr?) 
 
 
 

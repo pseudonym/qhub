@@ -1,11 +1,11 @@
 // vim:ts=4:sw=4:noet
-#include "PluginAccounts.h"
+#include "Accounts.h"
 
-#include "ADCClient.h"
-#include "UserInfo.h"
-#include "UserData.h"
-#include "XmlTok.h"
-#include "PluginVirtualFs.h"
+#include "../ADCClient.h"
+#include "../UserInfo.h"
+#include "../UserData.h"
+#include "../XmlTok.h"
+#include "VirtualFs.h"
 
 using namespace qhub;
 
@@ -30,7 +30,7 @@ bool Accounts::load() throw()
 {
 	bool success = false;
 	XmlTok root;
-	if(root.load("etc/qhub/accounts.xml")) {
+	if(root.load(CONFIGDIR "/accounts.xml")) {
 		XmlTok* p = &root;
 		if(p->findChild("accounts")) {
 			users.clear(); // clean old users
@@ -59,7 +59,7 @@ bool Accounts::save() const throw()
 		tmp->setAttr("password", i->second);
 	}
 	p = p->getParent();
-	return root.save("etc/qhub/accounts.xml");
+	return root.save(CONFIGDIR "/accounts.xml");
 }
 
 void Accounts::initVFS() throw()
@@ -70,7 +70,7 @@ void Accounts::initVFS() throw()
 	assert(virtualfs->mknod("/accounts/add", this));
 	assert(virtualfs->mknod("/accounts/del", this));
 	assert(virtualfs->mknod("/accounts/list", this));
-	assert(virtualfs->mknod("/accounts/show", this));
+	//assert(virtualfs->mknod("/accounts/show", this));
 }
 
 void Accounts::deinitVFS() throw()
@@ -84,16 +84,16 @@ void Accounts::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Accounts: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin Accounts: VirtualFs interface found.");
 			initVFS();
 		} else {
-			fprintf(stderr, "warning: Plugin Accounts: VirtualFs interface not found.\n");
+			log(qerr, "warning: Plugin Accounts: VirtualFs interface not found.");
 		}
-		fprintf(stderr, "success: Plugin Accounts: Started.\n");
+		log(qstat, "success: Plugin Accounts: Started.");
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin Accounts: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin Accounts: VirtualFs interface found.");
 			initVFS();
 		}
 	}
@@ -105,9 +105,9 @@ void Accounts::on(PluginStopped&, Plugin* p) throw()
 		if(virtualfs)
 			deinitVFS();
 		save();
-		fprintf(stderr, "success: Plugin Accounts: Stopped.\n");
+		log(qstat, "success: Plugin Accounts: Stopped.");
 	} else if(virtualfs && p == virtualfs) {
-		fprintf(stderr, "warning: Plugin Accounts: VirtualFs interface disabled.\n");
+		log(qerr, "warning: Plugin Accounts: VirtualFs interface disabled.");
 		virtualfs = NULL;
 	}
 }
@@ -136,7 +136,7 @@ void Accounts::on(ClientInfo& a, ADCClient* client, UserInfo& inf) throw()
 		if(data->getInt(idUserLevel)) {
 			inf.del(UIID('N','I'));
 			a.setState(Plugin::MODIFIED);
-			// don't allow users to change to a registered nick
+		// don't allow users to change to a registered nick
 		} else if(users.find(inf.getNick()) != users.end()) {
 			inf.del(UIID('N','I'));
 			a.setState(Plugin::MODIFIED);
@@ -159,20 +159,20 @@ void Accounts::on(UserConnected&, ADCClient* client) throw()
 void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
-		VirtualFs::Message* m = (VirtualFs::Message*)d;
+		VirtualFs::Message* m = static_cast<VirtualFs::Message*>(d);
 		assert(m);
 		if(m->type == VirtualFs::Message::CHDIR) {
 			m->reply("This is the accounts section. Create and remove accounts and properties here.");
 		} else if(m->type == VirtualFs::Message::HELP) {
 			if(m->cwd == "/accounts/") {
 				m->reply(
-				    "The following commands are available to you:\r\n"
-				    "load\t\t\tloads the users file from disk\r\n"
-				    "save\t\t\tsaves the users file to disk\r\n"
-				    "add <user> <password>\tadds a user\r\n"
-				    "del <user>\t\tremoves a user\r\n"
-				    "list [wildcard]\t\tshows the list of registered users\r\n"
-				    "show <user>\t\tshows information about a user\r\n"
+				    "The following commands are available to you:\n"
+				    "load\t\t\tloads the users file from disk\n"
+				    "save\t\t\tsaves the users file to disk\n"
+				    "add <user> <password>\tadds a user\n"
+				    "del <user>\t\tremoves a user\n"
+				    "list [wildcard]\t\tshows the list of registered users"
+				    //"show <user>\t\tshows information about a user"
 				);
 			}
 		} else if(m->type == VirtualFs::Message::EXEC) {
@@ -211,9 +211,10 @@ void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 					m->reply("Syntax: del <nick>");
 				}
 			} else if(m->arg[0] == "list") {
-				string ret = "Success: Registered users:\r\n";
+				string ret = "Success: Registered users:";
 				for(Users::iterator i = users.begin(); i != users.end(); ++i) {
-					ret += i->first + "\r\n";
+					ret += '\n';
+					ret += i->first;
 				}
 				m->reply(ret);
 			}

@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "error.h"
 #include "ServerSocket.h"
 #include "InterHub.h"
 #include "Hub.h"
@@ -22,10 +23,13 @@
 using namespace qhub;
 
 ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(domain), type(t), hub(h) {
+	if(error()){
+		return;
+	}
 	int yes = 1;
 
 	if(setsockopt(getSocket(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-		perror("warning: setsockopt:SO_REUSEADDR");
+		log(qerr, format("warning: setsockopt:SO_REUSEADDR: %s") % Util::errnoToString(errno));
 	}
 
 	//just let the kernel handle this for us...
@@ -43,6 +47,8 @@ ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(doma
 	setBindAddress(); // empty = use INADDR_ANY
 	bind();
 	listen();
+
+	enableMe(ev_read);
 }
 
 bool ServerSocket::onRead() throw()
@@ -52,19 +58,17 @@ bool ServerSocket::onRead() throw()
 		Domain d;
 		Socket::accept(fd, d);
 		if(fd != -1){
-			fprintf(stderr, "Accepted socket %d\n", fd);
-			Socket* tmp;
 			switch(type){
 			case INTER_HUB:
+				log(qstat, format("accepted ihub socket %d") % fd);
 				hub->acceptInterHub(fd, d);
 				break;
 			case LEAF_HANDLER:
+				log(qstat, format("accepted leaf socket %d") % fd);
 				hub->acceptLeaf(fd, d);
 				break;
 			default:
-				fprintf(stderr, "Closing socket: unknown type for listening socket.\n");
-				close(fd);
-				break;
+				assert(0 && "unknown type for listening socket.");
 			}
 		} else {
 			break;
@@ -76,7 +80,6 @@ bool ServerSocket::onRead() throw()
 
 void ServerSocket::onWrite() throw()
 {
-	printf("Serversocket received a write.\n");
-	exit(1);
+	assert(0 && "ServerSocket received a write.");
 }
 

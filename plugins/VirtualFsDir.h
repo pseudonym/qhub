@@ -2,7 +2,7 @@
 #ifndef _INCLUDED_PLUGINS_DIR_H_
 #define _INCLUDED_PLUGINS_DIR_H_
 
-#include "Util.h"
+#include "../Util.h"
 #include <map>
 #include <cassert>
 
@@ -27,23 +27,25 @@ public:
 	string toString(int indent = 0) const throw() {
 		string ret;
 		for(SubDirs::const_iterator i = subDirs.begin(); i != subDirs.end(); ++i) {
-			ret += string(indent, ' ') + i->first + "/\r\n";
+			ret += string(indent, ' ') + i->first + "/\n";
 			if(i->first != "..")
 				ret += i->second->toString(indent + 1);
 		}
 		for(Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
-			ret += string(indent, ' ') + i->first + "\r\n";
+			ret += string(indent, ' ') + i->first + "\n";
 		}
+		ret.erase(ret.end()-1);
 		return ret;
 	}
 	string ls() const throw() {
 		string ret;
 		for(SubDirs::const_iterator i = subDirs.begin(); i != subDirs.end(); ++i) {
-			ret += i->first + "/\r\n";
+			ret += i->first + "/\n";
 		}
 		for(Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
-			ret += i->first + "\r\n";
+			ret += i->first + "\n";
 		}
+		ret.erase(ret.end()-1);
 		return ret;
 	}	
 	string toPath() const throw() {
@@ -207,46 +209,5 @@ private:
 };
 
 } //namespace qhub
-
-/*
-int main()
-{
-	vfs::Dir root;
-
-	assert(root.md("hoi"));
-	assert(root.md("hoi/blah"));
-	assert(root.md("aap"));
-	assert(root.md("aap/noot"));
-	assert(root.md("aap/mies"));
-	assert(root.md("aap/mies/mies2"));
-	assert(root.md("a/b/c") == NULL);
-	root.cd("aap")->mkNode("exec1", (void*)1);
-	root.cd("aap")->mkNode("exec2", (void*)1);
-	root.cd("aap")->rmNode("exec2");
-	
-
-	fprintf(stderr, "%s\n", root.toPath().c_str());
-	fprintf(stderr, "%s\n", root.cd("aap")->ls().c_str());
-	fprintf(stderr, "%s\n", root.toString().c_str());
-
-	vfs::Dir* sub = root.cd("aap/../aap")->cd();
-	assert(sub = sub->cd("/aap/mies/mies2/../"));
-	fprintf(stderr, "%s\n", sub->toPath().c_str());
-
-	assert(sub->md("kip"));
-
-	fprintf(stderr, "%s\n", sub->toString().c_str());
-
-	assert(sub = sub->rd("kip"));
-	assert(sub->rd("mies") == NULL);
-	assert(sub->rd("/hoi/blah/"));
-	assert(root.rd("/hoi/"));
-	assert(sub->rd("/") == NULL);
-	fprintf(stderr, "%s\n", root.toPath().c_str());
-	fprintf(stderr, "%s\n", root.toString().c_str());
-
-	return 0;
-}
-*/
 
 #endif //_INCLUDED_PLUGINS_DIR_H

@@ -1,0 +1,5 @@
+<plugins>
+	<plugin>fsutil</plugin>
+	<plugin>virtualfs</plugin>
+	<plugin>accounts</plugin>
+</plugins>

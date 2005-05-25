@@ -1,5 +1,5 @@
-#ifndef __COMPAT_HASH_
-#define __COMPAT_HASH_
+#ifndef __COMPAT_HASH_MAP
+#define __COMPAT_HASH_MAP
 
 #include <string>
 
@@ -29,6 +29,7 @@ using __gnu_cxx::hash_map;
 
 
 /** BEGIN FIX **/
+#ifndef __COMPAT_HASH_SET
 #if defined(HAVE___GNU_CXX__EXT_HASH_MAP) || defined(HAVE___GNU_CXX__HASH_MAP)
 namespace __gnu_cxx
 #else
@@ -43,6 +44,7 @@ template<> struct hash< std::string >
 	}
 };
 }
+#endif
 /** END FIX **/
 
 

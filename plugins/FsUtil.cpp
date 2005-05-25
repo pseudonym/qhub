@@ -1,11 +1,11 @@
 // vim:ts=4:sw=4:noet
-#include "PluginFsUtil.h"
+#include "FsUtil.h"
 
-#include "ADCClient.h"
-#include "UserInfo.h"
-#include "UserData.h"
-#include "XmlTok.h"
-#include "PluginVirtualFs.h"
+#include "../ADCClient.h"
+#include "../UserInfo.h"
+#include "../UserData.h"
+#include "../XmlTok.h"
+#include "VirtualFs.h"
 
 using namespace qhub;
 
@@ -30,7 +30,7 @@ bool FsUtil::load() throw()
 	bool success = false;
 	aliases.clear(); // clean old data
 	XmlTok root;
-	if(root.load("etc/qhub/fsutil.xml")) {
+	if(root.load(CONFIGDIR "/fsutil.xml")) {
 		XmlTok* p = &root;
 		if(p->findChild("fsutil")) {
 			success = true;
@@ -68,7 +68,7 @@ bool FsUtil::save() const throw()
 	}
 	p = p->getParent();
 	p = p->getParent();
-	return root.save("etc/qhub/fsutil.xml");
+	return root.save(CONFIGDIR "/fsutil.xml");
 }
 
 void FsUtil::initVFS() throw()
@@ -89,16 +89,16 @@ void FsUtil::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin FsUtil: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin FsUtil: VirtualFs interface found.");
 			initVFS();
 		} else {
-			fprintf(stderr, "warning: Plugin FsUtil: VirtualFs interface not found.\n");
+			log(qerr, "warning: Plugin FsUtil: VirtualFs interface not found.");
 		}
-		fprintf(stderr, "success: Plugin FsUtil: Started.\n");
+		log(qstat, "success: Plugin FsUtil: Started.");
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			fprintf(stderr, "success: Plugin FsUtil: VirtualFs interface found.\n");
+			log(qstat, "success: Plugin FsUtil: VirtualFs interface found.\n");
 			initVFS();
 		}
 	}
@@ -110,9 +110,9 @@ void FsUtil::on(PluginStopped&, Plugin* p) throw()
 		if(virtualfs)
 			deinitVFS();
 		save();
-		fprintf(stderr, "success: Plugin FsUtil: Stopped.\n");
+		log(qstat, "success: Plugin FsUtil: Stopped.");
 	} else if(virtualfs && p == virtualfs) {
-		fprintf(stderr, "warning: Plugin FsUtil: VirtualFs interface disabled.\n");
+		log(qerr, "warning: Plugin FsUtil: VirtualFs interface disabled.\n");
 		virtualfs = NULL;
 	}
 }
@@ -127,11 +127,11 @@ void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 		} else if(m->type == VirtualFs::Message::HELP) {
 			if(m->cwd == "/fsutil/") {
 				m->reply(
-				    "The following commands are available to you:\r\n"
-				    "load\t\t\tloads settings\r\n"
-				    "save\t\t\tsaves settings\r\n"
-				    "alias [alias] [command]\t\tlist/add aliases\r\n"
-				    "unalias <alias>\t\tremoves an alias\r\n"
+				    "The following commands are available to you:\n"
+				    "load\t\t\tloads settings\n"
+				    "save\t\t\tsaves settings\n"
+				    "alias [alias] [command]\tlist/add aliases\n"
+				    "unalias <alias>\t\tremoves an alias"
 				);
 			}
 		} else if(m->type == VirtualFs::Message::EXEC) {

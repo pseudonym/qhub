@@ -1,5 +1,0 @@
-<plugins>
-	<plugin>fsutil.so</plugin>
-	<plugin>virtualfs.so</plugin>
-	<plugin>accounts.so</plugin>
-</plugins>

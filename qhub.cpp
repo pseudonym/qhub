@@ -1,5 +1,6 @@
 #include "config.h"
 #include "qhub.h"
+#include "error.h"
 
 #include <stdio.h>
 
@@ -10,6 +11,8 @@
 
 #include "Plugin.h"
 #include "Settings.h"
+#include "Util.h"
+#include "Logs.h"
 
 #include <string>
 
@@ -48,10 +51,10 @@ void end(int)
 {
 	Plugin::deinit();
 	Hub::killAll();
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	signal(SIGINT, &end);
 	signal(SIGPIPE, SIG_IGN);
@@ -64,33 +67,18 @@ int main()
 
 	EventHandler::init();
 
-#if 0
-#ifdef HAVE_LIBOOP_EVENT
-	event_init();
-#endif
+	ios::sync_with_stdio();
+	Logs::stat << "starting " PACKAGE "/" VERSION << endl;
 
-#ifndef HAVE_LIBOOP_EVENT
-	oop_source_sys* system;
+	//do this here so we don't wind up doing extra
+	//work if all they want is --version or --help
+	Settings::parseArgs(argc, argv);
 
-	if((system=oop_sys_new()) == NULL){
-		fprintf(stderr, "Malloc failure.\n");
-		exit(1);
-	}
-	src = oop_sys_source(system);
-	fprintf(stderr, "Using liboop system event source: select() will be used.\n");
-#else
-	src = oop_event_new();
-	fprintf(stderr, "Using libevent source adapter\n", src);
-#endif
-	//Set up ADNS
-	//adns = oop_adns_new(src, (adns_initflags)0, NULL);
-#endif //#if 0
+	Settings::readFromXML();
 
 	//try loading
 	Plugin::init();
-	Plugin::openModule("loader.so");
-
-	Settings::readFromXML();
+	Plugin::openModule("loader");
 
 	//Init random number generator
 	srand(time(NULL));
@@ -100,12 +88,6 @@ int main()
 	timer->delay = 1000000;
 	on_timer(src, timer->tv, timer);
 */
-
-#ifndef HAVE_LIBOOP_EVENT
-//	oop_sys_run(system);
-#else
-//	event_dispatch();
-#endif
 
 	EventHandler::mainLoop();
 

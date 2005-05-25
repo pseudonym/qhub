@@ -16,11 +16,11 @@ public:
 	virtual bool onRead() throw() = 0;
 	virtual void onWrite() throw() = 0;
 
-	enum event { ev_read=1, ev_write=2
+	enum type { ev_read=1, ev_write=2
 	};
 
-	void enableMe(event e) throw();
-	void disableMe(event e) throw();
+	void enableMe(type e) throw();
+	void disableMe(type e) throw();
 
 	int getSocket() throw() { return fd; };
 	

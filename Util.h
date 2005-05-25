@@ -4,14 +4,18 @@
 
 #include <string>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
+#include "compat_hash_map.h"
+#include <boost/format.hpp>
 #include "string8.h"
+#include "error.h"
 
 namespace qhub {
 
 using namespace std;
 
 typedef vector<string> StringList;
+typedef hash_map<string,string> StringMap;
 typedef void* voidPtr;
 
 
@@ -22,10 +26,6 @@ public:
 	static voidPtr const emptyVoidPtr;
 	static StringList const emptyStringList;
 
-	static void log(string const& message, int level=0) throw();
-
-	static string format(const char* msg, ...);
-		
 	static string errnoToString(int err) throw()
 	{
 		return strerror(err);
@@ -39,14 +39,10 @@ public:
 	};
 
 	static string toString(void* p) throw() {
-		char buf[32];
-		snprintf(buf, 32, "%p", p);
-		return buf;
+		return (format("%p") % p).str();
 	};
 	static string toString(int i) throw() {
-		char buf[32];
-		snprintf(buf, 32, "%i", i);
-		return buf;
+		return (format("%i") % i).str();
 	};
 
 	static string8 genRand192() throw() {

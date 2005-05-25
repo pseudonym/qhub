@@ -1,5 +1,6 @@
 #include "EventHandler.h"
 #include "Util.h"
+#include "error.h"
 
 #include <string>
 #include <assert.h>
@@ -14,9 +15,9 @@ EventHandler::EventHandler() : ev(NULL), enabledFlags(0)
 
 EventHandler::~EventHandler() throw()
 {
-	Util::log("~EventHandler\n");
+	log(qstat, "~EventHandler\n");
 	if(ev != NULL){
-		Util::log(Util::format("Deleting EventHandler &p\n", this));
+		log(qstat, "Deleting EventHandler\n");
 		if(event_del(ev) == -1){
 			exit(1);	
 		}
@@ -30,8 +31,8 @@ void demux(int fd, short e, void* event)
 
 	assert(eh->getEnabledFlags() != 0 && "We are not supposed to be receiving events!");
 
-	Util::log(Util::format("Demux EventHandler=%p fd=%d event=%d\n", (int)eh, fd, e));		
-	
+	log(qstat, format("Demux EventHandler=%p fd=%d event=%d\n") % eh % fd % e);		
+
 	bool result = true;
 	if(e & EV_READ){
 		result = eh->onRead();
@@ -42,14 +43,14 @@ void demux(int fd, short e, void* event)
 	}
 }
 
-void EventHandler::disableMe(event e) throw()
+void EventHandler::disableMe(type e) throw()
 {
-	Util::log(Util::format("Disabling socket %d for %d, enabledFlags=%d\n", fd, e, enabledFlags), 10);
+	log(qstat, format("Disabling socket %d for %d, enabledFlags=%d\n") % fd % e % enabledFlags);
 
 	//remove the pertinent flag
 	enabledFlags &= ~e;
 
-	Util::log(Util::format("enabledFlags=%d\n", enabledFlags));
+	log(qstat, format("enabledFlags=%d\n") % enabledFlags);
 
 	if(event_del(ev) == -1){
 		exit(1);
@@ -73,9 +74,9 @@ void EventHandler::disableMe(event e) throw()
 	}
 }
 
-void EventHandler::enableMe(event e) throw()
+void EventHandler::enableMe(type e) throw()
 {
-	Util::log(Util::format("Enabling socket %d for %d\n", fd, e), 10);
+	log(qstat, format("Enabling socket %d for %d\n") % fd % e);
 	
 	if(enabledFlags != 0){
 		if(event_del(ev) == -1){
@@ -106,14 +107,14 @@ void EventHandler::enableMe(event e) throw()
 
 void EventHandler::init() throw()
 {
-	Util::log("Initializing event handling.\n");
+	log(qstat, "Initializing event handling.\n");
 
 	event_init();	
 }
 
 void EventHandler::mainLoop() throw()
 {
-	Util::log("Entering mainloop.\n");
+	log(qstat, "Entering mainloop.\n");
 
 	event_dispatch();
 }

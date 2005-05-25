@@ -1,9 +1,9 @@
 // vim:ts=4:sw=4:noet
-#include "PluginVirtualFs.h"
+#include "VirtualFs.h"
 
-#include "ADCClient.h"
-#include "UserData.h"
-#include "PluginVirtualFsDir.h"
+#include "../ADCClient.h"
+#include "../UserData.h"
+#include "VirtualFsDir.h"
 
 using namespace qhub;
 
@@ -47,7 +47,7 @@ void VirtualFs::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		init();
-		fprintf(stderr, "success: Plugin VirtualFs: Started.\n");
+		log(qstat, "success: Plugin VirtualFs: Started.\n");
 	}
 }
 
@@ -55,7 +55,7 @@ void VirtualFs::on(PluginStopped&, Plugin* p) throw()
 {
 	if(p == this) {
 		deinit();
-		fprintf(stderr, "success: Plugin VirtualFs: Stopped.\n");
+		log(qstat, "success: Plugin VirtualFs: Stopped.\n");
 	}
 }
 
@@ -63,7 +63,7 @@ void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(p == this) {
 		Message* m = (Message*)d;
-		assert(d);
+		assert(m);
 		if(m->cwd == "" && m->type == Message::HELP) {
 			m->reply("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");
 		}
@@ -118,7 +118,7 @@ void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
 		Dir* d = root->cd(pwd);
 		if(d) {
 			if(siz == 1 || (d = d->cd(sl[1]))) {
-				client->doPrivateMessage("ACK: " + d->toPath() + "\r\n" + d->ls());
+				client->doPrivateMessage("ACK: " + d->toPath() + "\n" + d->ls());
 			} else {
 				client->doPrivateMessage("NAK: Path ambiguous or not found.");
 			}

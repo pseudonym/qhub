@@ -25,7 +25,7 @@ public:
 	// NOTE: see setData
 	string toString(int indent = 0) const throw();
 	// NOTE: see setData
-	string getData() const throw();
+	const string& getData() const throw();
 	/*
 	 * Setters
 	 */
