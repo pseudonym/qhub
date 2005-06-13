@@ -3,6 +3,7 @@
 
 #include "../ADCClient.h"
 #include "../UserData.h"
+#include "../Logs.h"
 #include "VirtualFsDir.h"
 
 using namespace qhub;
@@ -47,7 +48,7 @@ void VirtualFs::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		init();
-		log(qstat, "success: Plugin VirtualFs: Started.\n");
+		Logs::stat << "success: Plugin VirtualFs: Started.\n";
 	}
 }
 
@@ -55,14 +56,14 @@ void VirtualFs::on(PluginStopped&, Plugin* p) throw()
 {
 	if(p == this) {
 		deinit();
-		log(qstat, "success: Plugin VirtualFs: Stopped.\n");
+		Logs::stat << "success: Plugin VirtualFs: Stopped.\n";
 	}
 }
 
 void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(p == this) {
-		Message* m = (Message*)d;
+		Message* m = static_cast<Message*>(d);
 		assert(m);
 		if(m->cwd == "" && m->type == Message::HELP) {
 			m->reply("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");

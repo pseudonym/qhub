@@ -35,7 +35,7 @@ private:
 	void deinitVFS() throw();
 	
 	VirtualFs* virtualfs;
-	typedef hash_map<string, string> Users; // too simple.. works for now
+	typedef hash_map<string, pair<string,int> > Users; // too simple.. works for now
 	Users users;
 };
 

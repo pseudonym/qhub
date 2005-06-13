@@ -14,14 +14,14 @@ UserData::Key UserData::toKey(string const& id) throw()
 	ClashMap::const_iterator i = clashMap.find(k);
 	if(i != clashMap.end()) {
 		if(i->second == id) {
-			//log(qstat, format("UserData::toKey: %s -> %x found") % id % k);
+			//Logs::stat << format("UserData::toKey: %s -> %x found\n") % id % k;
 		} else {
-			Logs::err << format("UserData::toKey: %s -> %x clashes with %s .. FATAL")
-					% id % k % i->second << endl;
+			Logs::err << format("UserData::toKey: %s -> %x clashes with %s .. FATAL\n")
+					% id % k % i->second;
 			exit(EXIT_FAILURE);
 		}
 	} else {
-		//log(qerr, format("UserData::toKey: %s -> %x created\n") % id % k);
+		//Logs::stat << format("UserData::toKey: %s -> %x created\n") % id % k;
 		clashMap[k] = id;
 	}
 	return k;

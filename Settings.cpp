@@ -40,7 +40,7 @@ int Settings::readFromXML() throw()
 			}
 			if(hubp->findChild("cid")) {
 				string cid = hubp->getNextChild()->getData();
-				log(qstat, "\tHub CID: " + cid);
+				Logs::stat << "\tHub CID: " << cid << '\n';
 				hub->setCID32(cid);
 			} else {
 				Logs::err << "All hubs must have CIDs: skipping one\n";
@@ -49,30 +49,30 @@ int Settings::readFromXML() throw()
 			}
 			if(hubp->findChild("description")) {
 				string desc = hubp->getNextChild()->getData();
-				log(qstat, "\tHub description: " + desc);
+				Logs::stat << "\tHub description: " << desc << '\n';
 				hub->setDescription(desc);
 			}
 			if(hubp->findChild("port")) {
 				int port = Util::toInt(hubp->getNextChild()->getData());
-				log(qstat, "\tADC Port: " + Util::toString(port));
+				Logs::stat << "\tADC Port: " << port << '\n';
 				if(port > 0 && port <= 65535)
 					hub->openADCPort(port);
 			}
 			if(hubp->findChild("maxpacketsize")) {
 				int size = Util::toInt(hubp->getNextChild()->getData());
-				log(qstat, "\tMax Packet Size: " + Util::toString(size));
+				Logs::stat << "\tMax Packet Size: " << size << '\n';
 				if(size > 0)
 					hub->setMaxPacketSize(size);
 			}
 			if(hubp->findChild("interport")) {
 				int port = Util::toInt(hubp->getNextChild()->getData());
-				log(qstat, "\tInter-hub Port: " + Util::toString(port));
+				Logs::stat << "\tInter-hub Port: " << port << '\n';
 				if(port > 0 && port <= 65535)
 					hub->openInterPort(port);
 			}
 			if(hubp->findChild("interpass")) {
 				string pass = hubp->getNextChild()->getData();
-				log(qstat, "\tInter-hub Pass: " + pass);
+				Logs::stat << "\tInter-hub Pass: " << pass << '\n';
 				hub->setInterPass(pass);
 			}
 
@@ -86,7 +86,10 @@ int Settings::readFromXML() throw()
 					continue;
 				}
 				string host = ichubp->getNextChild()->getData();
-				if(!ichubp->findChild("port"))		continue;
+				if(!ichubp->findChild("port")) {
+					Logs::err << "Interconnect port not specified.. skipping\n";
+					continue;
+				}
 				int port = Util::toInt(ichubp->getNextChild()->getData());
 
 				Logs::stat << "\tConnecting to " << host << ':' << port << endl; 

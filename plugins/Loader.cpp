@@ -90,13 +90,13 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
 		} else {
-			log(qerr, "warning: Plugin Loader: VirtualFs interface not found.");
+			Logs::err << "warning: Plugin Loader: VirtualFs interface not found.\n";
 		}
-		Logs::stat << "success: Plugin Loader: Started." << endl;
+		Logs::stat << "success: Plugin Loader: Started.\n";
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			log(qstat, "success: Plugin Loader: VirtualFs interface found.");
+			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
 		}
 	}
@@ -107,9 +107,9 @@ void Loader::on(PluginStopped&, Plugin* p) throw()
 	if(p == this) {
 		if(virtualfs)
 			deinitVFS();
-		log(qstat, "success: Plugin Loader: Stopped.\n");
+		Logs::stat << "success: Plugin Loader: Stopped.\n";
 	} else if(virtualfs && p == virtualfs) {
-		log(qerr, "warning: Plugin Loader: VirtualFs interface disabled.\n");
+		Logs::err << "warning: Plugin Loader: VirtualFs interface disabled.\n";
 		virtualfs = NULL;
 	}
 }

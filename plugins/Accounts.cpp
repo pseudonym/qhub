@@ -5,6 +5,7 @@
 #include "../UserInfo.h"
 #include "../UserData.h"
 #include "../XmlTok.h"
+#include "../Logs.h"
 #include "VirtualFs.h"
 
 using namespace qhub;
@@ -39,7 +40,9 @@ bool Accounts::load() throw()
 			if(p->findChild("user")) {
 				XmlTok* tmp;
 				while((tmp = p->getNextChild())) {
-					users[tmp->getAttr("nick")] = tmp->getAttr("password");
+					int lvl = Util::toInt(tmp->getAttr("level"));
+					users[tmp->getAttr("nick")] =
+							make_pair(tmp->getAttr("password"),lvl==0?1:lvl);
 				}
 			}
 			p = p->getParent();
@@ -56,7 +59,8 @@ bool Accounts::save() const throw()
 	for(Users::const_iterator i = users.begin(); i != users.end(); ++i) {
 		XmlTok* tmp = p->addChild("user");
 		tmp->setAttr("nick", i->first);
-		tmp->setAttr("password", i->second);
+		tmp->setAttr("password", i->second.first);
+		tmp->setAttr("level", Util::toString(i->second.second));
 	}
 	p = p->getParent();
 	return root.save(CONFIGDIR "/accounts.xml");
@@ -64,18 +68,18 @@ bool Accounts::save() const throw()
 
 void Accounts::initVFS() throw()
 {
-	assert(virtualfs->mkdir("/accounts", this));
-	assert(virtualfs->mknod("/accounts/load", this));
-	assert(virtualfs->mknod("/accounts/save", this));
-	assert(virtualfs->mknod("/accounts/add", this));
-	assert(virtualfs->mknod("/accounts/del", this));
-	assert(virtualfs->mknod("/accounts/list", this));
+	virtualfs->mkdir("/accounts", this);
+	virtualfs->mknod("/accounts/load", this);
+	virtualfs->mknod("/accounts/save", this);
+	virtualfs->mknod("/accounts/add", this);
+	virtualfs->mknod("/accounts/del", this);
+	virtualfs->mknod("/accounts/list", this);
 	//assert(virtualfs->mknod("/accounts/show", this));
 }
 
 void Accounts::deinitVFS() throw()
 {
-	assert(virtualfs->rmdir("/accounts"));
+	virtualfs->rmdir("/accounts");
 }
 
 void Accounts::on(PluginStarted&, Plugin* p) throw()
@@ -84,16 +88,16 @@ void Accounts::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			log(qstat, "success: Plugin Accounts: VirtualFs interface found.");
+			Logs::stat << "success: Plugin Accounts: VirtualFs interface found.\n";
 			initVFS();
 		} else {
-			log(qerr, "warning: Plugin Accounts: VirtualFs interface not found.");
+			Logs::err << "warning: Plugin Accounts: VirtualFs interface not found.\n";
 		}
-		log(qstat, "success: Plugin Accounts: Started.");
+		Logs::stat << "success: Plugin Accounts: Started.\n";
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			log(qstat, "success: Plugin Accounts: VirtualFs interface found.");
+			Logs::stat << "success: Plugin Accounts: VirtualFs interface found.\n";
 			initVFS();
 		}
 	}
@@ -105,9 +109,9 @@ void Accounts::on(PluginStopped&, Plugin* p) throw()
 		if(virtualfs)
 			deinitVFS();
 		save();
-		log(qstat, "success: Plugin Accounts: Stopped.");
+		Logs::stat << "success: Plugin Accounts: Stopped.\n";
 	} else if(virtualfs && p == virtualfs) {
-		log(qerr, "warning: Plugin Accounts: VirtualFs interface disabled.");
+		Logs::err << "warning: Plugin Accounts: VirtualFs interface disabled.\n";
 		virtualfs = NULL;
 	}
 }
@@ -118,8 +122,8 @@ void Accounts::on(ClientLogin&, ADCClient* client) throw()
 	Users::const_iterator i = users.find(inf->getNick());
 	if(i != users.end()) {
 		UserData* data = client->getUserData();
-		data->setInt(idUserLevel, 1);
-		client->doAskPassword(i->second);
+		data->setInt(idUserLevel, i->second.second);
+		client->doAskPassword(i->second.first);
 	}
 
 	// Remove the OP flag
@@ -151,7 +155,7 @@ void Accounts::on(ClientInfo& a, ADCClient* client, UserInfo& inf) throw()
 void Accounts::on(UserConnected&, ADCClient* client) throw()
 {
 	UserData* data = client->getUserData();
-	if(data->getInt(idUserLevel) >= 1) {
+	if(data->getInt(idUserLevel) >= 3) {
 		client->getUserInfo()->set(UIID('O','P'), "1");
 	}
 }
@@ -167,11 +171,11 @@ void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 			if(m->cwd == "/accounts/") {
 				m->reply(
 				    "The following commands are available to you:\n"
-				    "load\t\t\tloads the users file from disk\n"
-				    "save\t\t\tsaves the users file to disk\n"
-				    "add <user> <password>\tadds a user\n"
-				    "del <user>\t\tremoves a user\n"
-				    "list [wildcard]\t\tshows the list of registered users"
+				    "load\t\t\t\tloads the users file from disk\n"
+				    "save\t\t\t\tsaves the users file to disk\n"
+				    "add <user> <password> <level>\tadds a user\n"
+				    "del <user>\t\t\tremoves a user\n"
+				    "list [wildcard]\t\t\tshows the list of registered users"
 				    //"show <user>\t\tshows information about a user"
 				);
 			}
@@ -190,13 +194,16 @@ void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 					m->reply("Failure: Failed to save user accounts file.");
 				}
 			} else if(m->arg[0] == "add") {
-				if(m->arg.size() == 3) {
-					users[m->arg[1]] = m->arg[2];
+				if(m->arg.size() == 4) {
+					users[m->arg[1]] = make_pair(m->arg[2], Util::toInt(m->arg[3]));
+					m->reply("Success: User created/updated.");
+				} else if(m->arg.size() == 3) {
+					users[m->arg[1]] = make_pair(m->arg[2], 1);
 					m->reply("Success: User created/updated.");
 					// check if user online..
 					// add OP1 if so
 				} else {
-					m->reply("Syntax: add <nick> <password>");
+					m->reply("Syntax: add <nick> <password> <level=1>");
 				}
 			} else if(m->arg[0] == "del") {
 				if(m->arg.size() == 2) {

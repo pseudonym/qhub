@@ -2,6 +2,7 @@
 #include "ADCSocket.h"
 #include "qhub.h"
 #include "Util.h"
+#include "Logs.h"
 #include "error.h"
 #include "ADC.h"
 
@@ -48,24 +49,22 @@ void ADCSocket::handleOnRead()
 	char* r = readBuffer + readPos;
 	char* tmp;
 	while((tmp = find(l, r, '\n')) != r) {
-		string line(l, tmp);
+		string line(l, ++tmp);
 		if(line.empty())
 			continue;	//ignore keepalives
 		StringList sl = Util::stringTokenize(line);
+		sl.back().resize(sl.back().size()-1);	//remove ending newline
 		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i)
 			*i = ADC::CSE(*i);
-		log(qline, format("%d<< %s") % getFd() % line);
-		onLine(sl, line + '\n');
+		Logs::line << getFd() << "<< " << line << endl;
+		onLine(sl, line);
 		if(disconnected)
 			return;
-		l = tmp+1;
+		l = tmp;
 	}
 	readPos = r - l;
-	if(readPos == BUF_SIZE) {
-		doError("line limit of 1024 characters exceeded");
-		disconnect("line limit of 1024 characters exceeded");
-		return;
-	}
+	if(readPos == BUF_SIZE)
+		throw Exception("line limit of 1024 characters exceeded");
 
 	::memmove(readBuffer, l, readPos);
 }
@@ -123,7 +122,7 @@ void ADCSocket::realDisconnect()
 	//this should not be necessary: the assumptions above forbid it
 	assert(fd != -1 && "Assumptions of 'delete this' usage was probably broken!");
 
-	log(qerr, format("Real Disconnect %d %p") % fd % this);
+	Logs::stat << format("Real Disconnect %d %p\n") % fd % this;
 	if(writeEnabled) {
 		cancel_fd(fd, OOP_WRITE);
 	}

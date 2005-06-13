@@ -64,7 +64,7 @@ am_qhub_OBJECTS = qhub-qhub.$(OBJEXT) qhub-Util.$(OBJEXT) \
 	qhub-ServerSocket.$(OBJEXT) qhub-InterHub.$(OBJEXT) \
 	qhub-Hub.$(OBJEXT) qhub-ADCSocket.$(OBJEXT) \
 	qhub-ADCClient.$(OBJEXT) qhub-ADC.$(OBJEXT) \
-	qhub-error.$(OBJEXT) qhub-Logs.$(OBJEXT) qhub-Plugin.$(OBJEXT) \
+	qhub-Logs.$(OBJEXT) qhub-Plugin.$(OBJEXT) \
 	qhub-UserData.$(OBJEXT) qhub-XmlTok.$(OBJEXT) \
 	qhub-Settings.$(OBJEXT) qhub-Timer.$(OBJEXT)
 qhub_OBJECTS = $(am_qhub_OBJECTS)
@@ -222,9 +222,9 @@ qhub_SOURCES = qhub.cpp qhub.h MyTime.h types.h Util.h Util.cpp \
 	ServerSocket.cpp ServerSocket.h DNSUser.h InterHub.cpp \
 	InterHub.h Hub.h Hub.cpp ADCSocket.h ADCSocket.cpp ADCClient.h \
 	ADCClient.cpp UserInfo.h ADC.h ADC.cpp Buffer.h \
-	compat_hash_map.h error.h error.cpp Logs.h Logs.cpp Plugin.h \
-	Plugin.cpp UserData.h UserData.cpp XmlTok.h XmlTok.cpp \
-	Settings.h Settings.cpp Timer.h Timer.cpp
+	compat_hash_map.h error.h Logs.h Logs.cpp Plugin.h Plugin.cpp \
+	UserData.h UserData.cpp XmlTok.h XmlTok.cpp Settings.h \
+	Settings.cpp Timer.h Timer.cpp
 EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO \
 	config.sub config.guess README.cygwin
 pkgsysconfdir = $(sysconfdir)/$(PACKAGE)
@@ -340,7 +340,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qhub-UserData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qhub-Util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qhub-XmlTok.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qhub-error.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qhub-qhub.Po@am__quote@
 
 .cpp.o:
@@ -531,20 +530,6 @@ qhub-ADC.obj: ADC.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ADC.cpp' object='qhub-ADC.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qhub_CXXFLAGS) $(CXXFLAGS) -c -o qhub-ADC.obj `if test -f 'ADC.cpp'; then $(CYGPATH_W) 'ADC.cpp'; else $(CYGPATH_W) '$(srcdir)/ADC.cpp'; fi`
-
-qhub-error.o: error.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qhub_CXXFLAGS) $(CXXFLAGS) -MT qhub-error.o -MD -MP -MF "$(DEPDIR)/qhub-error.Tpo" -c -o qhub-error.o `test -f 'error.cpp' || echo '$(srcdir)/'`error.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/qhub-error.Tpo" "$(DEPDIR)/qhub-error.Po"; else rm -f "$(DEPDIR)/qhub-error.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='error.cpp' object='qhub-error.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qhub_CXXFLAGS) $(CXXFLAGS) -c -o qhub-error.o `test -f 'error.cpp' || echo '$(srcdir)/'`error.cpp
-
-qhub-error.obj: error.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qhub_CXXFLAGS) $(CXXFLAGS) -MT qhub-error.obj -MD -MP -MF "$(DEPDIR)/qhub-error.Tpo" -c -o qhub-error.obj `if test -f 'error.cpp'; then $(CYGPATH_W) 'error.cpp'; else $(CYGPATH_W) '$(srcdir)/error.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/qhub-error.Tpo" "$(DEPDIR)/qhub-error.Po"; else rm -f "$(DEPDIR)/qhub-error.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='error.cpp' object='qhub-error.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qhub_CXXFLAGS) $(CXXFLAGS) -c -o qhub-error.obj `if test -f 'error.cpp'; then $(CYGPATH_W) 'error.cpp'; else $(CYGPATH_W) '$(srcdir)/error.cpp'; fi`
 
 qhub-Logs.o: Logs.cpp
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qhub_CXXFLAGS) $(CXXFLAGS) -MT qhub-Logs.o -MD -MP -MF "$(DEPDIR)/qhub-Logs.Tpo" -c -o qhub-Logs.o `test -f 'Logs.cpp' || echo '$(srcdir)/'`Logs.cpp; \

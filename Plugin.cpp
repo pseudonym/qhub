@@ -46,14 +46,15 @@ bool Plugin::openModule(string const& name, string const& insertBefore) throw()
 					}
 					plugins.insert(j, 1, p);
 				}
-				log(qstat, "Loading plugin \"" + name + "\" SUCCESS!\n");
+				Logs::stat << "Loading plugin \"" << name << "\" SUCCESS!\n";
 				return true;
 			}
 		}
 	} else {
 		error = dlerror();
 	}
-	log(qerr, "Loading plugin \"" + name + "\" FAILED! " + (error != NULL ? error : ""));
+	Logs::err << "Loading plugin \"" << name << "\" FAILED! " <<
+			(error != NULL ? error : "") << endl;
 	return false;
 }
 

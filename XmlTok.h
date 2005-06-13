@@ -54,7 +54,6 @@ private:
 	typedef pair<string, string> Attribute;
 	typedef vector<Attribute> Attributes;
 	Attributes attributes;
-	string empty;
 };
 
 } //namespace qhub

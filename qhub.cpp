@@ -135,14 +135,14 @@ int main(int argc, char **argv)
 	oop_source_sys* system;
 
 	if((system=oop_sys_new()) == NULL){
-		log(qerr, "Malloc failure.");
+		Logs::err << "Malloc failure.\n";
 		exit(EXIT_FAILURE);
 	}
 	src = oop_sys_source(system);
-	log(qstat, "Using liboop system event source: select() will be used.");
+	Logs::stat << "Using liboop system event source: select() will be used.\n";
 #else
 	src = oop_event_new();
-	log(qstat, "Using libevent source adapter");
+	Logs::stat << "Using libevent source adapter\n";
 #endif
 	//Set up ADNS
 	adns = oop_adns_new(src, (adns_initflags)0, NULL);
@@ -168,5 +168,5 @@ int main(int argc, char **argv)
 	event_dispatch();
 #endif
 
-	return 0;
+	return EXIT_SUCCESS;
 }

@@ -3,7 +3,6 @@
 #include <string>
 #include <cassert>
 #include "Util.h"
-#include "error.h"
 
 using namespace qhub;
 

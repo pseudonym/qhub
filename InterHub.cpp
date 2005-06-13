@@ -6,6 +6,7 @@
 
 #include "qhub.h"
 #include "error.h"
+#include "Logs.h"
 #include "string8.h"
 #include "Util.h"
 
@@ -27,10 +28,10 @@ InterHub::InterHub(Hub* h, int fd, Domain d) throw()
 void InterHub::onLookup(adns_answer* reply)
 {
 	assert(getState() == PROTOCOL);
-	log(qstat, string("InterHub::onLookup: ") + reply->owner);
+	Logs::stat << "InterHub::onLookup: " << reply->owner << endl;
 
 	if (reply->status != adns_s_ok) {
-		log(qerr, string("InterHub::onLookup error: ") + adns_strerror(reply->status));
+		Logs::err <<"InterHub::onLookup error: " << adns_strerror(reply->status) << endl;
 	} else {
 		assert(reply->type == adns_r_a);
 		if(reply->nrrs > 0){

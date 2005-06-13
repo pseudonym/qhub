@@ -3,7 +3,7 @@
 
 #include <exception>
 #include <string>
-#include <boost/format.hpp>
+#include "Logs.h"
 
 namespace qhub {
 
@@ -20,32 +20,6 @@ struct Exception : public std::exception
 private:
 	std::string msg;
 };
-
-extern std::FILE* qerr;
-extern std::FILE* qstat;
-extern std::FILE* qline;
-
-template<typename CharT, typename Traits, typename Alloc>
-inline void log(std::FILE* stream, const std::basic_string<CharT,Traits,Alloc>& msg)
-{
-	fwrite(msg.data(), msg.size(), sizeof(CharT), stream);
-	if(msg[msg.size()-1] != '\n')
-		fwrite("\n", 1, sizeof(char), stream);
-}
-
-template<typename CharT, typename Traits, typename Alloc>
-inline void log(std::FILE* stream, const boost::basic_format<CharT,Traits,Alloc>& msg)
-{
-	log(stream, msg.str());
-}
-
-template<typename CharT>
-inline void log(std::FILE* stream, const CharT* msg)
-{
-	log(stream, std::basic_string<CharT>(msg));
-}
-
-using boost::format;
 
 } // namespace qhub
 

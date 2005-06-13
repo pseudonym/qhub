@@ -161,14 +161,14 @@ void Hub::broadcastPassive(string const& data, ADCSocket* except/* = NULL*/) thr
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			i->second->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
 			(*i)->writeb(tmp);
 		}
 	} else {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			if(i->second != except)
 				i->second->writeb(tmp);
 		}
