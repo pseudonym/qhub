@@ -15,7 +15,6 @@ Low-level network handling
 Protocol stuff
 	Dont allow nick-collisions
 	Send delta-INFs
-	LO1 handling (Status of this in spec?)
 
 More work on multihub support (much has been accomplished however)
 	automatically try reconnecting every few minutes if an interhub connection fails
