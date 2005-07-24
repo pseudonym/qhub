@@ -41,7 +41,24 @@ void Logs::setLine(const string& fn)
 	line.rdbuf(tmp.release());
 }
 
+void Logs::set(std::ostream& s, const std::string& filename)
+{
+	auto_ptr<filebuf> tmp(new filebuf);
+	tmp->open(filename.c_str(), ios::app | ios::out);
+	if(!tmp->is_open()) {
+		throw Exception("Logs::set(): could not reassign stream to \""
+				+ filename + '"');
+	}
+	std::streambuf* t = s.rdbuf(tmp.release());
+	if(dynamic_cast<std::filebuf*>(t))
+		// ok, we allocated it, delete it
+		delete t;
+}
+
 void Logs::copy(const ostream& src, ostream& dest)
 {
-	dest.rdbuf(src.rdbuf());
+	std::streambuf* t = dest.rdbuf(src.rdbuf());
+	if(dynamic_cast<std::filebuf*>(t))
+		// ok, we allocated it, delete it
+		delete t;
 }

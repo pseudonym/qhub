@@ -55,7 +55,7 @@ StringList Util::lazyQuotedStringTokenize(string const& msg) throw() // token = 
 			break;
 		case '"':
 			if(state == 0) {
-				sl.push_back(empty);
+				sl.push_back(emptyString);
 				state = 2;
 			} else if(state == 1) {
 				state = 2;

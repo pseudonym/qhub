@@ -1,5 +1,7 @@
 // vim:ts=4:sw=4:noet
 #include <boost/cast.hpp>
+#include <sstream>
+#include <iterator>
 
 #include "Bans.h"
 
@@ -9,6 +11,7 @@
 #include "../UserData.h"
 #include "../XmlTok.h"
 #include "../Logs.h"
+#include "../Settings.h"
 #include "VirtualFs.h"
 
 using namespace qhub;
@@ -33,7 +36,7 @@ bool Bans::load() throw()
 {
 	bool success = false;
 	XmlTok root;
-	if(root.load(CONFIGDIR "/bans.xml") && root.findChild("bans")) {
+	if(root.load(Settings::getFilename(getId())) && root.findChild("bans")) {
 		XmlTok* p = &root;
 		ipBans.clear(), nickBans.clear(), cidBans.clear(); // clean old bans
 		success = true;
@@ -47,8 +50,8 @@ bool Bans::load() throw()
 				const string& reason = tmp->getAttr("reason");
 				const string& ip = tmp->getData();
 				time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
-				BanInfo tmp(t, banner, reason);
-				ipBans.insert(make_pair(ip, tmp));
+				BanInfo bi(t, banner, reason);
+				ipBans.insert(make_pair(ip, bi));
 			}
 			p = p->getParent();
 		}
@@ -61,8 +64,8 @@ bool Bans::load() throw()
 				const string& reason = tmp->getAttr("reason");
 				const string& nick = tmp->getData();
 				time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
-				BanInfo tmp(t, banner, reason);
-				nickBans.insert(make_pair(nick, tmp));
+				BanInfo bi(t, banner, reason);
+				nickBans.insert(make_pair(nick, bi));
 			}
 			p = p->getParent();
 		}
@@ -75,8 +78,8 @@ bool Bans::load() throw()
 				const string& reason = tmp->getAttr("reason");
 				const string& cid = tmp->getData();
 				time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
-				BanInfo tmp(t, banner, reason);
-				cidBans.insert(make_pair(cid, tmp));
+				BanInfo bi(t, banner, reason);
+				cidBans.insert(make_pair(cid, bi));
 			}
 			p = p->getParent();
 		}
@@ -131,7 +134,7 @@ bool Bans::save() throw()
 		++i;
 	}
 
-	return root.save(CONFIGDIR "/bans.xml");
+	return root.save(Settings::getFilename(getId()));
 }
 
 void Bans::initVFS() throw()
@@ -266,18 +269,24 @@ void Bans::on(PluginMessage&, Plugin* p, void* d) throw()
 					m->reply("Invalid IP address.");
 					return;
 				}
-				if(m->arg.size() == 4 || m->arg.size() == 3) {
-					BanInfo b(time(0) + parseTime(m->arg[2]), m->client->getUserInfo()->getNick(),
-							m->arg.size() == 3 ? Util::emptyString : m->arg[3]);
+				if(m->arg.size() >= 3) {
+					ostringstream str;
+					// turn the ban reason into one string
+					copy(m->arg.begin()+3, m->arg.end(), ostream_iterator<string>(str, " "));
+					BanInfo b(parseTime(m->arg[2]), m->client->getUserInfo()->getNick(),
+							str.str());
 					ipBans.insert(make_pair(m->arg[1], b));
 					m->reply("Success: ban added.");
 				} else {
 					m->reply("Syntax: banip <ip> <time> [description]");
 				}
 			} else if(m->arg[0] == "bannick") {
-				if(m->arg.size() == 4 || m->arg.size() == 3) {
-					BanInfo b(time(0) + parseTime(m->arg[2]), m->client->getUserInfo()->getNick(),
-							m->arg.size() == 3 ? Util::emptyString : m->arg[3]);
+				if(m->arg.size() >= 3) {
+					ostringstream str;
+					// turn the ban reason into one string
+					copy(m->arg.begin()+3, m->arg.end(), ostream_iterator<string>(str, " "));
+					BanInfo b(parseTime(m->arg[2]), m->client->getUserInfo()->getNick(),
+							str.str());
 					nickBans.insert(make_pair(m->arg[1], b));
 					m->reply("Success: ban added.");
 				} else {
@@ -288,9 +297,12 @@ void Bans::on(PluginMessage&, Plugin* p, void* d) throw()
 					m->reply("Invalid CID.");
 					return;
 				}
-				if(m->arg.size() == 4 || m->arg.size() == 3) {
-					BanInfo b(time(0) + parseTime(m->arg[2]), m->client->getUserInfo()->getNick(),
-							m->arg.size() == 3 ? Util::emptyString : m->arg[3]);
+				if(m->arg.size() >= 3) {
+					ostringstream str;
+					//turn the ban reason into one string
+					copy(m->arg.begin()+3, m->arg.end(), ostream_iterator<string>(str, " "));
+					BanInfo b(parseTime(m->arg[2]), m->client->getUserInfo()->getNick(),
+							str.str());
 					cidBans.insert(make_pair(m->arg[1], b));
 					m->reply("Success: ban added.");
 				} else {
@@ -329,10 +341,10 @@ time_t Bans::parseTime(const string& tmp)
 	istringstream str(tmp);
 	int64_t num;
 	char type = 0;
-	time_t time;
+	time_t t;
 
 	if(str >> num) {
-		if(num == -1)
+		if(num == int64_t(-1))
 			return numeric_limits<time_t>::max();
 		str >> type;	// if this part fails, it's ok because we default to minutes...
 		switch(type) {
@@ -349,12 +361,13 @@ time_t Bans::parseTime(const string& tmp)
 		default:
 			num *= 60;
 		}
+		num += static_cast<int64_t>(time(0));
 		try {
-			time = boost::numeric_cast<time_t>(num);
+			t = boost::numeric_cast<time_t>(num);
 		} catch(boost::bad_numeric_cast&) {
-			time = numeric_limits<time_t>::max();
+			t = numeric_limits<time_t>::max();
 		}
-		return num;
+		return t;
 	} else
 		throw Exception("invalid ban time value");
 }

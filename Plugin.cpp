@@ -1,6 +1,7 @@
 // vim:ts=4:sw=4:noet
 #include "Plugin.h"
 #include "Util.h"
+#include "Logs.h"
 #include <dlfcn.h>
 #include "error.h"
 
@@ -103,4 +104,5 @@ bool Plugin::hasModule(string const& name) throw()
 			return true;
 	}
 	return false;
+	//return find_if(begin(), end(), bind2nd(equals<string>(mem_fun(&getId)), name));
 }

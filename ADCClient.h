@@ -70,13 +70,13 @@ private:
 	/*
 	 * Data handlers	
 	 */
-	void handle(StringList& sl, u_int32_t const cmd, string const* full) throw();
+	void handle(StringList& sl, uint32_t const cmd, string& full) throw();
 	void handleSupports(StringList& sl) throw();
 	void handleLogin(StringList& sl) throw();
 	void handlePassword(StringList& sl) throw();
 	void handleDisconnect(StringList& sl) throw();
-	void handleInfo(StringList& sl, u_int32_t const cmd, string const* full) throw();
-	void handleMessage(StringList& sl, u_int32_t const cmd, string const* full) throw();
+	void handleInfo(StringList& sl, uint32_t const cmd, string& full) throw();
+	void handleMessage(StringList& sl, uint32_t const cmd, string& full) throw();
 
 	void login() throw();
 	void logout() throw();
@@ -89,9 +89,6 @@ private:
 	string password;
 	string8 salt;
 	bool active;
-
-	string const& assemble(StringList const& sl) throw();
-	string temp;
 
 	// Invalid
 	ADCClient() : ADCSocket(-1, Socket::IP4, NULL) {};

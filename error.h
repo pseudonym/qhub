@@ -1,9 +1,9 @@
+// vim:ts=4:sw=4:noet
 #ifndef QHUB_ERROR_H
 #define QHUB_ERROR_H
 
-#include <exception>
+#include <stdexcept>
 #include <string>
-#include "Logs.h"
 
 namespace qhub {
 
@@ -19,6 +19,18 @@ struct Exception : public std::exception
 
 private:
 	std::string msg;
+};
+
+// used for parsing ex. bad escapes
+struct parse_error : public std::runtime_error {
+	parse_error() : runtime_error("parse_error: error parsing ADC string") {}
+	explicit parse_error(const std::string& arg) : runtime_error(arg) {}
+};
+
+// used for invalid command types
+struct command_error : public std::runtime_error {
+	command_error() : runtime_error("command_error: invalid ADC command") {}
+	explicit command_error(const std::string& arg) : runtime_error(arg) {}
 };
 
 } // namespace qhub

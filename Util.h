@@ -6,7 +6,6 @@
 #include <vector>
 #include <cstdlib>
 #include "compat_hash_map.h"
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include "string8.h"
 #include "error.h"

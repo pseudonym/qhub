@@ -17,6 +17,7 @@ public:
 	static void setErr(const std::string& filename);
 	static void setStat(const std::string& filename);
 	static void setLine(const std::string& filename);
+	static void set(std::ostream& s, const std::string& filename);
 	static void copy(const std::ostream& src, std::ostream& dest);
 };
 

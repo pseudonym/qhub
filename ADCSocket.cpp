@@ -44,27 +44,26 @@ void ADCSocket::handleOnRead()
 		}
 		return;
 	}
-	readPos += ret;
 	char* l = readBuffer;
-	char* r = readBuffer + readPos;
-	char* tmp;
-	while((tmp = find(l, r, '\n')) != r) {
-		string line(l, ++tmp);
+	char* r = readBuffer + readPos + ret;
+	char* tmp = readBuffer + readPos;
+	while((tmp = find(tmp, r, '\n')) != r) {
+		string line(l, tmp);
+		l = ++tmp;
 		if(line.empty())
 			continue;	//ignore keepalives
 		StringList sl = Util::stringTokenize(line);
-		sl.back().resize(sl.back().size()-1);	//remove ending newline
 		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i)
 			*i = ADC::CSE(*i);
-		Logs::line << getFd() << "<< " << line << endl;
+		line += '\n';
+		Logs::line << getFd() << "<< " << line;
 		onLine(sl, line);
 		if(disconnected)
 			return;
-		l = tmp;
 	}
 	readPos = r - l;
 	if(readPos == BUF_SIZE)
-		throw Exception("line limit of 1024 characters exceeded");
+		throw parse_error("line limit of 1024 characters exceeded");
 
 	::memmove(readBuffer, l, readPos);
 }

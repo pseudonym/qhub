@@ -14,6 +14,10 @@ time on the logging than anything else :)
 rather than each hub having a direct connection to all its peers... not sure
 how well this works, though....
 * began work on a bans plugin, maybe it can actually be used for real hubs now..
+* added plugin hooks for interhub... only primitive ones, though
+* started using diffentiated excepion classes (though the catches still catch
+anything...
+* a whole bunch of general code shuffling
 
 - 0.9 -
 * Pseudo is now in charge :)

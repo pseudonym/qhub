@@ -6,6 +6,7 @@
 #include "../UserData.h"
 #include "../XmlTok.h"
 #include "../Logs.h"
+#include "../Settings.h"
 #include "VirtualFs.h"
 
 using namespace qhub;
@@ -31,7 +32,7 @@ bool Accounts::load() throw()
 {
 	bool success = false;
 	XmlTok root;
-	if(root.load(CONFIGDIR "/accounts.xml")) {
+	if(root.load(Settings::getFilename(getId()))) {
 		XmlTok* p = &root;
 		if(p->findChild("accounts")) {
 			users.clear(); // clean old users
@@ -63,7 +64,7 @@ bool Accounts::save() const throw()
 		tmp->setAttr("level", Util::toString(i->second.second));
 	}
 	p = p->getParent();
-	return root.save(CONFIGDIR "/accounts.xml");
+	return root.save(Settings::getFilename(getId()));
 }
 
 void Accounts::initVFS() throw()
@@ -74,7 +75,6 @@ void Accounts::initVFS() throw()
 	virtualfs->mknod("/accounts/add", this);
 	virtualfs->mknod("/accounts/del", this);
 	virtualfs->mknod("/accounts/list", this);
-	//assert(virtualfs->mknod("/accounts/show", this));
 }
 
 void Accounts::deinitVFS() throw()

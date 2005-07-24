@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([qhub], [0.9.2])
+AC_INIT([qhub], [0.9.3])
 AC_CONFIG_SRCDIR([qhub.cpp])
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
@@ -11,8 +11,8 @@ AC_LANG([C++])
 
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
-#Using `AC_PROG_RANLIB' is rendered obsolete by `AC_PROG_LIBTOOL'
-#AC_PROG_RANLIB
+## Using `AC_PROG_RANLIB' is rendered obsolete by `AC_PROG_LIBTOOL'
+##AC_PROG_RANLIB
 
 
 AM_CONFIG_HEADER(config.h)

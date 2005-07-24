@@ -4,6 +4,7 @@
 #include "../XmlTok.h"
 #include "../Util.h"
 #include "../Logs.h"
+#include "../Settings.h"
 
 using namespace qhub;
 
@@ -28,7 +29,7 @@ int Loader::load() throw()
 	int success = 0;
 	int failure = 0;
 	XmlTok root;
-	if(root.load(CONFIGDIR "/plugins.xml")) {
+	if(root.load(Settings::getFilename("plugins"))) {
 		XmlTok* p = &root;
 		if(p->findChild("plugins") && (p = p->getNextChild()) && p->findChild("plugin")) {
 			XmlTok* tmp;
@@ -61,7 +62,7 @@ bool Loader::save() const throw()
 		tmp->setData((*i)->getId());
 	}
 	p = p->getParent();
-	return root.save(CONFIGDIR "/plugins.xml");
+	return root.save(Settings::getFilename("plugins"));
 }
 
 void Loader::initVFS() throw()

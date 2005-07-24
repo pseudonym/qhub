@@ -4,6 +4,7 @@
 
 #include <string>
 #include <cassert>
+#include <stdint.h>
 
 #include "compat_hash_map.h"
 #include <list>
@@ -17,6 +18,7 @@ namespace qhub {
 
 class ADCClient;
 class UserInfo;
+class InterHub;
 
 class Plugin {
 public:
@@ -51,6 +53,10 @@ public:
 		USER_COMMAND,			// user sends private message to hub bot
 		USER_MESSAGE,			// user sends message
 		USER_PRIVATEMESSAGE,	// user sends message with PM flag
+		// Interhub messages
+		INTER_CONNECTED,
+		INTER_DISCONNECTED,
+		INTER_LINE,
 		// Last
 		LAST
 	};
@@ -110,6 +116,13 @@ public:
 	typedef ActionType<USER_PRIVATEMESSAGE, HANDLE | STOP | DISCONNECT>
 			UserPrivateMessage;
 
+	typedef ActionType<INTER_CONNECTED, HANDLE | DISCONNECT>
+			InterConnected;
+	typedef ActionType<INTER_DISCONNECTED, HANDLE>
+			InterDisconnected;
+	typedef ActionType<INTER_LINE, HANDLE | DISCONNECT | MODIFY | STOP>
+			InterLine;
+
 	
 	template<typename T0>
 	static void fire(T0& type) throw() {
@@ -168,9 +181,9 @@ public:
 	virtual void on(ClientDisconnected&, ADCClient*) throw() {};
 	// Called on every client input
 	// parm: ADCClient* = the client
-	// parm: u_int32_t = FOURCC of command
+	// parm: uint32_t = FOURCC of command
 	// parm: StringList: list of command arguments
-	virtual void on(ClientLine&, ADCClient*, u_int32_t const, StringList) throw() {};
+	virtual void on(ClientLine&, ADCClient*, uint32_t const, StringList) throw() {};
 	// Called when a client sends first BINF
 	// parm: ADCClient* = the client
 	virtual void on(ClientLogin&, ADCClient*) throw() {};
@@ -191,8 +204,19 @@ public:
 	// Called when a client sends a normal broadcast chat message
 	// parm: ADCClient* = the client
 	// parm: string = the message
-	virtual void on(UserMessage&, ADCClient*, u_int32_t const, string&) throw() {};
-	virtual void on(UserPrivateMessage&, ADCClient*, u_int32_t const, string&, string&) throw() {};
+	virtual void on(UserMessage&, ADCClient*, uint32_t const, string&) throw() {};
+	virtual void on(UserPrivateMessage&, ADCClient*, uint32_t const, string&, string&) throw() {};
+	// Called when another hub connects
+	// parm: InterHub* = the interhub connection
+	virtual void on(InterConnected&, InterHub*) throw() {};
+	// Called when hub disconnects
+	// parm: InterHub* = the interhub connection
+	virtual void on(InterDisconnected&, InterHub*) throw() {};
+	// Called on interhub input
+	// parm: InterHub* = the interhub connection
+	// parm: uint32_t = FOURCC of command
+	// parm: StringList = list of command arguments
+	virtual void on(InterLine&, InterHub*, const uint32_t, StringList&) throw() {};
 
 	/*
 	 * Static methods

@@ -6,7 +6,7 @@
 
 #include <string>
 #include <list>
-#include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 
 #include "Buffer.h"
 #include "DNSUser.h"
@@ -20,21 +20,19 @@ using namespace std;
 
 namespace qhub {
 
-class Hub {
+class Hub : boost::noncopyable {
 public:
 	static void killAll() throw();
 
-	Hub();
+	Hub(const string& cid32, const string& name);
 	virtual ~Hub();
 
-	void openADCPort(int port);
+	void openClientPort(int port);
 	void openInterPort(int port);
 	void openInterConnection(const string& host, int port) throw();
 
-	void setCID32(const string& c) { cid32 = c; };
+	//these should never change during the life of the hub
 	const string& getCID32() const { return cid32; };
-
-	void setHubName(const string& n) { name = n; };
 	const string& getHubName() const { return name; };
 
 	void setDescription(const string& d) { description = d; };
@@ -43,8 +41,8 @@ public:
 	void setInterPass(const string& p) { interPass = p; }
 	const string& getInterPass() const { return interPass; }
 
-	void setMaxPacketSize(int s);
-	int getMaxPacketSize() const { return maxPacketSize; };
+	//void setMaxPacketSize(int s);
+	//int getMaxPacketSize() const { return maxPacketSize; };
 
 	void acceptLeaf(int fd, Socket::Domain d);
 	void acceptInterHub(int fd, Socket::Domain d);
@@ -74,13 +72,13 @@ private:
 	static void remove(Hub* h) throw();
 	inline size_t motdHelper();
 
-	typedef list<Hub*> Hubs;
+	typedef vector<Hub*> Hubs;	// list is definitely not necessary, pointers are easy to move
 	static Hubs hubs;
 
-	int maxPacketSize;
+	//int maxPacketSize;
 	
-	string name;
-	string cid32;
+	const string name;
+	const string cid32;
 	string description;
 	string interPass;
 	
@@ -92,7 +90,7 @@ private:
 	Users passiveUsers;
 	Users activeUsers;
 
-	typedef list<InterHub*> Interhubs;
+	typedef vector<InterHub*> Interhubs;
 	//working connections
 	Interhubs interhubs;
 	//waiting for handshake

@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 #endif
 
 	ios::sync_with_stdio();
-	Logs::stat << "starting " PACKAGE "/" VERSION << endl;
+	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help
