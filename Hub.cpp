@@ -36,6 +36,8 @@ void Hub::openClientPort(int port)
 	                        Socket::IP4,
 #endif
 	                        port, ServerSocket::LEAF_HANDLER, this);
+
+#ifdef ENABLE_IPV6
 	if(tmp->error()){
 		delete tmp;
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER, this);
@@ -43,6 +45,7 @@ void Hub::openClientPort(int port)
 	if(tmp->error()){
 		return;
 	}
+#endif
 	
 	enable_fd(tmp->getFd(), OOP_READ, tmp);
 }
