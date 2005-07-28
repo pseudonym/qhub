@@ -36,6 +36,14 @@ void Hub::openClientPort(int port)
 	                        Socket::IP4,
 #endif
 	                        port, ServerSocket::LEAF_HANDLER, this);
+	if(tmp->error()){
+		delete tmp;
+		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER, this);
+	}
+	if(tmp->error()){
+		return;
+	}
+	
 	enable_fd(tmp->getFd(), OOP_READ, tmp);
 }
 
