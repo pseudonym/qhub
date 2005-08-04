@@ -17,7 +17,7 @@ qhub_SOURCES += UserData.h UserData.cpp XmlTok.h XmlTok.cpp
 qhub_SOURCES += Settings.h Settings.cpp
 qhub_SOURCES += Timer.h Timer.cpp
 
-EXTRA_DIST = doc/protocol.txt doc/ADC-commands_by_type.txt TODO
+EXTRA_DIST = doc/ADC-commands_by_type.txt TODO Settings.xml
 EXTRA_DIST += config.sub config.guess README.cygwin doc/ADC-IHUB
 
 pkgsysconfdir = $(sysconfdir)/$(PACKAGE_NAME)
