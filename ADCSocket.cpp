@@ -2,6 +2,7 @@
 #include "ADCSocket.h"
 #include "qhub.h"
 #include "Util.h"
+#include "Logs.h"
 #include "error.h"
 #include "ADC.h"
 
@@ -25,7 +26,6 @@ ADCSocket::ADCSocket(Hub* parent) throw()
 
 ADCSocket::~ADCSocket() throw()
 {
-	log(qstat, "~ADCSocket\n");
 	delete[] readBuffer;
 }
 
@@ -44,29 +44,26 @@ void ADCSocket::handleOnRead()
 		}
 		return;
 	}
-	readPos += ret;
 	char* l = readBuffer;
-	char* r = readBuffer + readPos;
-	char* tmp;
-	while((tmp = find(l, r, '\n')) != r) {
+	char* r = readBuffer + readPos + ret;
+	char* tmp = readBuffer + readPos;
+	while((tmp = find(tmp, r, '\n')) != r) {
 		string line(l, tmp);
+		l = ++tmp;
 		if(line.empty())
 			continue;	//ignore keepalives
 		StringList sl = Util::stringTokenize(line);
 		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i)
 			*i = ADC::CSE(*i);
-		log(qline, format("%d<< %s") % getFd() % line);
-		onLine(sl, line + '\n');
+		line += '\n';
+		Logs::line << getFd() << "<< " << line;
+		onLine(sl, line);
 		if(disconnected)
 			return;
-		l = tmp+1;
 	}
 	readPos = r - l;
-	if(readPos == BUF_SIZE) {
-		doError("line limit of 1024 characters exceeded");
-		disconnect("line limit of 1024 characters exceeded");
-		return;
-	}
+	if(readPos == BUF_SIZE)
+		throw parse_error("line limit of 1024 characters exceeded");
 
 	::memmove(readBuffer, l, readPos);
 }
@@ -127,7 +124,7 @@ void ADCSocket::realDisconnect()
 	//this should not be necessary: the assumptions above forbid it
 	assert(fd != -1 && "Assumptions of 'delete this' usage was probably broken!");
 
-	log(qerr, format("Real Disconnect %d %p") % fd % this);
+	Logs::stat << format("Real Disconnect %d %p\n") % fd % this;
 	if(writeEnabled) {
 		disableMe(ev_write);
 	}

@@ -3,14 +3,13 @@
 #include <string>
 #include <cassert>
 #include "Util.h"
-#include "error.h"
 
 using namespace qhub;
 
 string ADC::ESC(string const& in) throw()
 {
 	string tmp;
-	tmp.reserve(255);
+	tmp.reserve(static_cast<size_t>(in.length()*1.2));
 	for(string::const_iterator i = in.begin(); i != in.end(); ++i) {
 		switch(*i) {
 		case ' ':
@@ -29,7 +28,7 @@ string ADC::ESC(string const& in) throw()
 	return tmp;
 }
 
-string ADC::CSE(string const& in) throw(Exception)
+string ADC::CSE(string const& in) throw(parse_error)
 {
 	string tmp;
 	tmp.reserve(in.length());
@@ -37,7 +36,7 @@ string ADC::CSE(string const& in) throw(Exception)
 		if(*i == '\\') {
 			++i;
 			if(i == in.end())
-				throw Exception("ADC::CSE invalid escape:\n\t" + in);
+				throw parse_error("ADC::CSE invalid escape:\n\t" + in);
 			switch (*i) {
 			case 'n':
 				tmp += '\n';
@@ -49,7 +48,7 @@ string ADC::CSE(string const& in) throw(Exception)
 				tmp += '\\';
 				break;
 			default:
-				throw Exception("ADC::CSE invalid escape:\n\t" + in);
+				throw parse_error("ADC::CSE invalid escape:\n\t" + in);
 			}
 			continue;
 		}
@@ -70,12 +69,8 @@ string& ADC::toString(StringList const& sl, string& out) throw()
 
 bool ADC::checkCID(const string& cid) throw()
 {
-	if(cid.size() != 13)
-		return false;
-	if(cid.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") != string::npos)
-		return false;
-	//bit 0 of last one cannot be 1
-	if(cid.find_first_not_of("ACEGIKMOQSUWY246", 12) != string::npos)
-		return false;
-	return true;
+	return cid.size() == 13
+			&& cid.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") == string::npos
+			//bit 0 of last one cannot be 1
+			&& cid.find_first_not_of("ACEGIKMOQSUWY246", 12) == string::npos;
 }

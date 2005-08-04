@@ -29,8 +29,6 @@ public:
 	//from DNSUser
 	virtual void onLookup();
 
-	void setHostName(const string& h) { hostname = h; }
-	void setPort(short p) { port = p; }
 	short getPort() const { return port; }
 	const string& getCID32() const { return cid; }
 	bool hasClient(const string& cid) const;
@@ -61,7 +59,7 @@ private:
 	string cid;
 	string hostname;
 	short port;
-	bool outgoing;
+	const bool outgoing;
 
 	typedef hash_map<string,UserInfo*> Users;
 	Users users;

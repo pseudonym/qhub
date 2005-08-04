@@ -13,7 +13,7 @@ namespace qhub {
 class ADC {
 public:
 	static string ESC(string const& in) throw();
-	static string CSE(string const& in) throw(Exception);
+	static string CSE(string const& in) throw(parse_error);
 	static string& toString(StringList const& sl, string& out) throw();
 	static bool checkCID(const string& cid) throw();
 };

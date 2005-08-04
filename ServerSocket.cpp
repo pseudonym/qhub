@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 
 #include "error.h"
+#include "Logs.h"
 #include "ServerSocket.h"
 #include "InterHub.h"
 #include "Hub.h"
@@ -29,7 +30,7 @@ ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(doma
 	int yes = 1;
 
 	if(setsockopt(getSocket(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-		log(qerr, format("warning: setsockopt:SO_REUSEADDR: %s") % Util::errnoToString(errno));
+		Logs::err << "warning: setsockopt:SO_REUSEADDR: " << Util::errnoToString(errno) << endl;
 	}
 
 	//just let the kernel handle this for us...
@@ -60,11 +61,11 @@ bool ServerSocket::onRead() throw()
 		if(fd != -1){
 			switch(type){
 			case INTER_HUB:
-				log(qstat, format("accepted ihub socket %d") % fd);
+				Logs::stat << "accepted ihub socket " << fd << endl;
 				hub->acceptInterHub(fd, d);
 				break;
 			case LEAF_HANDLER:
-				log(qstat, format("accepted leaf socket %d") % fd);
+				Logs::stat << "accepted leaf socket " << fd << endl;
 				hub->acceptLeaf(fd, d);
 				break;
 			default:

@@ -1,10 +1,11 @@
-lib_LTLIBRARIES = qhub-accounts.la qhub-virtualfs.la qhub-fsutil.la qhub-loader.la
+lib_LTLIBRARIES  = qhub-accounts.la qhub-virtualfs.la qhub-fsutil.la
+lib_LTLIBRARIES += qhub-loader.la qhub-bans.la
 AM_CXXFLAGS = -Wall -DDEBUG -g -DCONFIGDIR=\"$(pkgsysconfdir)\"
-pkgsysconfdir = $(sysconfdir)/$(PACKAGE)
+pkgsysconfdir = $(sysconfdir)/$(PACKAGE_NAME)
 
 
-##foo1_la_SOURCES = foo1.c
-##foo1_la_LDFLAGS = -module
+qhub_bans_la_SOURCES = Bans.h Bans.cpp
+qhub_bans_la_LDFLAGS = -module
 
 qhub_accounts_la_SOURCES = Accounts.h Accounts.cpp
 qhub_accounts_la_LDFLAGS = -module

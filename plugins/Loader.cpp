@@ -4,6 +4,7 @@
 #include "../XmlTok.h"
 #include "../Util.h"
 #include "../Logs.h"
+#include "../Settings.h"
 
 using namespace qhub;
 
@@ -28,7 +29,7 @@ int Loader::load() throw()
 	int success = 0;
 	int failure = 0;
 	XmlTok root;
-	if(root.load(CONFIGDIR "/plugins.xml")) {
+	if(root.load(Settings::getFilename("plugins"))) {
 		XmlTok* p = &root;
 		if(p->findChild("plugins") && (p = p->getNextChild()) && p->findChild("plugin")) {
 			XmlTok* tmp;
@@ -61,7 +62,7 @@ bool Loader::save() const throw()
 		tmp->setData((*i)->getId());
 	}
 	p = p->getParent();
-	return root.save(CONFIGDIR "/plugins.xml");
+	return root.save(Settings::getFilename("plugins"));
 }
 
 void Loader::initVFS() throw()
@@ -90,13 +91,13 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
 		} else {
-			log(qerr, "warning: Plugin Loader: VirtualFs interface not found.");
+			Logs::err << "warning: Plugin Loader: VirtualFs interface not found.\n";
 		}
-		Logs::stat << "success: Plugin Loader: Started." << endl;
+		Logs::stat << "success: Plugin Loader: Started.\n";
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			log(qstat, "success: Plugin Loader: VirtualFs interface found.");
+			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
 		}
 	}
@@ -107,9 +108,9 @@ void Loader::on(PluginStopped&, Plugin* p) throw()
 	if(p == this) {
 		if(virtualfs)
 			deinitVFS();
-		log(qstat, "success: Plugin Loader: Stopped.\n");
+		Logs::stat << "success: Plugin Loader: Stopped.\n";
 	} else if(virtualfs && p == virtualfs) {
-		log(qerr, "warning: Plugin Loader: VirtualFs interface disabled.\n");
+		Logs::err << "warning: Plugin Loader: VirtualFs interface disabled.\n";
 		virtualfs = NULL;
 	}
 }

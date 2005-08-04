@@ -6,7 +6,7 @@
 #include <vector>
 #include <cstdlib>
 #include "compat_hash_map.h"
-#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 #include "string8.h"
 #include "error.h"
 
@@ -32,18 +32,17 @@ public:
 	};
 
 	static int toInt(char const* p) throw() {
-		return atoi(p);
+		return toInt(string(p));
 	};
 	static int toInt(string const& s) throw() {
-		return toInt(s.c_str());
+		return boost::lexical_cast<int>(s);
 	};
 
-	static string toString(void* p) throw() {
-		return (format("%p") % p).str();
-	};
-	static string toString(int i) throw() {
-		return (format("%i") % i).str();
-	};
+	template<class T>
+	static string toString(const T& val) throw()
+	{
+		return boost::lexical_cast<string>(val);
+	}
 
 	static string8 genRand192() throw() {
 		u_int8_t buf[24];

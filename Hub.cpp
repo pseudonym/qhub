@@ -2,6 +2,7 @@
 #include "Hub.h"
 
 #include "qhub.h"
+#include "error.h"
 #include "ServerSocket.h"
 #include "ADCClient.h"
 #include "InterHub.h"
@@ -10,15 +11,13 @@
 
 #include <cstdlib>
 #include <algorithm>
-#include <adns.h>
-#include <oop-adns.h>
+#include <boost/format.hpp>
 
 using namespace qhub;
 
 Hub::Hubs Hub::hubs;
 
-Hub::Hub() : maxPacketSize(65536), name("qhub"), cid32("ABCDEFGHIJKLM"),
-		description("majs")
+Hub::Hub(const string& cid32_, const string& name_) : name(name_), cid32(cid32_)
 {
 	add(this);
 }
@@ -28,7 +27,7 @@ Hub::~Hub()
 	remove(this);
 }
 
-void Hub::openADCPort(int port)
+void Hub::openClientPort(int port)
 {
 	//Leaf-handler
 	ServerSocket* tmp = new ServerSocket(
@@ -38,6 +37,18 @@ void Hub::openADCPort(int port)
 	                        Socket::IP4,
 #endif
 	                        port, ServerSocket::LEAF_HANDLER, this);
+
+#ifdef ENABLE_IPV6
+	if(tmp->error()){
+		delete tmp;
+		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER, this);
+	}
+	if(tmp->error()){
+		return;
+	}
+#endif
+	
+	tmp->enableMe(EventHandler::ev_read);
 }
 
 void Hub::openInterPort(int port)
@@ -60,7 +71,8 @@ void Hub::acceptLeaf(int fd, Socket::Domain d)
 
 void Hub::getUserList(ADCSocket* c) throw()
 {
-	string tmp;
+	Buffer::Ptr t(new Buffer(Util::emptyString));
+	string& tmp = t->getBuf();
 	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); i++) {
 		tmp += i->second->getAdcInf();
 	}
@@ -70,7 +82,6 @@ void Hub::getUserList(ADCSocket* c) throw()
 	for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); i++) {
 		(*i)->appendUserList(tmp);
 	}
-	Buffer::writeBuffer t(new Buffer(tmp));
 	c->writeb(t);
 }
 
@@ -84,7 +95,7 @@ inline size_t Hub::motdHelper()
 
 void Hub::motd(ADCClient* c) throw()
 {
-	format fmt("Hubconnections: %d.\nWe have %d (of which %d are passive) local users, and %d remote users.");
+	boost::format fmt("Hubconnections: %d.\nWe have %d (of which %d are passive) local users, and %d remote users.");
 	fmt % interhubs.size() % (activeUsers.size()+passiveUsers.size()) % passiveUsers.size() % motdHelper();
 	c->doHubMessage(fmt.str());
 }
@@ -92,7 +103,7 @@ void Hub::motd(ADCClient* c) throw()
 void Hub::direct(string const& cid, string const& data, ADCClient* from) throw()
 {
 	Users::iterator i;
-	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
+	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if((i = activeUsers.find(cid)) != activeUsers.end() || (i = passiveUsers.find(cid)) != passiveUsers.end()) {
 		if(from)
 			from->writeb(tmp);
@@ -107,7 +118,7 @@ void Hub::direct(string const& cid, string const& data, ADCClient* from) throw()
 
 void Hub::broadcast(string const& data, ADCSocket* except/* = NULL*/) throw()
 {
-	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
+	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
 		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
 			i->second->writeb(tmp);
@@ -160,14 +171,14 @@ void Hub::broadcastPassive(string const& data, ADCSocket* except/* = NULL*/) thr
 {
 	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			i->second->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
 			(*i)->writeb(tmp);
 		}
 	} else {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			if(i->second != except)
 				i->second->writeb(tmp);
 		}
@@ -184,11 +195,6 @@ void Hub::broadcastInter(string const& data, InterHub* except/* = NULL*/) throw(
 		if(*i != except)
 			(*i)->send(data);
 	}
-}
-
-void Hub::setMaxPacketSize(int s)
-{
-	maxPacketSize = s;
 }
 
 bool Hub::hasClient(string const& cid, bool localonly) const throw()

@@ -1,11 +1,14 @@
+// vim:ts=4:sw=4:noet
 #include "InterHub.h"
 #include "Hub.h"
 #include "Encoder.h"
 #include "TigerHash.h"
 #include "UserInfo.h"
+#include "Plugin.h"
 
 #include "qhub.h"
 #include "error.h"
+#include "Logs.h"
 #include "string8.h"
 #include "Util.h"
 
@@ -27,29 +30,31 @@ InterHub::InterHub(Hub* h, int fd, Domain d) throw()
 void InterHub::onLookup()
 {
 /*	assert(getState() == PROTOCOL);
-	log(qstat, string("InterHub::onLookup: ") + reply->owner);
+	Logs::stat << "InterHub::onLookup: " << reply->owner << endl;
 
 	if (reply->status != adns_s_ok) {
-		log(qerr, string("InterHub::onLookup error: ") + adns_strerror(reply->status));
-	} else {
-		assert(reply->type == adns_r_a);
-		if(reply->nrrs > 0){
-			struct sockaddr_in dest_addr;
-			dest_addr.sin_family = AF_INET;
-			dest_addr.sin_port = htons(getPort());
-			dest_addr.sin_addr = reply->rrs.inaddr[0];
-			memset(&(dest_addr.sin_zero), '\0', 8);
+		Logs::err <<"InterHub::onLookup error: " << adns_strerror(reply->status) << endl;
+		return;
+	}
+	assert(reply->type == adns_r_a);
+	if(reply->nrrs > 0) {
+		sockaddr_in dest_addr;
+		dest_addr.sin_family = AF_INET;
+		dest_addr.sin_port = htons(getPort());
+		dest_addr.sin_addr = reply->rrs.inaddr[0];
+		memset(&(dest_addr.sin_zero), '\0', 8);
 
-			::connect(getFd(), reinterpret_cast<struct sockaddr*>(&dest_addr), sizeof(struct sockaddr));
-			enableMe(ev_read);
-			doSupports();
-		}
+		::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr));
+		enableMe(ev_read);
+		doSupports();
 	}*/
 }
 
 void InterHub::onConnected() throw()
 {
 	alarm(15);
+	Plugin::InterConnected action;
+	Plugin::fire(action, this);
 }
 
 void InterHub::onDisconnected(const string& clue) throw()
@@ -62,13 +67,13 @@ void InterHub::onDisconnected(const string& clue) throw()
 		delete i->second;
 	}
 	users.clear();
+	Plugin::InterDisconnected action;
+	Plugin::fire(action, this);
 }
 
 bool InterHub::hasClient(const string& cid) const
 {
-	if(users.find(cid) == users.end())
-		return false;
-	return true;
+	return users.find(cid) != users.end();
 }
 
 void InterHub::appendUserList(string& tmp) throw()
@@ -83,10 +88,10 @@ void InterHub::doError(const string& msg) throw()
 	if(state == PROTOCOL)
 		// silent disconnect... we don't want probes
 		return;
-	send("SSTA " + getHub()->getCID32() + " 200 " + ADC::ESC(msg) + '\n');
+	send("LSTA " + getHub()->getCID32() + " 200 " + ADC::ESC(msg) + '\n');
 }
 
-void InterHub::onLine(StringList& sl, const string& full) throw()
+void InterHub::onLine(StringList& sl, const string& fullmsg) throw()
 {
 	alarm(0);
 
@@ -94,17 +99,30 @@ void InterHub::onLine(StringList& sl, const string& full) throw()
 		disconnect("bad FOURCC");
 		return;
 	}
+	
 	uint32_t command = stringToFourCC(sl[0]);
+	string full = fullmsg;
+
+	{
+		Plugin::InterLine action;
+		Plugin::fire(action, this, command, sl);
+		if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED)) {
+			return;
+		} else if(action.isSet(Plugin::MODIFIED)) {
+			command = stringToFourCC(sl[0]);
+			ADC::toString(sl, full);
+		}
+	}
 
 	switch(state) {
 	case PROTOCOL:
-		if(command != (SUP | 'S')) {
-			disconnect("InterHub::onLine bad command type in state PROTOCOL");
+		if(command != (SUP | 'L')) {
+			disconnect("bad command type in state PROTOCOL");
 			return;
 		}
 		if (sl.size() < 4 || find(sl.begin()+2, sl.end(), "+BASE") == sl.end() ||
 				find(sl.begin()+2, sl.end(), "+IHUB") == sl.end()) {
-			disconnect("InterHub::onLine invalid supports");
+			disconnect("invalid supports");
 			return;
 		}
 		if(!outgoing)
@@ -128,7 +146,7 @@ void InterHub::onLine(StringList& sl, const string& full) throw()
 		state = VERIFY;
 		break;
 	case VERIFY:
-		if(command != (PAS | 'S') && command != (GPA | 'S')) {
+		if(command != (PAS | 'L') && command != (GPA | 'L')) {
 			doError("bad command type");
 			disconnect("InterHub::onLine bad command type in state VERIFY");
 			return;
@@ -141,33 +159,34 @@ void InterHub::onLine(StringList& sl, const string& full) throw()
 			getHub()->getUserList(this);
 			getHub()->activate(this);
 		} else
-			assert(0 && "bad command type slipped through");
+			assert(0);
 		break;
 	case NORMAL:
 		//pass the message on
 		handle(sl, full, command);
 		break;
 	default:
-		assert(0 && "InterHub::onLine invalid state");
+		assert(0);
 	}
 }
 
 void InterHub::doSupports() throw()
 {
-	send("SSUP " + getHub()->getCID32() + " +BASE +IHUB\n");
+	send("LSUP " + getHub()->getCID32() + " +BASE +IHUB\n");
 }
 
 void InterHub::doInf() throw()
 {
 	send("SINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
-			" HU1 DE" + ADC::ESC(getHub()->getDescription()) + " VE" PACKAGE "/" VERSION "\n");
+			" HU1 DE" + ADC::ESC(getHub()->getDescription()) + " VE"
+			PACKAGE_NAME "/" PACKAGE_VERSION "\n");
 }
 
 void InterHub::doAskPassword() throw()
 {
 	assert(state == IDENTIFY && salt.empty());
 	salt = Util::genRand192();
-	send("SGPA " + getHub()->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.size()) + '\n');
+	send("LGPA " + getHub()->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.size()) + '\n');
 }
 
 void InterHub::doPassword(const StringList& sl) throw()
@@ -181,7 +200,7 @@ void InterHub::doPassword(const StringList& sl) throw()
 	h.update(getHub()->getInterPass().data(), getHub()->getInterPass().size());
 	h.update(s, len);
 	delete[] s;
-	send("SPAS " + getHub()->getCID32() + ' ' +
+	send("LPAS " + getHub()->getCID32() + ' ' +
 			Encoder::toBase32(h.finalize(), TigerHash::HASH_SIZE) + '\n');
 }
 
@@ -205,6 +224,8 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 		getHub()->broadcastPassive(full, this);
 		break;
 	case 'S':
+		getHub()->broadcastInter(full, this);
+	case 'L':
 		if(sl[1] != cid) {
 			doError("CID mismatch");
 			disconnect("CID mismatch");
@@ -243,7 +264,7 @@ void InterHub::handlePassword(const StringList& sl) throw()
 	h.finalize();
 	string result32 = Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE);
 	if(result32 != sl[2]) {
-		send("SSTA " + getHub()->getCID32() + " 223 " + ADC::ESC("Bad password") + '\n');
+		send("LSTA " + getHub()->getCID32() + " 223 " + ADC::ESC("Bad password") + '\n');
 		disconnect("bad password: expected " + result32);
 		return;
 	}

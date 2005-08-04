@@ -5,7 +5,9 @@
 
 #include "XmlTok.h"
 #include "Util.h"
-#include <stdio.h>
+#include "Logs.h"
+#include <cstdio>
+#include <cassert>
 
 #if defined(HAVE_EXPAT_H)
 # include <expat.h>
@@ -51,8 +53,7 @@ XmlTok::XmlTok(string const& n, XmlTok* p) throw()
 		: parent(p), name(n)
 {
 	if(sizeof(XML_Char) != 1) {
-		log(qerr, "XmlTok::XmlTok UTF8 compilation.. not supported FIXME");
-		exit(1);
+		assert(0 && "XmlTok::XmlTok UTF8 compilation.. not supported FIXME");
 	}
 }
 
@@ -95,7 +96,7 @@ string const& XmlTok::getAttr(string const& n) const throw()
 		if(i->first == n)
 			return i->second;
 	}
-	return empty;
+	return Util::emptyString;
 }
 
 string XmlTok::toString(int indent) const throw()
@@ -149,7 +150,7 @@ bool XmlTok::load(string const& filename) throw()
 {
 	FILE* fp = fopen(filename.c_str(), "r");
 	if(!fp) {
-		log(qerr, "XmlTok::load: fopen: " + Util::errnoToString(errno));
+		Logs::err << "XmlTok::load: fopen: " << Util::errnoToString(errno) << endl;
 		return false;
 	}
 
@@ -165,15 +166,15 @@ bool XmlTok::load(string const& filename) throw()
 	do {
 		size_t len = fread(buf, 1, sizeof(buf), fp);
 		if(ferror(fp)) {
-			log(qerr, "XmlTok::load: Read error");
+			Logs::err << "XmlTok::load: Read error\n";
 			fclose(fp);
 			return false;
 		}
 		done = len < sizeof(buf);
 		if(!XML_Parse(parser, buf, len, done)) {
-			log(qerr, format("XmlTok::load: %s at line %d\n") %
+			Logs::err << format("XmlTok::load: %s at line %d\n") %
 			        XML_ErrorString(XML_GetErrorCode(parser)) %
-			        XML_GetCurrentLineNumber(parser));
+			        XML_GetCurrentLineNumber(parser);
 			fclose(fp);
 			return false;
 		}
@@ -187,7 +188,7 @@ bool XmlTok::save(string const& filename) const throw()
 {
 	FILE* fp = fopen(filename.c_str(), "w");
 	if(!fp) {
-		log(qerr, "XmlTok::save: fopen: " + Util::errnoToString(errno));
+		Logs::err << "XmlTok::save: fopen: " << Util::errnoToString(errno) << endl;
 		return false;
 	}
 
@@ -196,7 +197,7 @@ bool XmlTok::save(string const& filename) const throw()
 	do {
 		left -= fwrite(total.c_str(), 1, left, fp);
 		if(ferror(fp)) {
-			log(qerr, "XmlTok::save: Write error");
+			Logs::err << "XmlTok::save: Write error";
 			fclose(fp);
 			return false;
 		}

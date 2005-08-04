@@ -1,9 +1,9 @@
+// vim:ts=4:sw=4:noet
 #ifndef QHUB_ERROR_H
 #define QHUB_ERROR_H
 
-#include <exception>
+#include <stdexcept>
 #include <string>
-#include <boost/format.hpp>
 
 namespace qhub {
 
@@ -21,31 +21,17 @@ private:
 	std::string msg;
 };
 
-extern std::FILE* qerr;
-extern std::FILE* qstat;
-extern std::FILE* qline;
+// used for parsing ex. bad escapes
+struct parse_error : public std::runtime_error {
+	parse_error() : runtime_error("parse_error: error parsing ADC string") {}
+	explicit parse_error(const std::string& arg) : runtime_error(arg) {}
+};
 
-template<typename CharT, typename Traits, typename Alloc>
-inline void log(std::FILE* stream, const std::basic_string<CharT,Traits,Alloc>& msg)
-{
-	fwrite(msg.data(), msg.size(), sizeof(CharT), stream);
-	if(msg[msg.size()-1] != '\n')
-		fwrite("\n", 1, sizeof(char), stream);
-}
-
-template<typename CharT, typename Traits, typename Alloc>
-inline void log(std::FILE* stream, const boost::basic_format<CharT,Traits,Alloc>& msg)
-{
-	log(stream, msg.str());
-}
-
-template<typename CharT>
-inline void log(std::FILE* stream, const CharT* msg)
-{
-	log(stream, std::basic_string<CharT>(msg));
-}
-
-using boost::format;
+// used for invalid command types
+struct command_error : public std::runtime_error {
+	command_error() : runtime_error("command_error: invalid ADC command") {}
+	explicit command_error(const std::string& arg) : runtime_error(arg) {}
+};
 
 } // namespace qhub
 

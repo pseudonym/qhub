@@ -1,37 +1,60 @@
-This is  (or will hopefully become) a full documentation of the ADC-based interhub protocol
-used by qhub.  This document assumes full knowledge (of at least familiarity with) the 
-standard ADC protocol.
+This is  (or will hopefully become) a full documentation of the ADC-based
+interhub protocol used by qhub.  This document assumes full knowledge (or
+at least familiarity with) the standard ADC protocol.
 
-Message types are the same, with the addition of the 'S' type.  The 'S' type is used for
-hub-hub messages that should not be forwarded to connected clients.  Currently, this is the
-only difference between IHUB and BASE.
+
+New message types:
+S	command should be forwarded to all connected servers, but not passed
+		on to clients
+L	command is local to this connection, do not forward at all
+
 
 Handshake:
-IHUB handshakes are almost identical to BASE handshakes.  The connecting party sends a SUP
-message, which must indicate support for both BASE and IHUB.  The other then must reply with
-its own SUP and INF.  After receiving the SUP from the opposing party, the connecting party
-should send its own INF, and after the INF a GPA.  Unlike server-client connections,
-server-server connections are passworded both ways.  Both sides must send correct GPA and
-PAS commands, and after both sides have verified the other, the connection is moved to the
-NORMAL state and the connection can be used.  Passwords are handled slightly differently:
-instead of each client being registered and having to supply the password they were
-registered with on the server, each server defines its own password that all other hubs
-use when connecting to it.
+IHUB handshakes are similar to BASE handshakes.  The connecting party
+sends a SUP message, which must indicate support for both BASE and IHUB.  The
+other then must reply with its own SUP.  However, instead of sending an INF,
+both must go directly to GPA, then reply with a correct PAS.  Both directions
+must share the same password, and this password must be the same across all
+interhub connections in a network.  The password cannot be stolen because
+only the hashed value is transmitted.  The SUP, GPA, and PAS commands should all
+be sent using type L.
+
+If the password check fails, each side must send an LSTA indicating this,
+followed by disconnection.  Otherwise, each side should send its own INF (type
+S), followed by the SINFs of all other servers it is currently connected to,
+followed by the BINFs of all connected clients.  In large hub networks, this can
+generate a large amount of traffic, so network administrators should be wary of
+creating too many new connections at once.
+
+
+Additional client INF parameters (hubs may strip these when forwarding to
+clients for security reasons):
+CH	contains the CID of the hub the user is directly connected to
+
+Additional hub INF parameters:
+AD	full address of hub's client port, e.g. "adc://hub.foo.com:1234"
+
 
 Normal operation:
-Messages of types A, B, D, and P are transparently (to the client) forwarded to connected
-hubs, which then distribute the command to the correct client.  Hubs must take care to
-locally cache BINFs coming down the interhub connection so they are able to send the
-correct userlist to connecting clients.  Verification, however, should only be done by
-the hub the client is physically connected to; other hubs must trust this as verification
-is already taken care of by the password verification done at handshake time.
+Messages of types A, B, D, and P are transparently (to the client) forwarded to
+connected hubs, which then distribute the command to the correct client.  Hubs
+must take care to locally cache BINFs coming down the interhub connection so
+they are able to send the correct userlist to connecting clients.
+Verification, however, should only be done by the hub the client is physically
+connected to; other hubs must trust this as verification is already taken care
+of by the password verification done at handshake time.
 
-TODO: I and H types
 
 Network architecture:
-Currently, there is no forwarding of messages between servers; hubs must be directly
-connected to every hub they wish to share users with.  This can result in interesting
-situations where users connected to one hub will see a different set of users than those
-connected to a connected hub because one hub is also sharing users with a third hub.  This
-is mainly because it is easy to implement and it doesn't really matter as nobody is really
-using this program anyway. :)
+The network of connected hubs should be laid out in a spanning tree
+configuration, similar to the IRC protocol.  See the IRC protocol RFC for a
+better explanation.  The question of which servers connect to each other is at
+the discretion of the people running the network.  Like in IRC, they will have
+the option of disconnecting and reconnecting servers to alleviate network
+congestion (though there are currently no facilities to do this).
+
+
+TODO:
+I and H types
+what about keeping plugin data like banlists consistent across all hubs
+	in a network?

@@ -8,7 +8,7 @@
 #include "UserData.h"
 #include "qhub.h"
 #include "ADC.h"
-#include "error.h"
+#include "Logs.h"
 
 using namespace std;
 using namespace qhub;
@@ -21,7 +21,6 @@ ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
 
 ADCClient::~ADCClient() throw()
 {
-	log(qstat, "~ADCClient\n");
 	alarm(0);
 	if(userInfo)
 		delete userInfo;
@@ -71,11 +70,6 @@ void ADCClient::logout() throw()
 	Plugin::fire(action, this);
 }
 
-string const& ADCClient::assemble(StringList const& sl) throw()
-{
-	return ADC::toString(sl, temp);
-}
-
 string const& ADCClient::getAdcInf() throw()
 {
 	return userInfo->toADC(getCID32());
@@ -115,7 +109,7 @@ void ADCClient::doDisconnect(string const& msg) throw()
 			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ID" +
 					getHub()->getCID32() + " MS" + ADC::ESC(msg) + '\n');
 	}
-	disconnect();
+	disconnect(msg);
 }
 
 void ADCClient::doHubMessage(string const& msg) throw()
@@ -144,7 +138,7 @@ void ADCClient::doDisconnectBy(string const& kicker, string const& msg) throw()
 		doDisconnect(errmsg); \
 	} while(0)
 
-void ADCClient::onLine(StringList& sl, string const& full) throw()
+void ADCClient::onLine(StringList& sl, string const& fullmsg) throw()
 {
 	assert(!sl.empty());
 
@@ -155,8 +149,9 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 	}
 
 	// Make Command integer
-	u_int32_t command = stringToFourCC(sl[0]);
-	string const* fullmsg = &full;
+	uint32_t command = stringToFourCC(sl[0]);
+	// doing a string copy here is worth not dealing with pointers
+	string full = fullmsg;
 
 	// Plugin fire ClientLine
 	{
@@ -166,7 +161,8 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 			return;
 		} else if(action.isSet(Plugin::MODIFIED)) {
 			command = stringToFourCC(sl[0]);
-			fullmsg = &assemble(sl);
+			// amazingly, this doesn't leak memory
+			ADC::toString(sl, full);
 		}
 	}
 
@@ -227,7 +223,7 @@ void ADCClient::onLine(StringList& sl, string const& full) throw()
 	}
 
 	// Woohoo! A normal message to process
-	handle(sl, command, fullmsg);
+	handle(sl, command, full);
 }
 
 void ADCClient::onConnected() throw()
@@ -244,7 +240,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
 		// remove us when doing e.g. the Kick, so that added is false here.
-		log(qstat, format("onDisconnected %d %p GUID: %s") % fd % this % getCID32());
+		Logs::stat << format("onDisconnected %d %p GUID: %s") % fd % this % getCID32();
 		logout();
 		if(clue.empty())
 			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + '\n');
@@ -262,7 +258,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 /* Data handlers */
 /*****************/
 
-void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) throw() {
+void ADCClient::handle(StringList& sl, u_int32_t const cmd, string& full) throw() {
 	u_int32_t threeCC = cmd & 0xFFFFFF00;
 	char oneCC = (char)cmd & 0x000000FF;
 
@@ -294,16 +290,16 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string const* full) 
 	} else {
 		switch(oneCC) {
 		case 'A':
-			getHub()->broadcastActive(*full);
+			getHub()->broadcastActive(full);
 			break;
 		case 'B':
-			getHub()->broadcast(*full); // do we ever want to stop anything to self?
+			getHub()->broadcast(full); // do we ever want to stop anything to self?
 			break;
 		case 'D':
-			getHub()->direct(sl[2], *full, this);
+			getHub()->direct(sl[2], full, this);
 			break;
 		case 'P':
-			getHub()->broadcastPassive(*full);
+			getHub()->broadcastPassive(full);
 			break;
 		default:
 			assert(0);
@@ -323,10 +319,9 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	cid = sl[1];
 
 	if(getHub()->hasClient(cid)) {
-		
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		// Ping other user, perhaps it's a ghost
-		//getHub()->direct(cid, "\n");
+		getHub()->direct(cid, "\n");
 		// Note: Don't forget to check again at HPAS.. perhaps someone beat us to it.
 		return;
 	}
@@ -334,9 +329,10 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	// Load info
 	userInfo = new UserInfo(this);
 	userInfo->fromADC(sl);
+	userInfo->del("OP"); //can't have them opping themselves...
 
 	// Guarantee NI and (I4 or I6)
-	if(!userInfo->has(UIID('N','I'))) {
+	if(!userInfo->has("NI")) {
 		PROTOCOL_ERROR("Missing parameters in INF");
 		return;
 	}
@@ -351,12 +347,11 @@ void ADCClient::handleLogin(StringList& sl) throw()
 		login();
 }
 
-void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string const* full) throw()
+void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string& full) throw()
 {
 	assert(state == NORMAL);
 
-	UserInfo newUserInfo(this);
-	newUserInfo.fromADC(sl);
+	UserInfo newUserInfo(this, sl);
 
 	Plugin::ClientInfo action;
 	Plugin::fire(action, this, newUserInfo);
@@ -374,10 +369,8 @@ void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string const* fu
 	// Broadcast
 	if(action.isSet(Plugin::MODIFIED)) {
 		getHub()->broadcast(newUserInfo.toADC(getCID32()));
-	} else if(!full) {
-		getHub()->broadcast(assemble(sl));
 	} else {
-		getHub()->broadcast(*full);
+		getHub()->broadcast(full);
 	}
 
 	// Merge new data
@@ -390,7 +383,7 @@ void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string const* fu
 	}
 }
 
-void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const* full) throw()
+void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string& full) throw()
 {
 	char oneCC = cmd & 0x000000FF;
 	if(oneCC == 'D' && sl.size() >= 4) {
@@ -400,10 +393,10 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 			if(action.isSet(Plugin::DISCONNECTED))
 				return;
 			if(!action.isSet(Plugin::STOPPED)) {
-				if(full && !action.isSet(Plugin::MODIFIED))
-					send(*full);
+				if(!action.isSet(Plugin::MODIFIED))
+					send(full);
 				else
-					send(assemble(sl));
+					send(ADC::toString(sl, full));
 			}
 		} else {
 			if(sl.size() == 4) {
@@ -413,8 +406,8 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 					return;
 				if(!action.isSet(Plugin::STOPPED)) {
 					if(action.isSet(Plugin::MODIFIED))
-						full = &assemble(sl);
-					getHub()->direct(sl[2], *full, this);
+						ADC::toString(sl, full);
+					getHub()->direct(sl[2], full, this);
 				}
 			} else {
 				Plugin::UserPrivateMessage action;
@@ -423,8 +416,8 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 					return;
 				if(!action.isSet(Plugin::STOPPED)) {
 					if(action.isSet(Plugin::MODIFIED))
-						full = &assemble(sl);
-					getHub()->direct(sl[2], *full, this);
+						ADC::toString(sl, full);
+					getHub()->direct(sl[2], full, this);
 				}
 			}
 		}
@@ -435,25 +428,25 @@ void ADCClient::handleMessage(StringList& sl, u_int32_t const cmd, string const*
 			if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 				return;
 			if(action.isSet(Plugin::MODIFIED))
-				full = &assemble(sl);
+				ADC::toString(sl, full);
 		} else {
 			Plugin::UserPrivateMessage action;
 			Plugin::fire(action, this, cmd, sl[2], sl[3]);
 			if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 				return;
 			if(action.isSet(Plugin::MODIFIED))
-				full = &assemble(sl);
+				ADC::toString(sl, full);
 		}
 
 		switch(oneCC) {
 		case 'A':
-			getHub()->broadcastActive(*full);
+			getHub()->broadcastActive(full);
 			break;
 		case 'B':
-			getHub()->broadcast(*full);
+			getHub()->broadcast(full);
 			break;
 		case 'P':
-			getHub()->broadcast(*full);
+			getHub()->broadcast(full);
 			break;
 		default:
 			assert(0);
@@ -471,8 +464,8 @@ void ADCClient::handleDisconnect(StringList& sl) throw()
 		return;
 	}
 	if(!userInfo->getOp()) {
-		send("ISTA " + getHub()->getCID32() + " 225 " + ADC::ESC("Access denied") + " FCHDSC\n");
-		doDisconnect("Access denied");
+		send("ISTA " + getHub()->getCID32() + " 125 " + ADC::ESC("Access denied") + " FCHDSC\n");
+		//doDisconnect("Access denied");
 		return;
 	}
 	// TODO add plugin stuff
@@ -510,8 +503,13 @@ void ADCClient::handlePassword(StringList& sl) throw()
 
 void ADCClient::handleSupports(StringList& sl) throw()
 {
+	//uncomment this once DC++ follows the spec and doesn't send +BAS0
+	/*if(find(sl.begin(), sl.end(), "+BASE") == sl.end()) {
+		PROTOCOL_ERROR("Invalid supports");
+	}*/
 	send("ISUP " + getHub()->getCID32() + " +BASE\n"
 	     "IINF " + getHub()->getCID32() + " NI" + ADC::ESC(getHub()->getHubName()) +
-	     " HU1 BO1 OP1 DE" + ADC::ESC(getHub()->getDescription()) + " VE" PACKAGE "/" VERSION "\n");
+	     " HU1 BO1 OP1 DE" + ADC::ESC(getHub()->getDescription()) + " VE" PACKAGE_NAME
+		 "/" PACKAGE_VERSION "\n");
 	state = IDENTIFY;
 }

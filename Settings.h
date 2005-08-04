@@ -1,12 +1,18 @@
 #ifndef __SETTINGS_H_
 #define __SETTINGS_H_
 
+#include <string>
+
 namespace qhub {
 
 class Settings {
 public:
-	static int readFromXML() throw();
-	static int parseArgs(int, char**) throw();
+	static std::string getFilename(const std::string& name) throw()
+	{
+		return CONFIGDIR + name + ".xml";
+	}
+	static void readFromXML();
+	static void parseArgs(int, char**);
 };
 
 }

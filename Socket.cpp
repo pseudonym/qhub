@@ -1,5 +1,6 @@
 // vim:ts=4:sw=4:noet
 #include "Socket.h"
+#include "Logs.h"
 #include "qhub.h"
 
 #include "config.h"
@@ -9,12 +10,14 @@ using namespace std;
 using namespace qhub;
 
 Socket::Socket(Domain d, int t, int p) throw()
-		: domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false), err(false)
+		: domain(d), ip4OverIp6(false), err(false),
+		writeEnabled(false), written(0), disconnected(false)
 {
 	create();
 
 	fd = ::socket(d, t, p);
 	if(getSocket() == -1){
+		Logs::err << format("Error, %p could not allocate socket.\n") % this;
 		err = true;
 		return;
 	}
@@ -25,7 +28,8 @@ Socket::Socket(Domain d, int t, int p) throw()
 }
 
 Socket::Socket(int f, Domain d) throw()
-		: domain(d), ip4OverIp6(false), writeEnabled(false), written(0), disconnected(false), err(false)
+		: domain(d), ip4OverIp6(false), err(false),
+		writeEnabled(false), written(0), disconnected(false)
 {
 	fd = f;
 	create();
@@ -34,7 +38,6 @@ Socket::Socket(int f, Domain d) throw()
 
 Socket::~Socket() throw()
 {
-	log(qstat, "~Socket\n");
 	destroy();
 }
 
@@ -93,14 +96,14 @@ void Socket::setBindAddress(string const& a) throw()
 	if(inet_pton(af, a.c_str(), inaddrp) == 0) {
 		if(domain == Socket::IP4) {
 			if(inet_pton(af, "0.0.0.0", inaddrp) == 0) {
-				log(qerr, "error (pton+ipv4): setBoundAddress:inet_pton:0.0.0.0");
+				Logs::err << "error (pton+ipv4): setBoundAddress:inet_pton:0.0.0.0\n";
 				exit(EXIT_FAILURE);
 			}
 		}
 #ifdef ENABLE_IPV6        
 		else if(domain == Socket::IP6) {
 			if(inet_pton(af, "::", inaddrp) == 0) {
-				log(qerr,"error (pton+ipv6): setBoundAddress:inet_pton:[::]");
+				Logs::err << "error (pton+ipv6): setBoundAddress:inet_pton:[::]\n";
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -110,14 +113,14 @@ void Socket::setBindAddress(string const& a) throw()
 	if(inet_aton(a.c_str(), (struct in_addr *)inaddrp) == 0) {
 		if(domain == Socket::IP4) {
 			if(inet_aton("0.0.0.0", (struct in_addr *)inaddrp) == 0) {
-				log(qerr,"error (aton+ipv4): setBoundAddress:inet_aton:0.0.0.0");
+				Logs::err << "error (aton+ipv4): setBoundAddress:inet_aton:0.0.0.0\n";
 				exit(EXIT_FAILURE);
 			}
 		}
 #ifdef ENABLE_IPV6        
 		else if(domain == Socket::IP6) {
 			if(inet_aton("::", (struct in_addr *)inaddrp) == 0) {
-				log(qerr,"error (aton+ipv6): setBoundAddress:inet_aton:[::]");
+				Logs::err << "error (aton+ipv6): setBoundAddress:inet_aton:[::]\n";
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -129,17 +132,14 @@ void Socket::setBindAddress(string const& a) throw()
 
 void Socket::listen(int backlog) throw()
 {
-	int s = ::listen(fd, backlog);
-	if(s == 0){
-		//printf("Listening in non-blocking mode on port %d with backlog %d.\n", ntohs(saddr_in.sin_port), backlog);
-	}
+	::listen(fd, backlog);
 }
 
 void Socket::bind() throw()
 {
 	int ret = ::bind(fd, saddrp, saddrl);
 	if(ret == -1) {
-		log(qerr, "error: bind" + Util::errnoToString(errno));
+		Logs::err << "error: bind: " << Util::errnoToString(errno) << endl;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -152,7 +152,7 @@ void Socket::accept(int& f, Domain& d) throw()
 
 void Socket::disconnect(const string& msg)
 {
-	log(qerr, Util::toString(getFd()) + " disconnected: " + msg);
+	Logs::err << getFd() << " disconnected: " << msg << endl;
 	disableMe(ev_read);
 	disconnected = true;
 }
@@ -169,9 +169,7 @@ void Socket::writeb(Buffer::writeBuffer b)
 		// no 0-byte sends, please
 		return;
 	}
-	log(qline, Util::toString(getFd()) + ">> " +
-			//don't log the \n, it will get written anyway
-			b->getBuf().substr(0,b->getBuf().size()-1));
+	Logs::line << getFd() << ">> " << b->getBuf();
 	queue.push(b);
 	if(!writeEnabled){
 		enableMe(ev_write);
@@ -289,7 +287,7 @@ bool Socket::setNoLinger() throw()
 	so_linger.l_linger = 0;
 	int ret = setsockopt(fd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
 	if(ret != 0) {
-		log(qerr, "warning: setsockopt:SO_LINGER: " + Util::errnoToString(errno));
+		Logs::err << "warning: setsockopt:SO_LINGER: " << Util::errnoToString(errno) << endl;
 		return false;
 	}
 	return true;
@@ -299,12 +297,12 @@ bool Socket::setNonBlocking() throw()
 {
 	int f;
 	if((f = fcntl(fd, F_GETFL, 0)) < 0){
-		log(qerr, "warning: fcntl:F_GETFL: " + Util::errnoToString(errno));
+		Logs::err << "warning: fcntl:F_GETFL: " << Util::errnoToString(errno) << endl;
 		return false;
 	}
 	f |= O_NONBLOCK;
 	if(fcntl(fd, F_SETFL, f) < 0){
-		log(qerr, "warning: fcntl:F_SETFL: " + Util::errnoToString(errno));
+		Logs::err << "warning: fcntl:F_SETFL: " << Util::errnoToString(errno) << endl;
 		return false;
 	}
 	return true;
@@ -312,13 +310,13 @@ bool Socket::setNonBlocking() throw()
 
 bool Socket::setSendTimeout(size_t seconds) throw()
 {
-	//Set timeout. Various Linux:es will refuse, but not all
+	//Set timeout. Various Linuxes will refuse, but not all
 	struct timeval tv;
 	tv.tv_sec = seconds;
 	tv.tv_usec = 0;
 	int ret = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 	if(ret != 0) {
-		log(qerr, "warning: setsockopt:SO_SNDTIMEO: " + Util::errnoToString(errno));
+		Logs::err << "warning: setsockopt:SO_SNDTIMEO: " << Util::errnoToString(errno) << endl;
 		return false;
 	}
 	return true;

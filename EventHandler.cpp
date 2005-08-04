@@ -8,16 +8,14 @@
 using namespace std;
 using namespace qhub;
 
-EventHandler::EventHandler() : ev(NULL), enabledFlags(0)
+EventHandler::EventHandler() : ev(NULL), enabledFlags(0), fd(0)
 {
 	
 }
 
 EventHandler::~EventHandler() throw()
 {
-	log(qstat, "~EventHandler\n");
 	if(ev != NULL){
-		log(qstat, "Deleting EventHandler\n");
 		if(event_del(ev) == -1){
 			exit(1);	
 		}
@@ -31,8 +29,6 @@ void demux(int fd, short e, void* event)
 
 	assert(eh->getEnabledFlags() != 0 && "We are not supposed to be receiving events!");
 
-	log(qstat, format("Demux EventHandler=%p fd=%d event=%d\n") % eh % fd % e);		
-
 	bool result = true;
 	if(e & EV_READ){
 		result = eh->onRead();
@@ -45,12 +41,8 @@ void demux(int fd, short e, void* event)
 
 void EventHandler::disableMe(type e) throw()
 {
-	log(qstat, format("Disabling socket %d for %d, enabledFlags=%d\n") % fd % e % enabledFlags);
-
 	//remove the pertinent flag
 	enabledFlags &= ~e;
-
-	log(qstat, format("enabledFlags=%d\n") % enabledFlags);
 
 	if(event_del(ev) == -1){
 		exit(1);
@@ -76,8 +68,6 @@ void EventHandler::disableMe(type e) throw()
 
 void EventHandler::enableMe(type e) throw()
 {
-	log(qstat, format("Enabling socket %d for %d\n") % fd % e);
-	
 	if(enabledFlags != 0){
 		if(event_del(ev) == -1){
 			exit(1);
@@ -107,14 +97,10 @@ void EventHandler::enableMe(type e) throw()
 
 void EventHandler::init() throw()
 {
-	log(qstat, "Initializing event handling.\n");
-
 	event_init();	
 }
 
 void EventHandler::mainLoop() throw()
 {
-	log(qstat, "Entering mainloop.\n");
-
 	event_dispatch();
 }

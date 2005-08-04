@@ -20,6 +20,7 @@ public:
 	string& getBuf() { return buf; };
 
 	typedef boost::shared_ptr<Buffer> writeBuffer;
+	typedef boost::shared_ptr<Buffer> Ptr;
 private:
 	Buffer(){};
 	string buf;

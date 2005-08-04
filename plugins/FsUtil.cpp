@@ -5,6 +5,8 @@
 #include "../UserInfo.h"
 #include "../UserData.h"
 #include "../XmlTok.h"
+#include "../Logs.h"
+#include "../Settings.h"
 #include "VirtualFs.h"
 
 using namespace qhub;
@@ -30,7 +32,7 @@ bool FsUtil::load() throw()
 	bool success = false;
 	aliases.clear(); // clean old data
 	XmlTok root;
-	if(root.load(CONFIGDIR "/fsutil.xml")) {
+	if(root.load(Settings::getFilename(getId()))) {
 		XmlTok* p = &root;
 		if(p->findChild("fsutil")) {
 			success = true;
@@ -68,7 +70,7 @@ bool FsUtil::save() const throw()
 	}
 	p = p->getParent();
 	p = p->getParent();
-	return root.save(CONFIGDIR "/fsutil.xml");
+	return root.save(Settings::getFilename(getId()));
 }
 
 void FsUtil::initVFS() throw()
@@ -89,16 +91,16 @@ void FsUtil::on(PluginStarted&, Plugin* p) throw()
 		load();
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			log(qstat, "success: Plugin FsUtil: VirtualFs interface found.");
+			Logs::stat << "success: Plugin FsUtil: VirtualFs interface found.\n";
 			initVFS();
 		} else {
-			log(qerr, "warning: Plugin FsUtil: VirtualFs interface not found.");
+			Logs::err << "warning: Plugin FsUtil: VirtualFs interface not found.\n";
 		}
-		log(qstat, "success: Plugin FsUtil: Started.");
+		Logs::stat << "success: Plugin FsUtil: Started.\n";
 	} else if(!virtualfs) {
 		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-			log(qstat, "success: Plugin FsUtil: VirtualFs interface found.\n");
+		Logs::stat << "success: Plugin FsUtil: VirtualFs interface found.\n";
 			initVFS();
 		}
 	}
@@ -110,9 +112,9 @@ void FsUtil::on(PluginStopped&, Plugin* p) throw()
 		if(virtualfs)
 			deinitVFS();
 		save();
-		log(qstat, "success: Plugin FsUtil: Stopped.");
+		Logs::stat << "success: Plugin FsUtil: Stopped.\n";
 	} else if(virtualfs && p == virtualfs) {
-		log(qerr, "warning: Plugin FsUtil: VirtualFs interface disabled.\n");
+		Logs::err << "warning: Plugin FsUtil: VirtualFs interface disabled.\n";
 		virtualfs = NULL;
 	}
 }

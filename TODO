@@ -13,12 +13,17 @@ Low-level network handling
 	Add customizable flood protection in ADCSocket
 
 Protocol stuff
-	Dont allow nick-collisions
+	Dont allow nick-collisions (made much more difficult by utf-8)
 	Send delta-INFs
-	LO1 handling (Status of this in spec?)
 
 More work on multihub support (much has been accomplished however)
 	automatically try reconnecting every few minutes if an interhub connection fails
+
+re-work UserData class, possibly using just a hash_map<string,boost::any>
+
+use fork() when there are multiple hubs to be run -- gives benefits of multithreading
+	without having to deal with locks, etc, and plugins don't need to keep track of
+	several different hubs
 
 Polish plugins
 	add operator functions plugin for bans, etc
@@ -28,6 +33,5 @@ Polish plugins
 	What about filtering stuff on many outgoing clients? (think a modified list of users: the
 		plugin-instance for one user wants no other users to receive his INFs, this can mean work
 		if there are only hooks for incoming data?)) 
-	Make a clean interface for event-notification (de)registration. Make this interface
-		independent on the actual underlying method used. Try to find some kind of smallest common
-		properties of different methods.
+	Make a clean interface for event-notification (de)registration.
+		(IO-refactor branch solves this)
