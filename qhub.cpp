@@ -120,12 +120,12 @@ int main(int argc, char **argv)
 	signal(SIGCHLD, SIG_IGN);
 #endif
 
-	ios::sync_with_stdio();
-	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help
 	Settings::parseArgs(argc, argv);
+
+	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 #ifdef HAVE_LIBOOP_EVENT
 	event_init();

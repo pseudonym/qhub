@@ -41,9 +41,15 @@ bool Accounts::load() throw()
 			if(p->findChild("user")) {
 				XmlTok* tmp;
 				while((tmp = p->getNextChild())) {
-					int lvl = Util::toInt(tmp->getAttr("level"));
+					int lvl;
+					try {
+						lvl = Util::toInt(tmp->getAttr("level"));
+					} catch (const boost::bad_lexical_cast&) {
+						// if not there, default to 1
+						lvl = 1;
+					}
 					users[tmp->getAttr("nick")] =
-							make_pair(tmp->getAttr("password"),lvl==0?1:lvl);
+							make_pair(tmp->getAttr("password"), lvl);
 				}
 			}
 			p = p->getParent();
