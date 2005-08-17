@@ -47,11 +47,7 @@ void ADCClient::login() throw()
 	getHub()->getUserList(this);
 	// Add user
 	active = userInfo->isActive();
-	if(getCID32() == getHub()->getCID32()){
-		send("ISTA " + getHub()->getCID32() + " 224 " + ADC::ESC("CID taken") + '\n');
-		disconnect();
-		return;		
-	}
+
 	added = true;
 	if(active)
 		getHub()->addActiveClient(getCID32(), this);
@@ -240,7 +236,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
 		// remove us when doing e.g. the Kick, so that added is false here.
-		Logs::stat << format("onDisconnected %d %p GUID: %s") % fd % this % getCID32();
+		Logs::stat << format("onDisconnected %d %p GUID: %s") % fd % this % getCID32() << endl;
 		logout();
 		if(clue.empty())
 			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + '\n');
@@ -318,7 +314,7 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	}
 	cid = sl[1];
 
-	if(getHub()->hasClient(cid)) {
+	if(getHub()->hasClient(cid) || cid == getHub()->getCID32()) {
 		PROTOCOL_ERROR("CID busy, change CID or wait");
 		// Ping other user, perhaps it's a ghost
 		getHub()->direct(cid, "\n");

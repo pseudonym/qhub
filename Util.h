@@ -31,15 +31,15 @@ public:
 		return strerror(err);
 	};
 
-	static int toInt(char const* p) throw() {
-		return toInt(string(p));
+	static int toInt(char const* p) throw(boost::bad_lexical_cast) {
+		return boost::lexical_cast<int>(p);
 	};
-	static int toInt(string const& s) throw() {
+	static int toInt(string const& s) throw(boost::bad_lexical_cast) {
 		return boost::lexical_cast<int>(s);
 	};
 
 	template<class T>
-	static string toString(const T& val) throw()
+	static string toString(const T& val) throw(boost::bad_lexical_cast)
 	{
 		return boost::lexical_cast<string>(val);
 	}

@@ -50,15 +50,15 @@ void Logs::set(std::ostream& s, const std::string& filename)
 				+ filename + '"');
 	}
 	std::streambuf* t = s.rdbuf(tmp.release());
-	if(dynamic_cast<std::filebuf*>(t))
+	//if(dynamic_cast<std::filebuf*>(t))
 		// ok, we allocated it, delete it
-		delete t;
+	//	delete t;
 }
 
 void Logs::copy(const ostream& src, ostream& dest)
 {
 	std::streambuf* t = dest.rdbuf(src.rdbuf());
-	if(dynamic_cast<std::filebuf*>(t))
+	//if(dynamic_cast<std::filebuf*>(t))
 		// ok, we allocated it, delete it
-		delete t;
+	//	delete t;
 }

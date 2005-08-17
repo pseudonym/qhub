@@ -9,7 +9,7 @@ class Settings {
 public:
 	static std::string getFilename(const std::string& name) throw()
 	{
-		return CONFIGDIR + name + ".xml";
+		return CONFIGDIR "/" + name + ".xml";
 	}
 	static void readFromXML();
 	static void parseArgs(int, char**);
