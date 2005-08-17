@@ -60,6 +60,16 @@ void Hub::openInterPort(int port)
 	                        Socket::IP4,
 #endif
 	                        port, ServerSocket::INTER_HUB, this);
+#ifdef ENABLE_IPV6
+        if(tmp->error()){
+                delete tmp;
+                tmp = new ServerSocket(Socket::IP4, port, ServerSocket::INTER_HUB, this);
+        }
+        if(tmp->error()){
+                return;
+        }
+#endif
+
 	enable_fd(tmp->getFd(), OOP_READ, tmp);
 }
 
