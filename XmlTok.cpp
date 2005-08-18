@@ -8,6 +8,7 @@
 #include "Logs.h"
 #include <cstdio>
 #include <cassert>
+#include <errno.h>
 
 #if defined(HAVE_EXPAT_H)
 # include <expat.h>
