@@ -17,7 +17,7 @@ namespace qhub {
 
 class Hub;
 
-class InterHub : public ADCSocket, public DNSUser {
+class InterHub : public ADCSocket {
 public:
 	InterHub(Hub* h, const string& hn, short p) throw();
 	InterHub(Hub* h, int fd, Domain d) throw();

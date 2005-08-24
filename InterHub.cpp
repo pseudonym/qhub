@@ -21,7 +21,6 @@ using namespace qhub;
 InterHub::InterHub(Hub* h, const string& hn, short p) throw()
 		: ADCSocket(h), hostname(hn), port(p), outgoing(true)
 {
-	lookup(hostname.c_str());
 }
 
 InterHub::InterHub(Hub* h, int fd, Domain d) throw()

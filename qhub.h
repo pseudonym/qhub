@@ -29,9 +29,6 @@ extern "C" {
 
 namespace qhub {
 
-class DNSUser;
-
-void lookup(const char* hostname, DNSUser* const d);
 
 }
 #endif

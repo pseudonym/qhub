@@ -18,20 +18,6 @@
 
 using namespace std;
 
-extern "C" {
-#include <oop.h>
-#include <oop-read.h>
-
-#include <oop-adns.h>
-#ifdef HAVE_LIBOOP_EVENT 
-#include <oop-event.h>
-#endif
-}
-
-#ifdef HAVE_LIBOOP_EVENT
-#include <event.h>
-#endif
-
 using namespace qhub;
 
 struct timeInfo {
@@ -39,14 +25,6 @@ struct timeInfo {
 	int delay;
 	struct event* ev;
 };
-
-void qhub::lookup(const char* hostname, DNSUser* const d){
-#ifdef LIBOOP_RECENT
-//	oop_adns_submit(adns,NULL,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
-#else
-//	oop_adns_submit(adns,hostname,adns_r_a,adns_qf_owner,on_lookup,d);
-#endif
-}
 
 void end(int)
 {
@@ -76,7 +54,8 @@ int main(int argc, char **argv)
 #endif
 
 	EventHandler::init();
-
+	DNSUser::init();
+	
 	ios::sync_with_stdio();
 	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 

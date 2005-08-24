@@ -7,12 +7,13 @@
 namespace qhub {
 
 //abstract/portable DNS lookup/completion notification
-class DNSUser {
+class DNSUser: public EventHandler {
 public:
-	//XXX: need to get rid of ADNS here.
-	virtual void onLookup() = 0;
+	static void init();
 
-	void lookup(const char* hostname) { qhub::lookup(hostname, this); };
+	virtual bool onRead() throw() = 0;
+	virtual void onWrite() throw() = 0;
+		       
 };
 
 
