@@ -44,6 +44,10 @@ void EventHandler::disableMe(type e) throw()
 	//remove the pertinent flag
 	enabledFlags &= ~e;
 
+	//the interface to libevent is somewhat "weird":
+	//We must delete the entire event, even if it still
+	//has flags we want to monitor, and the re-add it, 
+	//instead of just signalling the changes...
 	if(event_del(ev) == -1){
 		exit(1);
 	}
