@@ -20,7 +20,8 @@ public:
 protected:
 	virtual bool onRead() throw();
 	virtual void onWrite() throw();
-
+	virtual void onTimeout() throw();
+	
 	int type;
 	Hub* hub;
 };

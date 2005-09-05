@@ -54,7 +54,7 @@ void Hub::openClientPort(int port)
 void Hub::openInterPort(int port)
 {
 	//Inter-hub
-	ServerSocket* tmp = new ServerSocket(
+	new ServerSocket(
 #ifdef ENABLE_IPV6
 	                        Socket::IP6,
 #else

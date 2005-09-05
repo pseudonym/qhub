@@ -2,7 +2,7 @@
 #define __INTERHUB_H_
 
 #include "ADCSocket.h"
-#include "DNSUser.h"
+#include "DNSAdapter.h"
 #include "UserInfo.h"
 
 #include <string>

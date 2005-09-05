@@ -79,6 +79,10 @@ bool ServerSocket::onRead() throw()
 	return true;
 }
 
+void ServerSocket::onTimeout() throw()
+{
+}
+
 void ServerSocket::onWrite() throw()
 {
 	assert(0 && "ServerSocket received a write.");

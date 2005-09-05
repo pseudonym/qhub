@@ -9,7 +9,6 @@
 #include <boost/utility.hpp>
 
 #include "Buffer.h"
-#include "DNSUser.h"
 #include "InterHub.h"
 #include "UserInfo.h"
 #include "Socket.h"

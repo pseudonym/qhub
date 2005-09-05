@@ -75,7 +75,8 @@ public:
 	 */
 	virtual bool onRead() throw();
 	virtual void onWrite() throw();
-
+	virtual void onTimeout() throw();
+	
 	virtual void onAlarm() throw();
 
 	/*

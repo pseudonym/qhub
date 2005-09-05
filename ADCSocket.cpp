@@ -68,6 +68,10 @@ void ADCSocket::handleOnRead()
 	::memmove(readBuffer, l, readPos);
 }
 
+void ADCSocket::onTimeout() throw()
+{
+}
+
 bool ADCSocket::onRead() throw()
 {
 	try {

@@ -13,13 +13,15 @@ public:
 	EventHandler();
 	virtual ~EventHandler() throw();
 
+	//this is needed for timeout-support
+	virtual void onTimeout() throw() = 0;
 	virtual bool onRead() throw() = 0;
 	virtual void onWrite() throw() = 0;
 
 	enum type { ev_read=1, ev_write=2
 	};
 
-	void enableMe(type e) throw();
+	void enableMe(type e, timeval* const timeval=0) throw();
 	void disableMe(type e) throw();
 
 	int getSocket() throw() { return fd; };

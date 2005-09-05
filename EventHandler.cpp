@@ -30,6 +30,9 @@ void demux(int fd, short e, void* event)
 	assert(eh->getEnabledFlags() != 0 && "We are not supposed to be receiving events!");
 
 	bool result = true;
+	if(e & EV_TIMEOUT){
+		eh->onTimeout();
+	}
 	if(e & EV_READ){
 		result = eh->onRead();
 	}
@@ -70,7 +73,7 @@ void EventHandler::disableMe(type e) throw()
 	}
 }
 
-void EventHandler::enableMe(type e) throw()
+void EventHandler::enableMe(type e, timeval* const timeout) throw()
 {
 	if(enabledFlags != 0){
 		if(event_del(ev) == -1){
@@ -94,7 +97,7 @@ void EventHandler::enableMe(type e) throw()
 		use_event |= EV_WRITE;
 	}
 	event_set(ev, fd, use_event, demux, this);
-	if(event_add(ev, NULL) == -1){
+	if(event_add(ev, timeout) == -1){
 		exit(1);
 	}
 }

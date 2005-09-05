@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #include "EventHandler.h"
-#include "DNSUser.h"
+#include "DNSAdapter.h"
 #include "Hub.h"
 #include "Timer.h"
 
@@ -42,6 +42,14 @@ void timerCallback(int, short int, void *ev)
 	evtimer_add(tmp->ev, &tmp->tv); 
 }
 
+class majs: public DNSAdapter
+{
+public:
+	majs(string s) : DNSAdapter(s) {} 
+	
+	virtual void complete(string s) { Logs::stat << "complete:          1234              123: " << s << endl; }
+};
+
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &end);
@@ -54,10 +62,10 @@ int main(int argc, char **argv)
 #endif
 
 	EventHandler::init();
-	DNSUser::init();
-	
+	DNSAdapter::init();
+
 	ios::sync_with_stdio();
-	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
+	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << " using Libevent method " << event_get_method() << endl;
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help
