@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 	DNSAdapter::init();
 
 	ios::sync_with_stdio();
-	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << " using Libevent method " << event_get_method() << endl;
+	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help

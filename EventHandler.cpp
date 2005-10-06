@@ -1,6 +1,7 @@
 #include "EventHandler.h"
 #include "Util.h"
 #include "error.h"
+#include "Logs.h"
 
 #include <string>
 #include <assert.h>
@@ -105,6 +106,8 @@ void EventHandler::enableMe(type e, timeval* const timeout) throw()
 void EventHandler::init() throw()
 {
 	event_init();	
+	
+	Logs::stat << "Eventhandling using Libevent method " << event_get_method() << endl;
 }
 
 void EventHandler::mainLoop() throw()
