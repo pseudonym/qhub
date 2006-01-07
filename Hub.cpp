@@ -8,6 +8,7 @@
 #include "InterHub.h"
 #include "Buffer.h"
 #include "EventHandler.h"
+#include "Logs.h"
 
 #include <cstdlib>
 #include <algorithm>
@@ -30,37 +31,65 @@ Hub::~Hub()
 void Hub::openClientPort(int port)
 {
 	//Leaf-handler
-	ServerSocket* tmp = new ServerSocket(
+	ServerSocket* tmp = NULL;
+	try {
+		tmp = new ServerSocket(
 #ifdef ENABLE_IPV6
-	                        Socket::IP6,
+		                       Socket::IP6,
 #else
-	                        Socket::IP4,
+		                       Socket::IP4,
 #endif
-	                        port, ServerSocket::LEAF_HANDLER, this);
-
-#ifdef ENABLE_IPV6
-	if(tmp->error()){
-		delete tmp;
-		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER, this);
-	}
-	if(tmp->error()){
+		                       port, ServerSocket::LEAF_HANDLER, this);
+		tmp->enableMe(EventHandler::ev_read);
 		return;
+	} catch(const socket_error& e) {
+		delete tmp;
+#ifndef ENABLE_IPV6 // only a failure if we're not going to try IPv4 after...
+		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
+#endif
+	}
+#ifdef ENABLE_IPV6
+	try {
+		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER, this);
+		tmp->enableMe(EventHandler::ev_read);
+		return;
+	} catch(const socket_error& e) {
+		delete tmp;
+		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
 	}
 #endif
-	
-	tmp->enableMe(EventHandler::ev_read);
 }
 
 void Hub::openInterPort(int port)
 {
 	//Inter-hub
-	new ServerSocket(
+	ServerSocket* tmp = NULL;
+	try {
+		tmp = new ServerSocket(
 #ifdef ENABLE_IPV6
-	                        Socket::IP6,
+		                       Socket::IP6,
 #else
-	                        Socket::IP4,
+		                       Socket::IP4,
 #endif
-	                        port, ServerSocket::INTER_HUB, this);
+		                       port, ServerSocket::INTER_HUB, this);
+		tmp->enableMe(EventHandler::ev_read);
+		return;
+	} catch(const socket_error& e) {
+		delete tmp;
+#ifndef ENABLE_IPV6 // only a failure if we're not going to try IPv4 after...
+		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
+#endif
+	}
+#ifdef ENABLE_IPV6
+	try {
+		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::INTER_HUB, this);
+		tmp->enableMe(EventHandler::ev_read);
+		return;
+	} catch(const socket_error& e) {
+		delete tmp;
+		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
+	}
+#endif
 }
 
 void Hub::acceptLeaf(int fd, Socket::Domain d)
@@ -147,7 +176,7 @@ void Hub::broadcast(string const& data, ADCSocket* except/* = NULL*/) throw()
 
 void Hub::broadcastActive(string const& data, ADCSocket* except/* = NULL*/) throw()
 {
-	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
+	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
 		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
 			i->second->writeb(tmp);
@@ -169,7 +198,7 @@ void Hub::broadcastActive(string const& data, ADCSocket* except/* = NULL*/) thro
 
 void Hub::broadcastPassive(string const& data, ADCSocket* except/* = NULL*/) throw()
 {
-	Buffer::writeBuffer tmp(new Buffer(data, PRIO_NORM));
+	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
 		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			i->second->writeb(tmp);
@@ -224,8 +253,8 @@ void Hub::addPassiveClient(string const& cid, ADCClient* client) throw()
 
 void Hub::switchClientMode(bool toActive, string const& cid, ADCClient* client) throw()
 {
-	assert((!toActive && activeUsers.find(cid) != activeUsers.end()) ||
-	       (toActive && passiveUsers.find(cid) != passiveUsers.end()));
+	assert((!toActive && activeUsers.count(cid)) ||
+	       (toActive && passiveUsers.count(cid)));
 	if(!toActive) {
 		activeUsers.erase(cid);
 		passiveUsers[cid] = client;
@@ -238,9 +267,8 @@ void Hub::switchClientMode(bool toActive, string const& cid, ADCClient* client) 
 void Hub::removeClient(string const& cid) throw()
 {
 	assert(hasClient(cid));
-	Users::iterator i = activeUsers.find(cid);
-	if(i != activeUsers.end())
-		activeUsers.erase(i);
+	if(activeUsers.count(cid))
+		activeUsers.erase(cid);
 	else
 		passiveUsers.erase(cid);
 }

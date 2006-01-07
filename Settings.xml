@@ -22,8 +22,8 @@
 		<name>-= qhub =-</name>
 		<cid>FQI2LLF4K5W3Y</cid>
 		<maxpacketsize>65536</maxpacketsize>
-		<port>9001</port>
-		<interport>9000</interport>
+		<port>7001</port>
+		<interport>7000</interport>
 	</hub>
 </config>
 

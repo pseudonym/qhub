@@ -3,7 +3,7 @@
 	<user nick="sedje" password="hoi"/>
 	<user nick="[rug.nl]s2-10n" password="hoi"/>
 	<user nick="aap" password="noot"/>
-	<user nick="PseudonympH" password="somepass"/>
+	<user nick="PseudonympH" password="somepass" level="3"/>
 	<user nick="åäö23" password="majs"/>
 	<user nick="sandos" password="majs"/>
 	<user nick="hoi" password="hoi"/>

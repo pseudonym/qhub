@@ -1,5 +1,5 @@
-#ifndef ___BUFFER_H__
-#define ___BUFFER_H__
+#ifndef BUFFER_H
+#define BUFFER_H
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -19,7 +19,6 @@ public:
 
 	string& getBuf() { return buf; };
 
-	typedef boost::shared_ptr<Buffer> writeBuffer;
 	typedef boost::shared_ptr<Buffer> Ptr;
 private:
 	Buffer(){};

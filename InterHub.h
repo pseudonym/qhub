@@ -8,7 +8,6 @@
 #include <string>
 #include "Util.h"
 #include "compat_hash_map.h"
-#include "string8.h"
 
 using namespace std;
 
@@ -64,7 +63,7 @@ private:
 	typedef hash_map<string,UserInfo*> Users;
 	Users users;
 
-	string8 salt;
+	vector<u_int8_t> salt;
 };
 
 }

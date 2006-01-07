@@ -9,7 +9,7 @@
 using namespace std;
 using namespace qhub;
 
-EventHandler::EventHandler() : ev(NULL), enabledFlags(0), fd(0)
+EventHandler::EventHandler() : fd(-1), ev(NULL), enabledFlags(0)
 {
 	
 }
@@ -107,7 +107,7 @@ void EventHandler::init() throw()
 {
 	event_init();	
 	
-	Logs::stat << "Eventhandling using Libevent method " << event_get_method() << endl;
+	//Logs::stat << "Eventhandling using Libevent method " << event_get_method() << endl;
 }
 
 void EventHandler::mainLoop() throw()

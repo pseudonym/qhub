@@ -15,9 +15,13 @@ rather than each hub having a direct connection to all its peers... not sure
 how well this works, though....
 * began work on a bans plugin, maybe it can actually be used for real hubs now..
 * added plugin hooks for interhub... only primitive ones, though
-* started using diffentiated excepion classes (though the catches still catch
+* started using diffentiated exception classes (though the catches still catch
 anything...
 * a whole bunch of general code shuffling
+* added support for T and F types... by doing the same as P and B
+* removed string8 class, as it was causing compilter errors on gcc 4.0 and is
+generally pointless
+* Buffer::writeBuffer renamed to Buffer::Ptr
 
 - 0.9 -
 * Pseudo is now in charge :)

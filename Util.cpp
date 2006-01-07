@@ -1,8 +1,5 @@
 // vim:ts=4:sw=4:noet
-#include <cstring>
 #include <cassert>
-#include <stdarg.h>
-#include <cstdio>
 
 #include "Util.h"
 
@@ -13,6 +10,13 @@ string const Util::emptyString;
 int const Util::emptyInt = 0;
 voidPtr const Util::emptyVoidPtr = NULL;
 StringList const Util::emptyStringList;
+
+vector<u_int8_t> Util::genRand(int bytes) throw() {
+	int buf[(bytes + sizeof(int) - 1) / sizeof(int)];
+	generate_n(buf, sizeof(buf)/sizeof(int), rand);
+	u_int8_t* b = reinterpret_cast<u_int8_t*>(buf);
+	return vector<u_int8_t>(b, b + bytes);
+}
 
 StringList Util::stringTokenize(string const& msg, char token /*= ' '*/) throw()
 {

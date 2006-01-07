@@ -9,7 +9,6 @@
 #include "qhub.h"
 #include "error.h"
 #include "Logs.h"
-#include "string8.h"
 #include "Util.h"
 
 #include <netinet/in.h>
@@ -184,8 +183,8 @@ void InterHub::doInf() throw()
 void InterHub::doAskPassword() throw()
 {
 	assert(state == IDENTIFY && salt.empty());
-	salt = Util::genRand192();
-	send("LGPA " + getHub()->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.size()) + '\n');
+	salt = Util::genRand(24);
+	send("LGPA " + getHub()->getCID32() + ' ' + Encoder::toBase32(&salt.front(), salt.size()) + '\n');
 }
 
 void InterHub::doPassword(const StringList& sl) throw()
@@ -207,7 +206,6 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 {
 	switch(full[0]) {
 	case 'B':
-		getHub()->broadcast(full, this);
 		if(command == (INF | 'B')) {
 			if(users.find(sl[1]) == users.end()) {
 				users.insert(make_pair(sl[1], new UserInfo(this, sl)));
@@ -215,11 +213,14 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 				users.find(sl[1])->second->update(UserInfo(this, sl));
 			}
 		}
+	case 'F': // FIXME
+		getHub()->broadcast(full, this);
 		break;
 	case 'A':
 		getHub()->broadcastActive(full, this);
 		break;
 	case 'P':
+	case 'T': // FIXME
 		getHub()->broadcastPassive(full, this);
 		break;
 	case 'S':
@@ -259,7 +260,7 @@ void InterHub::handlePassword(const StringList& sl) throw()
 	TigerHash h;
 	h.update(getCID32().data(), getCID32().size());
 	h.update(getHub()->getInterPass().data(), getHub()->getInterPass().size());
-	h.update(salt.data(), salt.size());
+	h.update(&salt.front(), salt.size());
 	h.finalize();
 	string result32 = Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE);
 	if(result32 != sl[2]) {

@@ -9,7 +9,7 @@
 using namespace std;
 using namespace qhub;
 
-Socket::Socket(Domain d, int t, int p) throw()
+Socket::Socket(Domain d, int t, int p) throw(socket_error)
 		: domain(d), ip4OverIp6(false), err(false),
 		writeEnabled(false), written(0), disconnected(false)
 {
@@ -17,9 +17,7 @@ Socket::Socket(Domain d, int t, int p) throw()
 
 	fd = ::socket(d, t, p);
 	if(getSocket() == -1){
-		Logs::err << format("Error, %p could not allocate socket.\n") % this;
-		err = true;
-		return;
+		throw socket_error("Could not allocate socket: " + Util::errnoToString(errno) + '\n');
 	}
 
 	setNonBlocking();
@@ -159,11 +157,11 @@ void Socket::disconnect(const string& msg)
 
 void Socket::write(string const& s, int prio)
 {
-	Buffer::writeBuffer tmp(new Buffer(s, prio));
+	Buffer::Ptr tmp(new Buffer(s, prio));
 	writeb(tmp);
 }
 
-void Socket::writeb(Buffer::writeBuffer b)
+void Socket::writeb(Buffer::Ptr b)
 {
 	if(b->getBuf().size() == 0){
 		// no 0-byte sends, please
@@ -181,7 +179,7 @@ void Socket::partialWrite()
 {
 	assert(!queue.empty() && "We got a write-event though we got nothing to write");
 
-	Buffer::writeBuffer top = queue.front();
+	Buffer::Ptr top = queue.front();
 
 	assert(written < (int)top->getBuf().size() && "We have already written the entirety of this buffer");
 

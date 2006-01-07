@@ -11,7 +11,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
-#include "string8.h"
 #include "Timer.h"
 #include "Util.h"
 
@@ -87,7 +86,7 @@ private:
 
 	string cid;
 	string password;
-	string8 salt;
+	vector<u_int8_t> salt;
 	bool active;
 
 	// Invalid

@@ -80,8 +80,8 @@ void ADCClient::doAskPassword(string const& pwd) throw()
 {
 	assert(state == IDENTIFY && !added);
 	password = pwd;
-	salt = Util::genRand192();
-	send("IGPA " + getHub()->getCID32() + ' ' + Encoder::toBase32(salt.data(), salt.length()) + '\n');
+	salt = Util::genRand(24);
+	send("IGPA " + getHub()->getCID32() + ' ' + Encoder::toBase32(&salt.front(), salt.size()) + '\n');
 	state = VERIFY;
 }
 
@@ -209,6 +209,8 @@ void ADCClient::onLine(StringList& sl, string const& fullmsg) throw()
 	case 'D':
 	case 'H':
 	case 'P':
+	case 'T':
+	case 'F':
 		break;
 	case 'C':
 	case 'I':
@@ -289,12 +291,14 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string& full) throw(
 			getHub()->broadcastActive(full);
 			break;
 		case 'B':
+		case 'F': // FIXME
 			getHub()->broadcast(full); // do we ever want to stop anything to self?
 			break;
 		case 'D':
 			getHub()->direct(sl[2], full, this);
 			break;
 		case 'P':
+		case 'T': // FIXME
 			getHub()->broadcastPassive(full);
 			break;
 		default:
@@ -474,11 +478,9 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	TigerHash h;
 	h.update(getCID32().data(), getCID32().length());
 	h.update(password.data(), password.length());
-	h.update(salt.data(), salt.length());
+	h.update(&salt.front(), salt.size());
 	h.finalize();
-	string8 hashed_pwd(h.getResult(), TigerHash::HASH_SIZE);
-	string hashed_pwd_b32 = Encoder::toBase32(hashed_pwd.data(), hashed_pwd.length());
-	if(hashed_pwd_b32 != sl[2]) {
+	if(Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE) != sl[2]) {
 		send("ISTA " + getHub()->getCID32() + " 223 " + ADC::ESC("Bad username or password") + '\n');
 		assert(!added);
 		disconnect();

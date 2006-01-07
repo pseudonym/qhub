@@ -7,12 +7,11 @@
 #include <cstdlib>
 #include "compat_hash_map.h"
 #include <boost/lexical_cast.hpp>
-#include "string8.h"
 #include "error.h"
 
-namespace qhub {
-
 using namespace std;
+
+namespace qhub {
 
 typedef vector<string> StringList;
 typedef hash_map<string,string> StringMap;
@@ -26,7 +25,7 @@ public:
 	static voidPtr const emptyVoidPtr;
 	static StringList const emptyStringList;
 
-	static string errnoToString(int err) throw()
+	static string errnoToString(int err = errno) throw()
 	{
 		return strerror(err);
 	};
@@ -44,14 +43,7 @@ public:
 		return boost::lexical_cast<string>(val);
 	}
 
-	static string8 genRand192() throw() {
-		u_int8_t buf[24];
-		for(unsigned i = 0; i < 24; i += sizeof(int)) {
-			int r = rand();
-			memcpy(buf + i, &r, sizeof(int) <= 24 - i ? sizeof(int) : 24 - i);
-		}
-		return string8(buf, 24);
-	};
+	static vector<u_int8_t> genRand(int bytes) throw();
 
 	static StringList stringTokenize(string const& msg, char token = ' ') throw();
 	static StringList lazyStringTokenize(string const& msg, char token = ' ') throw();

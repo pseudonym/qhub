@@ -33,6 +33,12 @@ struct command_error : public std::runtime_error {
 	explicit command_error(const std::string& arg) : runtime_error(arg) {}
 };
 
+// used for low-level socket stuff
+struct socket_error : public std::runtime_error {
+	socket_error() : runtime_error("socket_error: low-level socket problem") {}
+	explicit socket_error(const std::string& arg) : runtime_error(arg) {}
+};
+
 } // namespace qhub
 
 #endif // QHUB_ERROR_H

@@ -2,14 +2,11 @@
 #define _SOCKET_H_
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <netdb.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/socket.h>
 #include <sys/resource.h>
 #include <sys/poll.h>
@@ -19,7 +16,6 @@
 
 #include <string>
 #include <queue>
-#include <boost/shared_ptr.hpp>
 
 #include "config.h"
 #include "Buffer.h"
@@ -44,7 +40,7 @@ public:
         IP6 = PF_INET6 
 #endif
         };
-	Socket(Domain d = IP4, int t = SOCK_STREAM, int p = 0) throw(); // new sockets
+	Socket(Domain d = IP4, int t = SOCK_STREAM, int p = 0) throw(socket_error); // new sockets
 	Socket(int fd, Domain d) throw(); // existing sockets
 	virtual ~Socket() throw();
 
@@ -64,7 +60,7 @@ public:
 
 	//beware: this will copy string. Limit use.
 	void write(string const& s, int prio = PRIO_NORM);
-	void writeb(Buffer::writeBuffer b);
+	void writeb(Buffer::Ptr b);
 
 	int getFd() const { return fd; };
 	Domain getDomain() const throw() { return ip4OverIp6 ? IP4 : domain; };
@@ -87,7 +83,7 @@ protected:
 
 	//output queue
 	//priority_queue<Buffer::writeBuffer> queue;
-	queue<Buffer::writeBuffer> queue;
+	queue<Buffer::Ptr> queue;
 
 	void partialWrite();
 	bool writeEnabled;
