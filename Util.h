@@ -8,6 +8,7 @@
 #include "compat_hash_map.h"
 #include <boost/lexical_cast.hpp>
 #include "error.h"
+#include <cerrno>
 
 using namespace std;
 
