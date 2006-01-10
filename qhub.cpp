@@ -48,7 +48,7 @@ class majs: public DNSAdapter
 public:
 	majs(string s) : DNSAdapter(s) {} 
 	
-	virtual void complete(string s) { Logs::stat << "complete:          1234              123: " << s << endl; }
+	virtual void complete(string s) { Logs::stat << "complete: " << s << endl; }
 };
 
 int main(int argc, char **argv)
@@ -65,6 +65,8 @@ int main(int argc, char **argv)
 	EventHandler::init();
 	DNSAdapter::init();
 
+	majs* p  = new majs("www.google.com");
+	
 	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 	//do this here so we don't wind up doing extra
