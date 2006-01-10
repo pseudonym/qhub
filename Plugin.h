@@ -22,7 +22,6 @@ class InterHub;
 
 class Plugin {
 public:
-	static UserData data;
 	static const string PLUGIN_EXTENSION;
 	
 	/*

@@ -7,7 +7,6 @@
 
 using namespace qhub;
 
-UserData Plugin::data;
 Plugin::Plugins Plugin::plugins;
 const string Plugin::PLUGIN_EXTENSION = ".so";
 

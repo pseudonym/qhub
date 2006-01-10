@@ -11,24 +11,23 @@ Timer::Alarms Timer::alarms2;
 void Timer::tick() throw() {
 	second++;
 	if(modified) {
-		for(Alarms::iterator i = alarms2.begin(); i != alarms2.end(); ++i)
-			alarms[i->first] = i->second;
-		for(bool done = true; !done; done = true) {
-			for(Alarms::iterator i = alarms.begin(); i != alarms.end(); ++i) {
-				if(i->second == 0) {
-					alarms.erase(i);
-					done = false;
-					break;
-				}
-			}
-		}
-		modified = false;
+		alarms.insert(alarms2.begin(), alarms2.end());
 		alarms2.clear();
+		modified = false;
+		for(Alarms::iterator i = alarms.begin(); i != alarms.end(); ) {
+			if(i->second == 0)
+				alarms.erase(i++);
+			else
+				++i;
+		}
 	}
 	for(Alarms::iterator i = alarms.begin(); i != alarms.end(); ++i) {
 		i->second--;
-		if(i->second == 0)
-			i->first->onAlarm();
+		if(i->second == 0) {
+			Timer* t = i->first;
+			alarms.erase(i);
+			t->onAlarm();
+		}
 	}
 }
 

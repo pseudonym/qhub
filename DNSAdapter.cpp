@@ -39,11 +39,9 @@ DNSAdapter::DNSAdapter(string& hostname)
 	
 	addr->s_addr = inet_addr(hostname.c_str());
 	//XXX: looking ip numeric ips -> hostname seems to corrupt memory
-	if (addr->s_addr == INADDR_NONE){
+	if (addr->s_addr == INADDR_NONE) {
 		ares_gethostbyname(channel, hostname.c_str(), AF_INET, callback, this);
-	}
-	else
-	{
+	} else {
 	    ares_gethostbyaddr(channel, addr, sizeof(&addr), AF_INET, callback,	this);
 	}
 
@@ -97,11 +95,7 @@ bool DNSAdapter::onRead() throw()
 
 	ares_process(channel, &read_fds, &write_fds);
 	
-	if(!doHack()){
-		return false;
-	}
-	
-	return true;
+	return doHack();
 }
 
 void DNSAdapter::onWrite() throw()
@@ -128,18 +122,16 @@ static void callback(void *arg, int status, struct hostent *host)
 	struct in_addr addr;
 	char **p;
 
-	if (status != ARES_SUCCESS)
-	{
-		fprintf(stderr, "Error: %s\n", ares_strerror(status));
+	if (status != ARES_SUCCESS) {
+		Logs::err << "Error: " << ares_strerror(status) << endl;
 		return;
 	}
 
-	for (p = host->h_addr_list; *p; p++)
-	{
+	for (p = host->h_addr_list; *p; p++) {
 		memcpy(&addr, *p, sizeof(struct in_addr));
 		char *textual = inet_ntoa(addr);
 		//printf("%-32s\t%s\n", host->h_name, textual);
-		if(textual){
+		if(textual) {
 			us->complete(inet_ntoa(addr));
 		} else {
 			us->complete("");

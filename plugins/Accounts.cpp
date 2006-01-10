@@ -25,52 +25,40 @@ extern "C" {
  * Plugin details
  */
 
-UserData::Key Accounts::idUserLevel = UserData::toKey("userlevel");
-UserData::Key Accounts::idVirtualFs = UserData::toKey("virtualfs");
+UserData::key_type Accounts::idUserLevel = "userlevel";
+UserData::key_type Accounts::idVirtualFs = "virtualfs";
 
 bool Accounts::load() throw()
 {
-	bool success = false;
-	XmlTok root;
-	if(root.load(Settings::getFilename(getId()))) {
-		XmlTok* p = &root;
-		if(p->findChild("accounts")) {
-			users.clear(); // clean old users
-			success = true;
-			p = p->getNextChild();
-			if(p->findChild("user")) {
-				XmlTok* tmp;
-				while((tmp = p->getNextChild())) {
-					int lvl;
-					try {
-						lvl = Util::toInt(tmp->getAttr("level"));
-					} catch (const boost::bad_lexical_cast&) {
-						// if not there, default to 1
-						lvl = 1;
-					}
-					users[tmp->getAttr("nick")] =
-							make_pair(tmp->getAttr("password"), lvl);
-				}
-			}
-			p = p->getParent();
+	XmlTok* p = Settings::getConfig("accounts");
+	users.clear(); // clean old users
+	p->findChild("user");
+	XmlTok* tmp;
+	while((tmp = p->getNextChild())) {
+		int lvl;
+		try {
+			lvl = Util::toInt(tmp->getAttr("level"));
+		} catch (const boost::bad_lexical_cast&) {
+			// if not there, default to 1
+			lvl = 1;
 		}
+		users[tmp->getAttr("nick")] =
+				make_pair(tmp->getAttr("password"), lvl);
 	}
-	return success;
+	return true;
 }
 
 bool Accounts::save() const throw()
 {
-	XmlTok root;
-	XmlTok* p = &root;
-	p = p->addChild("accounts");
+	XmlTok* p = Settings::getConfig("accounts");
+	p->clear();
 	for(Users::const_iterator i = users.begin(); i != users.end(); ++i) {
 		XmlTok* tmp = p->addChild("user");
 		tmp->setAttr("nick", i->first);
 		tmp->setAttr("password", i->second.first);
 		tmp->setAttr("level", Util::toString(i->second.second));
 	}
-	p = p->getParent();
-	return root.save(Settings::getFilename(getId()));
+	return true;
 }
 
 void Accounts::initVFS() throw()
@@ -92,7 +80,7 @@ void Accounts::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		load();
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Accounts: VirtualFs interface found.\n";
 			initVFS();
@@ -101,7 +89,7 @@ void Accounts::on(PluginStarted&, Plugin* p) throw()
 		}
 		Logs::stat << "success: Plugin Accounts: Started.\n";
 	} else if(!virtualfs) {
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Accounts: VirtualFs interface found.\n";
 			initVFS();

@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include "Util.h"
 
 using namespace std;
 
@@ -44,6 +45,8 @@ public:
 	typedef vector<XmlTok*>::iterator iterator;
 	iterator begin() { return children.begin(); };
 	iterator end() { return children.end(); };
+
+	void clear() throw();
 private:
 	string data;
 	XmlTok* parent;
@@ -51,9 +54,7 @@ private:
 	typedef vector<XmlTok*> Children;
 	Children children;
 	Children::iterator found;
-	typedef pair<string, string> Attribute;
-	typedef vector<Attribute> Attributes;
-	Attributes attributes;
+	StringMap attributes;
 };
 
 } //namespace qhub

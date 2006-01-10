@@ -13,6 +13,8 @@ using namespace std;
 
 namespace qhub {
 
+class UserData;
+
 typedef vector<string> StringList;
 typedef hash_map<string,string> StringMap;
 typedef void* voidPtr;
@@ -24,6 +26,7 @@ public:
 	static int const emptyInt;
 	static voidPtr const emptyVoidPtr;
 	static StringList const emptyStringList;
+	static UserData data;
 
 	static string errnoToString(int err = errno) throw()
 	{

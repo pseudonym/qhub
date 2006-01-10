@@ -12,13 +12,12 @@ namespace qhub {
 
 class UserData {
 public:
-	typedef u_int32_t Key;
-	static Key toKey(string const& id) throw();
+	typedef string key_type;
 
 #define GET_AND_SET(type, Type) \
 public: \
 	/* If setting something equal to emptyType, delete it instead */ \
-	void set##Type(Key key, type value) throw() { \
+	void set##Type(key_type key, type value) throw() { \
 		Type##Map::iterator i = type##Map.find(key); \
 		if(i != type##Map.end()) { \
 			if(value == Util::empty##Type) \
@@ -31,14 +30,14 @@ public: \
 		} \
 	} \
 	/* Return set value or emptyType when not found */ \
-	type const& get##Type(Key key) const throw() { \
+	type const& get##Type(key_type key) const throw() { \
 		Type##Map::const_iterator i = type##Map.find(key); \
 		if(i != type##Map.end()) \
 			return i->second; \
 		return Util::empty##Type; \
 	} \
 private: \
-	typedef map<Key, type> Type##Map; \
+	typedef map<key_type, type> Type##Map; \
 	Type##Map type##Map;
 			 
 	GET_AND_SET(int, Int)
@@ -46,11 +45,6 @@ private: \
 	GET_AND_SET(voidPtr, VoidPtr)
 
 #undef GET_AND_SET
-	
-public:
-	// Key clash avoidance
-	typedef map<Key, string> ClashMap;
-	static ClashMap clashMap;
 };	
 
 } //namespace qhub

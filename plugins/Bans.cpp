@@ -30,68 +30,62 @@ extern "C" {
  * Plugin details
  */
 
-UserData::Key Bans::idVirtualFs = UserData::toKey("virtualfs");
+UserData::key_type Bans::idVirtualFs = "virtualfs";
 
 bool Bans::load() throw()
 {
-	bool success = false;
-	XmlTok root;
-	if(root.load(Settings::getFilename(getId())) && root.findChild("bans")) {
-		XmlTok* p = &root;
-		ipBans.clear(), nickBans.clear(), cidBans.clear(); // clean old bans
-		success = true;
+	XmlTok* p = Settings::getConfig("bans");
+	ipBans.clear(), nickBans.clear(), cidBans.clear(); // clean old bans
+	p->clear();
+	if(p->findChild("ipbans")) {
 		p = p->getNextChild();
-		if(p->findChild("ipbans")) {
-			p = p->getNextChild();
-			XmlTok* tmp;
-			p->findChild("ip");
-			while((tmp = p->getNextChild())) {
-				const string& banner = tmp->getAttr("banner");
-				const string& reason = tmp->getAttr("reason");
-				const string& ip = tmp->getData();
-				time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
-				BanInfo bi(t, banner, reason);
-				ipBans.insert(make_pair(ip, bi));
-			}
-			p = p->getParent();
+		XmlTok* tmp;
+		p->findChild("ip");
+		while((tmp = p->getNextChild())) {
+			const string& banner = tmp->getAttr("banner");
+			const string& reason = tmp->getAttr("reason");
+			const string& ip = tmp->getData();
+			time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
+			BanInfo bi(t, banner, reason);
+			ipBans.insert(make_pair(ip, bi));
 		}
-		if(p->findChild("nickbans")) {
-			p = p->getNextChild();
-			XmlTok* tmp;
-			p->findChild("nick");
-			while((tmp = p->getNextChild())) {
-				const string& banner = tmp->getAttr("banner");
-				const string& reason = tmp->getAttr("reason");
-				const string& nick = tmp->getData();
-				time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
-				BanInfo bi(t, banner, reason);
-				nickBans.insert(make_pair(nick, bi));
-			}
-			p = p->getParent();
-		}
-		if(p->findChild("cidbans")) {
-			p = p->getNextChild();
-			XmlTok* tmp;
-			p->findChild("cid");
-			while((tmp = p->getNextChild())) {
-				const string& banner = tmp->getAttr("banner");
-				const string& reason = tmp->getAttr("reason");
-				const string& cid = tmp->getData();
-				time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
-				BanInfo bi(t, banner, reason);
-				cidBans.insert(make_pair(cid, bi));
-			}
-			p = p->getParent();
-		}
+		p = p->getParent();
 	}
-	return success;
+	if(p->findChild("nickbans")) {
+		p = p->getNextChild();
+		XmlTok* tmp;
+		p->findChild("nick");
+		while((tmp = p->getNextChild())) {
+			const string& banner = tmp->getAttr("banner");
+			const string& reason = tmp->getAttr("reason");
+			const string& nick = tmp->getData();
+			time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
+			BanInfo bi(t, banner, reason);
+			nickBans.insert(make_pair(nick, bi));
+		}
+		p = p->getParent();
+	}
+	if(p->findChild("cidbans")) {
+		p = p->getNextChild();
+		XmlTok* tmp;
+		p->findChild("cid");
+		while((tmp = p->getNextChild())) {
+			const string& banner = tmp->getAttr("banner");
+			const string& reason = tmp->getAttr("reason");
+			const string& cid = tmp->getData();
+			time_t t = boost::lexical_cast<time_t>(tmp->getAttr("timeout"));
+			BanInfo bi(t, banner, reason);
+			cidBans.insert(make_pair(cid, bi));
+		}
+		p = p->getParent();
+	}
+	return true;
 }
 
 bool Bans::save() throw()
 {
-	XmlTok root;
-	XmlTok* p = &root;
-	p = p->addChild("bans");
+	XmlTok* p = Settings::getConfig("bans");
+	p->clear();
 	p = p->addChild("ipbans");
 	for(BanList::iterator i = ipBans.begin(); i != ipBans.end(); ) {
 		if(i->second.timeout <= time(0)) {
@@ -134,7 +128,7 @@ bool Bans::save() throw()
 		++i;
 	}
 
-	return root.save(Settings::getFilename(getId()));
+	return true;
 }
 
 void Bans::initVFS() throw()
@@ -157,7 +151,7 @@ void Bans::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		load();
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Bans: VirtualFs interface found.\n";
 			initVFS();
@@ -166,7 +160,7 @@ void Bans::on(PluginStarted&, Plugin* p) throw()
 		}
 		Logs::stat << "success: Plugin Bans: Started.\n";
 	} else if(!virtualfs) {
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Bans: VirtualFs interface found.\n";
 			initVFS();

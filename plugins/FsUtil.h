@@ -14,7 +14,7 @@ class VirtualFs;
 
 class FsUtil : public Plugin {
 public:
-	static UserData::Key idVirtualFs;	// void* (Plugin*)
+	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 
 	FsUtil() throw() : virtualfs(NULL) {};
 	virtual ~FsUtil() throw() {};

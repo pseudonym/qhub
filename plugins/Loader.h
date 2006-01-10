@@ -13,7 +13,7 @@ class VirtualFs;
 
 class Loader : public Plugin {
 public:
-	static UserData::Key idVirtualFs;	// voidPtr (Plugin*)
+	static UserData::key_type idVirtualFs;	// voidPtr (Plugin*)
 	
 	Loader() throw() {};
 	virtual ~Loader() throw() {};

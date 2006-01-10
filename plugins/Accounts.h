@@ -15,8 +15,8 @@ class VirtualFs;
 
 class Accounts : public Plugin {
 public:
-	static UserData::Key idUserLevel;	// int
-	static UserData::Key idVirtualFs;	// void* (Plugin*)
+	static UserData::key_type idUserLevel;	// int
+	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 	
 	Accounts() throw() : virtualfs(NULL) {};
 	virtual ~Accounts() throw() {};

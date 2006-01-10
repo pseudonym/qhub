@@ -32,23 +32,16 @@ void Hub::openClientPort(int port)
 {
 	//Leaf-handler
 	ServerSocket* tmp = NULL;
-	try {
-		tmp = new ServerSocket(
 #ifdef ENABLE_IPV6
-		                       Socket::IP6,
-#else
-		                       Socket::IP4,
-#endif
-		                       port, ServerSocket::LEAF_HANDLER, this);
+	try {
+		tmp = new ServerSocket(Socket::IP6, port, ServerSocket::LEAF_HANDLER, this);
 		tmp->enableMe(EventHandler::ev_read);
 		return;
-	} catch(const socket_error& e) {
+	} catch(const socket_error&) {
 		delete tmp;
-#ifndef ENABLE_IPV6 // only a failure if we're not going to try IPv4 after...
-		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
-#endif
+		// oh well, just try using IPv4...
 	}
-#ifdef ENABLE_IPV6
+#endif
 	try {
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER, this);
 		tmp->enableMe(EventHandler::ev_read);
@@ -57,39 +50,29 @@ void Hub::openClientPort(int port)
 		delete tmp;
 		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
 	}
-#endif
 }
 
 void Hub::openInterPort(int port)
 {
 	//Inter-hub
 	ServerSocket* tmp = NULL;
-	try {
-		tmp = new ServerSocket(
 #ifdef ENABLE_IPV6
-		                       Socket::IP6,
-#else
-		                       Socket::IP4,
-#endif
-		                       port, ServerSocket::INTER_HUB, this);
+	try {
+		tmp = new ServerSocket(Socket::IP6, port, ServerSocket::INTER_HUB, this);
 		tmp->enableMe(EventHandler::ev_read);
 		return;
-	} catch(const socket_error& e) {
+	} catch(const socket_error&) {
 		delete tmp;
-#ifndef ENABLE_IPV6 // only a failure if we're not going to try IPv4 after...
-		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
-#endif
 	}
-#ifdef ENABLE_IPV6
+#endif
 	try {
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::INTER_HUB, this);
 		tmp->enableMe(EventHandler::ev_read);
 		return;
 	} catch(const socket_error& e) {
 		delete tmp;
-		Logs::err << "opening client port " << port << "failed: " << e.what() << endl;
+		Logs::err << "opening server port " << port << "failed: " << e.what() << endl;
 	}
-#endif
 }
 
 void Hub::acceptLeaf(int fd, Socket::Domain d)

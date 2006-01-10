@@ -14,8 +14,8 @@ class Dir;
 
 class VirtualFs : public Plugin {
 public:
-	static UserData::Key idVirtualFs;	// voidPtr
-	static UserData::Key idVirtualPath;	// string
+	static UserData::key_type idVirtualFs;	// voidPtr
+	static UserData::key_type idVirtualPath;	// string
 
 	/*
 	 * IPC structure

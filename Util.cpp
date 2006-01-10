@@ -2,6 +2,7 @@
 #include <cassert>
 
 #include "Util.h"
+#include "UserData.h"
 
 using namespace std;
 using namespace qhub;
@@ -10,6 +11,7 @@ string const Util::emptyString;
 int const Util::emptyInt = 0;
 voidPtr const Util::emptyVoidPtr = NULL;
 StringList const Util::emptyStringList;
+UserData Util::data;
 
 vector<u_int8_t> Util::genRand(int bytes) throw() {
 	int buf[(bytes + sizeof(int) - 1) / sizeof(int)];

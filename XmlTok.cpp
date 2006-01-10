@@ -8,7 +8,7 @@
 #include "Logs.h"
 #include <cstdio>
 #include <cassert>
-#include <errno.h>
+#include <cerrno>
 
 #if defined(HAVE_EXPAT_H)
 # include <expat.h>
@@ -93,10 +93,8 @@ XmlTok* XmlTok::getParent() throw()
 
 string const& XmlTok::getAttr(string const& n) const throw()
 {
-	for(Attributes::const_iterator i = attributes.begin(); i != attributes.end(); ++i) {
-		if(i->first == n)
-			return i->second;
-	}
+	if(attributes.count(n))
+		return attributes.find(n)->second;
 	return Util::emptyString;
 }
 
@@ -106,7 +104,7 @@ string XmlTok::toString(int indent) const throw()
 	for(Children::const_iterator i = children.begin(); i != children.end(); ++i) {
 		XmlTok* p = *i;
 		ret += string(indent, indentChar) + "<" + p->name;
-		for(Attributes::const_iterator j = p->attributes.begin(); j != p->attributes.end(); ++j)
+		for(StringMap::const_iterator j = p->attributes.begin(); j != p->attributes.end(); ++j)
 			ret += ' ' + j->first + "=\"" + j->second + "\"";
 		if(p->children.empty()) {
 			if(p->data.empty()) {
@@ -139,7 +137,7 @@ XmlTok* XmlTok::addChild(string const& n) throw()
 
 void XmlTok::setAttr(string const& n, string const& attr) throw()
 {
-	attributes.push_back(make_pair(n, attr));
+	attributes.insert(make_pair(n, attr));
 }
 
 void XmlTok::setData(string const& d) throw()
@@ -205,4 +203,12 @@ bool XmlTok::save(string const& filename) const throw()
 	} while(left);
 	fclose(fp);
 	return true;
+}
+
+void XmlTok::clear() throw()
+{
+	attributes.clear();
+	for(Children::iterator i = children.begin(); i != children.end(); ++i)
+		delete *i;
+	children.clear();
 }

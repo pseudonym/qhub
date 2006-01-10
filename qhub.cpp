@@ -30,6 +30,7 @@ void end(int)
 {
 	Plugin::deinit();
 	Hub::killAll();
+	Settings::save();
 	exit(EXIT_SUCCESS);
 }
 
@@ -64,14 +65,13 @@ int main(int argc, char **argv)
 	EventHandler::init();
 	DNSAdapter::init();
 
-	ios::sync_with_stdio();
 	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help
 	Settings::parseArgs(argc, argv);
 
-	Settings::readFromXML();
+	Settings::load();
 
 	//try loading
 	Plugin::init();
@@ -80,8 +80,8 @@ int main(int argc, char **argv)
 	//Init random number generator
 	srand(time(NULL));
 
-	struct timeInfo *tmp = (struct timeInfo*) malloc(sizeof(struct event));
-	tmp->ev = (struct event*) malloc(sizeof(struct event));
+	struct timeInfo *tmp = new struct timeInfo;
+	tmp->ev = new struct event;
 	
 	evtimer_set(tmp->ev, timerCallback, tmp);
 	

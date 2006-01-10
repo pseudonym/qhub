@@ -25,42 +25,32 @@ extern "C" {
  * Plugin details
  */
 
-UserData::Key FsUtil::idVirtualFs = UserData::toKey("virtualfs");
+UserData::key_type FsUtil::idVirtualFs = "virtualfs";
 
 bool FsUtil::load() throw()
 {
-	bool success = false;
 	aliases.clear(); // clean old data
-	XmlTok root;
-	if(root.load(Settings::getFilename(getId()))) {
-		XmlTok* p = &root;
-		if(p->findChild("fsutil")) {
-			success = true;
-			p = p->getNextChild();
-			if(p->findChild("aliases")) {
-				p = p->getNextChild();
-				aliasPrefix = p->getAttr("prefix");
-				if(aliasPrefix.empty())
-					aliasPrefix = "+";
-				if(p->findChild("alias")) {
-					XmlTok* tmp;
-					while((tmp = p->getNextChild())) {
-						aliases[tmp->getAttr("in")] = tmp->getAttr("out");
-					}
-				}
-				p = p->getParent();
+	XmlTok* p = Settings::getConfig("fsutil");
+	p->clear();
+	if(p->findChild("aliases")) {
+		p = p->getNextChild();
+		aliasPrefix = p->getAttr("prefix");
+		if(aliasPrefix.empty())
+			aliasPrefix = "+";
+		if(p->findChild("alias")) {
+			XmlTok* tmp;
+			while((tmp = p->getNextChild())) {
+				aliases[tmp->getAttr("in")] = tmp->getAttr("out");
 			}
-			p = p->getParent();
 		}
+		p = p->getParent();
 	}
-	return success;
+	return true;
 }
 
 bool FsUtil::save() const throw()
 {
-	XmlTok root;
-	XmlTok* p = &root;
-	p = p->addChild("fsutil");
+	XmlTok* p = Settings::getConfig("fsutil");
 	p = p->addChild("aliases");
 	p->setAttr("prefix", aliasPrefix);
 	for(Aliases::const_iterator i = aliases.begin(); i != aliases.end(); ++i) {
@@ -68,9 +58,7 @@ bool FsUtil::save() const throw()
 		tmp->setAttr("in", i->first);
 		tmp->setAttr("out", i->second);
 	}
-	p = p->getParent();
-	p = p->getParent();
-	return root.save(Settings::getFilename(getId()));
+	return true;
 }
 
 void FsUtil::initVFS() throw()
@@ -89,7 +77,7 @@ void FsUtil::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		load();
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin FsUtil: VirtualFs interface found.\n";
 			initVFS();
@@ -98,9 +86,9 @@ void FsUtil::on(PluginStarted&, Plugin* p) throw()
 		}
 		Logs::stat << "success: Plugin FsUtil: Started.\n";
 	} else if(!virtualfs) {
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
-		Logs::stat << "success: Plugin FsUtil: VirtualFs interface found.\n";
+			Logs::stat << "success: Plugin FsUtil: VirtualFs interface found.\n";
 			initVFS();
 		}
 	}

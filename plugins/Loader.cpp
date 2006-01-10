@@ -22,32 +22,28 @@ extern "C" {
  * Plugin details
  */
 
-UserData::Key Loader::idVirtualFs = UserData::toKey("virtualfs");
+UserData::key_type Loader::idVirtualFs = "virtualfs";
 
 int Loader::load() throw()
 {
 	int success = 0;
 	int failure = 0;
-	XmlTok root;
-	if(root.load(Settings::getFilename("plugins"))) {
-		XmlTok* p = &root;
-		if(p->findChild("plugins") && (p = p->getNextChild()) && p->findChild("plugin")) {
-			XmlTok* tmp;
-			while((tmp = p->getNextChild())) {
-				string const& name = tmp->getData();
-				if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
-					Logs::stat << "\nloading plugin \"" << name << "\"\n";
-					if(Plugin::openModule(name)) {
-						success++;
-					} else {
-						failure++;
-					}
+	XmlTok* p = Settings::getConfig("plugins");
+	if(p->findChild("plugin")) {
+		XmlTok* tmp;
+		while((tmp = p->getNextChild())) {
+			string const& name = tmp->getData();
+			if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
+				Logs::stat << "\nloading plugin \"" << name << "\"\n";
+				if(Plugin::openModule(name)) {
+					success++;
+				} else {
+					failure++;
 				}
 			}
-			p = p->getParent();
-		} else {
-			return 0;
 		}
+	} else {
+		return 0;
 	}
 	return failure == 0 ? success : -failure;
 }
@@ -55,14 +51,13 @@ int Loader::load() throw()
 bool Loader::save() const throw()
 {
 	XmlTok root;
-	XmlTok* p = &root;
-	p = p->addChild("plugins");
+	XmlTok* p = Settings::getConfig("plugins");
+	p->clear();
 	for(Plugin::iterator i = Plugin::begin(); i != Plugin::end(); ++i) {
 		XmlTok* tmp = p->addChild("plugin");
 		tmp->setData((*i)->getId());
 	}
-	p = p->getParent();
-	return root.save(Settings::getFilename("plugins"));
+	return true;
 }
 
 void Loader::initVFS() throw()
@@ -86,7 +81,7 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		load();
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
@@ -95,7 +90,7 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 		}
 		Logs::stat << "success: Plugin Loader: Started.\n";
 	} else if(!virtualfs) {
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();

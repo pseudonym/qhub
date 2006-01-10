@@ -22,8 +22,8 @@ extern "C" {
  * Plugin details
  */
 
-UserData::Key VirtualFs::idVirtualFs = UserData::toKey("virtualfs");
-UserData::Key VirtualFs::idVirtualPath = UserData::toKey("virtualpath");
+UserData::key_type VirtualFs::idVirtualFs = "virtualfs";
+UserData::key_type VirtualFs::idVirtualPath = "virtualpath";
 
 void VirtualFs::Message::reply(string const& msg) throw()
 {
@@ -32,7 +32,7 @@ void VirtualFs::Message::reply(string const& msg) throw()
 
 void VirtualFs::init() throw()
 {
-	Plugin::data.setVoidPtr(idVirtualFs, this);
+	Util::data.setVoidPtr(idVirtualFs, this);
 	root = new Dir;
 	root->setPartialMatch(true);
 	root->setData(this);
@@ -41,7 +41,7 @@ void VirtualFs::init() throw()
 void VirtualFs::deinit() throw()
 {
 	delete root;
-	Plugin::data.setVoidPtr(idVirtualFs, NULL);
+	Util::data.setVoidPtr(idVirtualFs, NULL);
 }
 
 void VirtualFs::on(PluginStarted&, Plugin* p) throw()
