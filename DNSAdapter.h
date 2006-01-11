@@ -1,7 +1,6 @@
 #ifndef __DNSADAPTER_H_
 #define __DNSADAPTER_H_
 
-#include <adns.h>
 #include <string>
 extern "C" {
 #include <ares.h>
@@ -15,12 +14,12 @@ namespace qhub {
 //abstract/portable DNS lookup/completion notification
 class DNSAdapter: public EventHandler {
 public:
-	DNSAdapter(string& hostname);
+	DNSAdapter(const string& hostname);
 	virtual ~DNSAdapter() throw();
 	
 	static void init();
 
-	virtual void complete(string result) = 0;
+	virtual void complete(const string& result) = 0;
 	
 protected:
 	virtual bool onRead() throw();
@@ -30,6 +29,7 @@ protected:
 	bool doHack();
 	
 	ares_channel channel;
+	string query;
 };
 
 

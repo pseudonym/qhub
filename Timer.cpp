@@ -1,37 +1,34 @@
 // vim:ts=4:sw=4:noet
+#include <cassert>
+#include <cstring>
+
 #include "Timer.h"
 
 using namespace qhub;
 
-unsigned Timer::second = 0;
-bool Timer::modified = false;
-Timer::Alarms Timer::alarms;
-Timer::Alarms Timer::alarms2;
+static void callback(int, short event, void* arg)
+{
+	assert(event == EV_TIMEOUT);
+	Timer* t = static_cast<Timer*>(arg);
+	t->onAlarm();
+}
 
-void Timer::tick() throw() {
-	second++;
-	if(modified) {
-		alarms.insert(alarms2.begin(), alarms2.end());
-		alarms2.clear();
-		modified = false;
-		for(Alarms::iterator i = alarms.begin(); i != alarms.end(); ) {
-			if(i->second == 0)
-				alarms.erase(i++);
-			else
-				++i;
-		}
-	}
-	for(Alarms::iterator i = alarms.begin(); i != alarms.end(); ++i) {
-		i->second--;
-		if(i->second == 0) {
-			Timer* t = i->first;
-			alarms.erase(i);
-			t->onAlarm();
-		}
-	}
+Timer::Timer() throw()
+{
+	memset(&ev, sizeof(struct event), 0);
+	evtimer_set(&ev, callback, this);
+}
+
+Timer::~Timer() throw()
+{
+	evtimer_del(&ev);
 }
 
 void Timer::alarm(unsigned seconds) throw() {
-	alarms2[this] = seconds;
-	modified = true;
+	evtimer_del(&ev);
+	if(!seconds)
+		return; // don't re-add, 0 means deactivate
+	tv.tv_sec = seconds;
+	tv.tv_usec = 0;
+	evtimer_add(&ev, &tv);
 }

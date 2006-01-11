@@ -22,6 +22,8 @@ anything...
 * removed string8 class, as it was causing compilter errors on gcc 4.0 and is
 generally pointless
 * Buffer::writeBuffer renamed to Buffer::Ptr
+* UserData now just using std::string for keys
+* reworked class Timer to better integrate with libevent
 
 - 0.9 -
 * Pseudo is now in charge :)

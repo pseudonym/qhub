@@ -4,7 +4,7 @@
 #include "Logs.h"
 
 #include <string>
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 using namespace qhub;
@@ -21,7 +21,7 @@ EventHandler::~EventHandler() throw()
 			exit(1);	
 		}
 	}
-	free(ev);
+	delete ev;
 }
 
 void demux(int fd, short e, void* event)
@@ -56,7 +56,7 @@ void EventHandler::disableMe(type e) throw()
 		exit(1);
 	}
 	if(enabledFlags == 0){
-		free(ev);
+		delete ev;
 		ev = NULL;
 	} else {
 		// we still want other events
@@ -84,7 +84,7 @@ void EventHandler::enableMe(type e, timeval* const timeout) throw()
 	}
 
 	if(ev == NULL){
-		ev = (struct ::event*) malloc(sizeof(struct ::event));
+		ev = new struct ::event;
 	}
 	memset(ev, sizeof(struct ::event), 0);
 

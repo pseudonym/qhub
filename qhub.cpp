@@ -17,14 +17,7 @@
 #include <string>
 
 using namespace std;
-
 using namespace qhub;
-
-struct timeInfo {
-	struct timeval tv;
-	int delay;
-	struct event* ev;
-};
 
 void end(int)
 {
@@ -34,21 +27,15 @@ void end(int)
 	exit(EXIT_SUCCESS);
 }
 
-void timerCallback(int, short int, void *ev)
-{
-	timeInfo* tmp = (timeInfo*) ev;
-
-	Timer::tick();
-	
-	evtimer_add(tmp->ev, &tmp->tv); 
-}
-
 class majs: public DNSAdapter
 {
 public:
 	majs(string s) : DNSAdapter(s) {} 
 	
-	virtual void complete(string s) { Logs::stat << "complete: " << s << endl; }
+	virtual void complete(const string& r)
+	{
+		Logs::stat << query << ": " << r << endl;
+	}
 };
 
 int main(int argc, char **argv)
@@ -82,17 +69,6 @@ int main(int argc, char **argv)
 	//Init random number generator
 	srand(time(NULL));
 
-	struct timeInfo *tmp = new struct timeInfo;
-	tmp->ev = new struct event;
-	
-	evtimer_set(tmp->ev, timerCallback, tmp);
-	
-	tmp->tv.tv_usec=0;
-	tmp->tv.tv_sec=1;
-	tmp->delay = 1;	
-	
-	evtimer_add(tmp->ev, &tmp->tv);
-	
 	EventHandler::mainLoop();
 
 	return EXIT_SUCCESS;

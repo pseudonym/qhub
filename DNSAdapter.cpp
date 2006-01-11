@@ -17,16 +17,14 @@ using namespace qhub;
 #include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
 extern "C" {
 #include <ares.h>
 }
 
 static void callback(void *arg, int status, struct hostent *host);
 
-DNSAdapter::DNSAdapter(string& hostname)
+DNSAdapter::DNSAdapter(const string& hostname) : query(hostname)
 {
 	int status = ares_init(&channel);
 	
@@ -35,14 +33,14 @@ DNSAdapter::DNSAdapter(string& hostname)
 		Logs::stat << "ares_init: " << ares_strerror(status) << endl;
 	}
 
-	struct in_addr* addr = new struct in_addr;
+	struct in_addr addr;
 	
-	addr->s_addr = inet_addr(hostname.c_str());
+	addr.s_addr = inet_addr(query.c_str());
 	//XXX: looking ip numeric ips -> hostname seems to corrupt memory
-	if (addr->s_addr == INADDR_NONE) {
-		ares_gethostbyname(channel, hostname.c_str(), AF_INET, callback, this);
+	if (addr.s_addr == INADDR_NONE) {
+		ares_gethostbyname(channel, query.c_str(), AF_INET, callback, this);
 	} else {
-	    ares_gethostbyaddr(channel, addr, sizeof(&addr), AF_INET, callback,	this);
+	    ares_gethostbyaddr(channel, &addr, sizeof(struct in_addr), AF_INET, callback, this);
 	}
 
 	doHack();
@@ -134,7 +132,7 @@ static void callback(void *arg, int status, struct hostent *host)
 		if(textual) {
 			us->complete(inet_ntoa(addr));
 		} else {
-			us->complete("");
+			us->complete(host->h_name);
 		}
 	}
 }

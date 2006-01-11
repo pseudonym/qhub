@@ -2,6 +2,8 @@
 #ifndef _INCLUDED_USERINFO_H_
 #define _INCLUDED_USERINFO_H_
 
+#include <map>
+
 #include "config.h"
 #include "Util.h"
 #include "Socket.h"
@@ -13,7 +15,7 @@ namespace qhub {
 
 class UserInfo {
 public:
-	typedef map<u_int16_t, string> InfMap;
+	typedef std::map<u_int16_t, string> InfMap;
 	typedef InfMap::const_iterator const_iterator;
 	const_iterator begin() throw() { return infMap.begin(); };
 	const_iterator end() throw() { return infMap.end(); };
