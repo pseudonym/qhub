@@ -125,10 +125,10 @@ public:
 		return parent;
 	}
 
-	void setData(void* dat) throw() {
+	void setData(VirtualFsListener* dat) throw() {
 		data = dat;
 	}
-	void* getData() const throw() {
+	VirtualFsListener* getData() const throw() {
 		return data;
 	}
 	
@@ -145,7 +145,7 @@ public:
 			return NULL;
 		}
 	}
-	bool mkNode(string const& name, void* data) throw() {
+	bool mkNode(string const& name, VirtualFsListener* data) throw() {
 		string tmp = name;
 		Dir* d = splitPath(tmp);
 		if(d) {
@@ -166,7 +166,7 @@ public:
 		}
 		return false;	
 	}
-	void* getNode(string& name) throw() {
+	VirtualFsListener* getNode(string& name) throw() {
 		string tmp = name;
 		Dir* d = splitPath(tmp);
 		if(d) {
@@ -203,8 +203,8 @@ private:
 	bool partial;
 	typedef map<string, Dir*> SubDirs;
 	SubDirs subDirs;
-	void* data;
-	typedef map<string, void*> Nodes;
+	VirtualFsListener* data;
+	typedef map<string, VirtualFsListener*> Nodes;
 	Nodes nodes;
 };
 

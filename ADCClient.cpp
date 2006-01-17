@@ -21,7 +21,8 @@ ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
 
 ADCClient::~ADCClient() throw()
 {
-	alarm(0);
+	if(timer)
+		timer->removeListener(this);
 	if(userInfo)
 		delete userInfo;
 	if(userData)
@@ -37,7 +38,10 @@ UserData* ADCClient::getUserData() throw()
 
 void ADCClient::login() throw()
 {
-	alarm(0); // Stop alarm. Else we'd get booted.
+	if(timer) {
+		timer->removeListener(this); // Stop alarm. Else we'd get booted.
+		timer = NULL;
+	}
 	state = NORMAL;
 	Plugin::UserConnected action;
 	Plugin::fire(action, this);
@@ -134,7 +138,7 @@ void ADCClient::doDisconnectBy(string const& kicker, string const& msg) throw()
 		doDisconnect(errmsg); \
 	} while(0)
 
-void ADCClient::onLine(StringList& sl, string const& fullmsg) throw()
+void ADCClient::onLine(StringList& sl, string const& fullmsg) throw(command_error)
 {
 	assert(!sl.empty());
 
@@ -157,7 +161,6 @@ void ADCClient::onLine(StringList& sl, string const& fullmsg) throw()
 			return;
 		} else if(action.isSet(Plugin::MODIFIED)) {
 			command = stringToFourCC(sl[0]);
-			// amazingly, this doesn't leak memory
 			ADC::toString(sl, full);
 		}
 	}
@@ -226,14 +229,16 @@ void ADCClient::onLine(StringList& sl, string const& fullmsg) throw()
 
 void ADCClient::onConnected() throw()
 {
-	alarm(15);
+	timer = Timer::makeTimer(15);
+	timer->addListener(this);
 	Plugin::ClientConnected action;
 	Plugin::fire(action, this);
 }
 
 void ADCClient::onDisconnected(string const& clue) throw()
 {
-	alarm(15);
+	timer = Timer::makeTimer(15);
+	timer->addListener(this);
 	if(added) {
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
@@ -256,7 +261,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 /* Data handlers */
 /*****************/
 
-void ADCClient::handle(StringList& sl, u_int32_t const cmd, string& full) throw() {
+void ADCClient::handle(StringList& sl, u_int32_t const cmd, string& full) throw(command_error) {
 	u_int32_t threeCC = cmd & 0xFFFFFF00;
 	char oneCC = (char)cmd & 0x000000FF;
 
@@ -291,11 +296,15 @@ void ADCClient::handle(StringList& sl, u_int32_t const cmd, string& full) throw(
 			getHub()->broadcastActive(full);
 			break;
 		case 'B':
-		case 'F': // FIXME
 			getHub()->broadcast(full); // do we ever want to stop anything to self?
 			break;
 		case 'D':
 			getHub()->direct(sl[2], full, this);
+			break;
+		case 'F':
+			if(sl[2].size() != 5 || sl[2][0] != '+' || sl[2][0] != '-')
+				throw command_error("Feature parameter corrupt:\n" + full);
+			getHub()->broadcastFeature(full, sl[2].substr(1), sl[2][0] == '+');
 			break;
 		case 'P':
 		case 'T': // FIXME

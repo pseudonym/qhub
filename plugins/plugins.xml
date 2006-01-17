@@ -1,6 +1,0 @@
-<plugins>
-	<plugin>fsutil</plugin>
-	<plugin>virtualfs</plugin>
-	<plugin>accounts</plugin>
-	<plugin>bans</plugin>
-</plugins>

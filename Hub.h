@@ -59,6 +59,7 @@ public:
 	void broadcastActive(string const& data, ADCSocket* except = NULL) throw();
 	void broadcastPassive(string const& data, ADCSocket* except = NULL) throw();
 	void broadcastInter(string const& data, InterHub* except = NULL) throw();
+	void broadcastFeature(string const& data, const string& feat, bool yes, ADCSocket* except = NULL) throw();
 	void direct(string const& data, string const& cid, ADCClient* from = NULL) throw();
 
 	void motd(ADCClient* c) throw();

@@ -1,13 +1,11 @@
 // vim:ts=4:sw=4:noet
 #include "FsUtil.h"
 
-#include "../ADCClient.h"
 #include "../UserInfo.h"
 #include "../UserData.h"
 #include "../XmlTok.h"
 #include "../Logs.h"
 #include "../Settings.h"
-#include "VirtualFs.h"
 
 using namespace qhub;
 
@@ -31,7 +29,6 @@ bool FsUtil::load() throw()
 {
 	aliases.clear(); // clean old data
 	XmlTok* p = Settings::getConfig("fsutil");
-	p->clear();
 	if(p->findChild("aliases")) {
 		p = p->getNextChild();
 		aliasPrefix = p->getAttr("prefix");
@@ -51,6 +48,7 @@ bool FsUtil::load() throw()
 bool FsUtil::save() const throw()
 {
 	XmlTok* p = Settings::getConfig("fsutil");
+	p->clear();
 	p = p->addChild("aliases");
 	p->setAttr("prefix", aliasPrefix);
 	for(Aliases::const_iterator i = aliases.begin(); i != aliases.end(); ++i) {
@@ -107,6 +105,72 @@ void FsUtil::on(PluginStopped&, Plugin* p) throw()
 	}
 }
 
+void FsUtil::on(ChDir, const string&, Client* c) throw()
+{
+	c->doPrivateMessage("This is the file system utilities section.");
+}
+
+void FsUtil::on(Help, const string&, Client* c) throw()
+{
+	c->doPrivateMessage(
+			"The following commands are available to you:\n"
+			"load\t\t\tloads settings\n"
+			"save\t\t\tsaves settings\n"
+			"alias [alias] [command]\tlist/add aliases\n"
+			"unalias <alias>\t\tremoves an alias"
+	);
+}
+
+void FsUtil::on(Exec, const string& cwd, Client* c, const StringList& arg) throw()
+{
+	assert(arg.size() >= 1);
+	if(arg[0] == "load") {
+		if(load()) {
+			c->doPrivateMessage("Success: FsUtil settings reloaded.");
+		} else {
+			c->doPrivateMessage("Failure: Failed to reload FsUtil settings file.");
+		}
+	} else if(arg[0] == "save") {
+		if(save()) {
+			c->doPrivateMessage("Success: FsUtil settings file saved.");
+		} else {
+			c->doPrivateMessage("Failure: Failed to save FsUtil settings file.");
+		}
+	} else if(arg[0] == "alias") {
+		if(arg.size() == 1) {
+			string tmp = "Success: aliases, prefix = \"" + aliasPrefix + "\":\r\n";
+			for(Aliases::const_iterator i = aliases.begin(); i != aliases.end(); ++i) {
+				tmp += i->first + " = " + i->second + "\r\n";
+			}
+			c->doPrivateMessage(tmp);
+		} else if(arg.size() == 2) {
+			Aliases::const_iterator i = aliases.find(arg[1]);
+			if(i != aliases.end())
+				c->doPrivateMessage("Success: " + i->first + " = " + i->second);
+			else
+				c->doPrivateMessage("Failed: " + arg[1] + " undefined");
+		} else if(arg.size() == 3) {
+			aliases[arg[1]] = arg[2];
+			c->doPrivateMessage("Success: alias added/modified");
+		} else {
+			c->doPrivateMessage("Syntax: alias [alias] [command]");
+		}
+	} else if(arg[0] == "unalias") {
+		if(arg.size() == 2) {
+			Aliases::iterator i = aliases.find(arg[1]);
+			if(i != aliases.end()) {
+				aliases.erase(i);
+				c->doPrivateMessage("Success: alias removed");
+			} else {
+				c->doPrivateMessage("Failed: no such alias defined");
+			}
+		} else {
+			c->doPrivateMessage("Syntax: unalias <nick>");
+		}
+	}
+}
+
+/*
 void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
@@ -172,7 +236,7 @@ void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 			}
 		}
 	}
-}
+}*/
 
 void FsUtil::on(UserCommand& a, ADCClient* client, string& msg) throw()
 {

@@ -20,7 +20,6 @@
 #include "config.h"
 #include "Buffer.h"
 #include "Util.h"
-#include "Timer.h"
 #include "EventHandler.h"
 
 using namespace std;
@@ -33,7 +32,7 @@ using namespace std;
 
 namespace qhub {
 
-class Socket : public EventHandler, public Timer {
+class Socket : public EventHandler {
 public:
 	enum Domain { IP4 = PF_INET, 
 #ifdef ENABLE_IPV6

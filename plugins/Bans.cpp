@@ -36,7 +36,6 @@ bool Bans::load() throw()
 {
 	XmlTok* p = Settings::getConfig("bans");
 	ipBans.clear(), nickBans.clear(), cidBans.clear(); // clean old bans
-	p->clear();
 	if(p->findChild("ipbans")) {
 		p = p->getNextChild();
 		XmlTok* tmp;
@@ -224,6 +223,109 @@ void Bans::on(ClientLogin& action, ADCClient* client) throw()
 	}
 }
 
+void Bans::on(ChDir, const string&, Client* c) throw()
+{
+	c->doPrivateMessage("This is the bans section. Create and remove bans and properties here.");
+}
+
+void Bans::on(Help, const string& cwd, Client* c) throw()
+{
+	assert(cwd == "/bans/");
+	c->doPrivateMessage(
+			"The following commands are available to you:\n"
+			"load\t\t\t\tloads the bans file from disk\n"
+			"save\t\t\t\tsaves the bans file to disk\n"
+			"ban(ip|nick|cid) <item> <time> [description]\tbans the specified item\n"
+			"\ttime has the same semantics as Verlihub, except no specifier\n"
+			"\tmeans minutes and 'm' means months\n"
+			"\ttime=0 means unban, time=-1 means forever\n"
+			"list\t\t\t\tshows the list of bans"
+	);
+}
+
+void Bans::on(Exec, const string& cwd, Client* c, const StringList& arg) throw()
+{
+	assert(arg.size() >= 1);
+	if(arg[0] == "load") {
+		if(load()) {
+			c->doPrivateMessage("Success: Bans file reloaded.");
+		} else {
+			c->doPrivateMessage("Failure: Failed to reload Bans file.");
+		}
+	} else if(arg[0] == "save") {
+		if(save()) {
+			c->doPrivateMessage("Success: Bans file saved.");
+		} else {
+			c->doPrivateMessage("Failure: Failed to save Bans file.");
+		}
+	} else if(arg[0] == "banip") {
+		if(arg.size() > 2 && inet_addr(arg[1].c_str()) == INADDR_NONE) {
+			c->doPrivateMessage("Invalid IP address.");
+			return;
+		}
+		if(arg.size() >= 3) {
+			ostringstream str;
+			// turn the ban reason into one string
+			copy(arg.begin()+3, arg.end(), ostream_iterator<string>(str, " "));
+			BanInfo b(parseTime(arg[2]), c->getUserInfo()->getNick(), str.str());
+			ipBans.insert(make_pair(arg[1], b));
+			c->doPrivateMessage("Success: ban added.");
+		} else {
+			c->doPrivateMessage("Syntax: banip <ip> <time> [description]");
+		}
+	} else if(arg[0] == "bannick") {
+		if(arg.size() >= 3) {
+			ostringstream str;
+			// turn the ban reason into one string
+			copy(arg.begin()+3, arg.end(), ostream_iterator<string>(str, " "));
+			BanInfo b(parseTime(arg[2]), c->getUserInfo()->getNick(), str.str());
+			nickBans.insert(make_pair(arg[1], b));
+			c->doPrivateMessage("Success: ban added.");
+		} else {
+			c->doPrivateMessage("Syntax: bannick <nick> <time> [description]");
+		}
+	} else if(arg[0] == "bancid") {
+		if(arg.size() > 2 && !ADC::checkCID(arg[1])) {
+			c->doPrivateMessage("Invalid CID.");
+			return;
+		}
+		if(arg.size() >= 3) {
+			ostringstream str;
+			//turn the ban reason into one string
+			copy(arg.begin()+3, arg.end(), ostream_iterator<string>(str, " "));
+			BanInfo b(parseTime(arg[2]), c->getUserInfo()->getNick(), str.str());
+			cidBans.insert(make_pair(arg[1], b));
+			c->doPrivateMessage("Success: ban added.");
+		} else {
+			c->doPrivateMessage("Syntax: bancid <cid> <time> [description]");
+		}
+	} else if(arg[0] == "list") {
+		string ret = "Banned IP addresses:";
+		for(BanList::const_iterator i = ipBans.begin(); i != ipBans.end(); ++i) {
+			ret += "\n  ";
+			ret += i->first;
+			ret += " (" + Util::toString(i->second.timeout) + ") ";
+			ret += i->second.reason + " //" + i->second.banner;
+		}
+		ret += "\n\nBanned nicknames:";
+		for(BanList::const_iterator i = nickBans.begin(); i != nickBans.end(); ++i) {
+			ret += "\n  ";
+			ret += i->first;
+			ret += " (" + Util::toString(i->second.timeout) + ") ";
+			ret += i->second.reason + " //" + i->second.banner;
+		}
+		ret += "\n\nBanned CIDs:";
+		for(BanList::const_iterator i = cidBans.begin(); i != cidBans.end(); ++i) {
+			ret += "\n  ";
+			ret += i->first;
+			ret += " (" + Util::toString(i->second.timeout) + ") ";
+			ret += i->second.reason + " //" + i->second.banner;
+		}
+		c->doPrivateMessage(ret);
+	}
+}
+
+/*
 void Bans::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
@@ -328,7 +430,7 @@ void Bans::on(PluginMessage&, Plugin* p, void* d) throw()
 			}
 		}
 	}
-}
+}*/
 
 time_t Bans::parseTime(const string& tmp)
 {

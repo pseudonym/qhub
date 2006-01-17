@@ -50,7 +50,8 @@ void InterHub::onLookup()
 
 void InterHub::onConnected() throw()
 {
-	alarm(15);
+	timer = Timer::makeTimer(15);
+	timer->addListener(this);
 	Plugin::InterConnected action;
 	Plugin::fire(action, this);
 }
@@ -89,9 +90,12 @@ void InterHub::doError(const string& msg) throw()
 	send("LSTA " + getHub()->getCID32() + " 200 " + ADC::ESC(msg) + '\n');
 }
 
-void InterHub::onLine(StringList& sl, const string& fullmsg) throw()
+void InterHub::onLine(StringList& sl, const string& fullmsg) throw(command_error)
 {
-	alarm(0);
+	if(timer) {
+		timer->removeListener(this);
+		timer = NULL;
+	}
 
 	if(sl[0].size() != 4) {
 		disconnect("bad FOURCC");
@@ -202,7 +206,7 @@ void InterHub::doPassword(const StringList& sl) throw()
 			Encoder::toBase32(h.finalize(), TigerHash::HASH_SIZE) + '\n');
 }
 
-void InterHub::handle(const StringList& sl, const string& full, uint32_t command) throw()
+void InterHub::handle(const StringList& sl, const string& full, uint32_t command) throw(command_error)
 {
 	switch(full[0]) {
 	case 'B':
@@ -213,8 +217,12 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 				users.find(sl[1])->second->update(UserInfo(this, sl));
 			}
 		}
-	case 'F': // FIXME
 		getHub()->broadcast(full, this);
+		break;
+	case 'F':
+		if(sl[2].size() != 5 || sl[2][0] != '+' || sl[2][0] != '-')
+			throw command_error("Feature parameter corrupt:\n" + full);
+		getHub()->broadcastFeature(full, sl[2].substr(1), sl[2][0] == '+', this);
 		break;
 	case 'A':
 		getHub()->broadcastActive(full, this);

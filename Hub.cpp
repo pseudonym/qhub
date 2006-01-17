@@ -209,6 +209,16 @@ void Hub::broadcastInter(string const& data, InterHub* except/* = NULL*/) throw(
 	}
 }
 
+void Hub::broadcastFeature(string const& data, const string& feat, bool yes, ADCSocket* except/* = NULL*/) throw()
+{
+	broadcastInter(data, dynamic_cast<InterHub*>(except)); // NULL on error, what we want...
+	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
+	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		if(i->second->getUserInfo()->hasSupport(feat) == yes)
+			i->second->writeb(tmp);
+	}
+}
+
 bool Hub::hasClient(string const& cid, bool localonly) const throw()
 {
 	if(activeUsers.find(cid) != activeUsers.end())

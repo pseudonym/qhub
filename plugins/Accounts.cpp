@@ -154,6 +154,74 @@ void Accounts::on(UserConnected&, ADCClient* client) throw()
 	}
 }
 
+void Accounts::on(ChDir, const string& cwd, Client* client) throw()
+{
+	client->doPrivateMessage("This is the accounts section. Create and remove accounts and properties here.");
+}
+
+void Accounts::on(Help, const string& cwd, Client* client) throw()
+{
+	assert(cwd == "/accounts/");
+	client->doPrivateMessage(
+			"The following commands are available to you:\n"
+		    "load\t\t\t\tloads the users file from disk\n"
+		    "save\t\t\t\tsaves the users file to disk\n"
+		    "add <user> <password> <level>\tadds a user\n"
+		    "del <user>\t\t\tremoves a user\n"
+		    "list [wildcard]\t\t\tshows the list of registered users"
+		    //"show <user>\t\tshows information about a user"
+	);
+}
+
+void Accounts::on(Exec, const string& cwd, Client* client, const StringList& arg) throw()
+{
+	assert(arg.size() >= 1);
+	if(arg[0] == "load") {
+		if(load()) {
+			client->doPrivateMessage("Success: User accounts file reloaded.");
+		} else {
+			client->doPrivateMessage("Failure: Failed to reload user accounts file.");
+		}
+	} else if(arg[0] == "save") {
+		if(save()) {
+			client->doPrivateMessage("Success: User accounts file saved.");
+		} else {
+			client->doPrivateMessage("Failure: Failed to save user accounts file.");
+		}
+	} else if(arg[0] == "add") {
+		if(arg.size() == 4) {
+			users[arg[1]] = make_pair(arg[2], Util::toInt(arg[3]));
+			client->doPrivateMessage("Success: User created/updated.");
+		} else if(arg.size() == 3) {
+			users[arg[1]] = make_pair(arg[2], 1);
+			client->doPrivateMessage("Success: User created/updated.");
+			// check if user online..
+			// add OP1 if so
+		} else {
+			client->doPrivateMessage("Syntax: add <nick> <password> <level=1>");
+		}
+	} else if(arg[0] == "del") {
+		if(arg.size() == 2) {
+			Users::iterator i = users.find(arg[1]);
+			if(i != users.end()) {
+				users.erase(i);
+				client->doPrivateMessage("Success: User deleted.");
+			} else {
+				client->doPrivateMessage("Failure: User not found.");
+			}
+		} else {
+			client->doPrivateMessage("Syntax: del <nick>");
+		}
+	} else if(arg[0] == "list") {
+		string ret = "Success: Registered users:";
+		for(Users::iterator i = users.begin(); i != users.end(); ++i) {
+			ret += '\n';
+			ret += i->first;
+		}
+		client->doPrivateMessage(ret);
+	}
+}
+ /*
 void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
@@ -221,4 +289,4 @@ void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
 			}
 		}
 	}
-}
+}*/

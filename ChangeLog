@@ -24,6 +24,7 @@ generally pointless
 * Buffer::writeBuffer renamed to Buffer::Ptr
 * UserData now just using std::string for keys
 * reworked class Timer to better integrate with libevent
+* added real support for F type messages
 
 - 0.9 -
 * Pseudo is now in charge :)

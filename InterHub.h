@@ -42,7 +42,7 @@ protected:
 	/*
 	 * Calls from ADCSocket
 	 */
-	virtual void onLine(StringList& sl, const string& full) throw();
+	virtual void onLine(StringList& sl, const string& full) throw(command_error);
 	virtual void onConnected() throw();
 	virtual void onDisconnected(string const& clue) throw();
 
@@ -52,7 +52,7 @@ private:
 	void doAskPassword() throw();
 	void doPassword(const StringList& sl) throw();
 
-	void handle(const StringList& sl, const string& full, uint32_t command) throw();
+	void handle(const StringList& sl, const string& full, uint32_t command) throw(command_error);
 	void handlePassword(const StringList& sl) throw();
 
 	string cid;

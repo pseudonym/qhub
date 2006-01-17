@@ -25,10 +25,10 @@ extern "C" {
 UserData::key_type VirtualFs::idVirtualFs = "virtualfs";
 UserData::key_type VirtualFs::idVirtualPath = "virtualpath";
 
-void VirtualFs::Message::reply(string const& msg) throw()
+/*void VirtualFs::Message::reply(string const& msg) throw()
 {
 	client->doPrivateMessage(msg);
-}
+}*/
 
 void VirtualFs::init() throw()
 {
@@ -60,7 +60,7 @@ void VirtualFs::on(PluginStopped&, Plugin* p) throw()
 	}
 }
 
-void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
+/*void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(p == this) {
 		Message* m = static_cast<Message*>(d);
@@ -69,9 +69,15 @@ void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
 			m->reply("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");
 		}
 	}
+}*/
+
+void VirtualFs::on(Help, const string& cwd, Client* c) throw()
+{
+	assert(cwd.empty());
+	c->doPrivateMessage("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");
 }
 
-bool VirtualFs::mkdir(string const& path, Plugin* p) throw()
+bool VirtualFs::mkdir(string const& path, VirtualFsListener* p) throw()
 {
 	Dir* d = root->md(path);
 	if(d) {
@@ -82,7 +88,7 @@ bool VirtualFs::mkdir(string const& path, Plugin* p) throw()
 	}
 }
 
-bool VirtualFs::mknod(string const& path, Plugin* p) throw()
+bool VirtualFs::mknod(string const& path, VirtualFsListener* p) throw()
 {
 	return root->mkNode(path, p);
 }
@@ -141,11 +147,11 @@ void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
 		} else {
 			client->doPrivateMessage("ACK: " + d->toPath());
 			data->setString(idVirtualPath, d->toPath() == "/" ? Util::emptyString : d->toPath());
-			Plugin* p = (Plugin*)d->getData();
+			VirtualFsListener* p = d->getData();
 			if(p) {
-				Message m(Message::CHDIR, data->getString(idVirtualPath), client);
-				PluginMessage action;
-				p->on(action, this, &m);
+				//Message m(Message::CHDIR, data->getString(idVirtualPath), client);
+				ChDir action;
+				p->on(action, data->getString(idVirtualPath), client);
 			}
 		}
 	} else if(sl[0] == "help") {
@@ -154,19 +160,19 @@ void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
 		if(!d || !d->getData()) {
 			client->doPrivateMessage("NAK: Path invalid, ambiguous or no help available.");
 		} else {
-			Plugin* p = (Plugin*)d->getData();
-			Message m(Message::HELP, pwd, client);
-			PluginMessage action;
-			p->on(action, this, &m);
+			VirtualFsListener* p = d->getData();
+			//Message m(Message::HELP, pwd, client);
+			Help action;
+			p->on(action, pwd, client);
 		}
 	} else {
 		Dir* d = root->cd(pwd);
 		if(d && (d = d->splitPath(sl[0]))) {
-			Plugin* p = (Plugin*)d->getNode(sl[0]);
+			VirtualFsListener* p = d->getNode(sl[0]);
 			if(p) {
-				Message m(Message::EXEC, sl[0], client, sl);
-				PluginMessage action;
-				p->on(action, this, &m);
+				//Message m(Message::EXEC, sl[0], client, sl);
+				Exec action;
+				p->on(action, sl[0], client, sl);
 			} else {
 				client->doPrivateMessage("NAK: Command ambiguous or not found.");
 			}

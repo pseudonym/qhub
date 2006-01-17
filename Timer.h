@@ -3,17 +3,26 @@
 #define _INCLUDED_TIMER_H_
 
 #include "EventHandler.h"
+#include "Speaker.h"
 
 using namespace std;
 
 namespace qhub {
 
-class Timer {
+struct TimerListener {
+	template<int I> struct X { enum { TYPE = I }; };
+
+	typedef X<0> Timeout;
+
+	virtual void on(Timeout) throw() = 0;
+};
+
+class Timer : public Speaker<TimerListener> {
 public:
-	Timer() throw();
+	static Timer* makeTimer(unsigned seconds, unsigned usec = 0) throw();
+
+	Timer(unsigned seconds, unsigned usec = 0) throw();
 	virtual ~Timer() throw();
-	void alarm(unsigned seconds = 0) throw();
-	virtual void onAlarm() throw() {}
 
 private:
 	struct event ev;

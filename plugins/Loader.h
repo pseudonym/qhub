@@ -4,14 +4,14 @@
 
 #include "../Plugin.h"
 #include "../UserData.h"
+#include "VirtualFs.h"
+#include "../ADCClient.h"
 
 using namespace std;
 
 namespace qhub {
 
-class VirtualFs;
-
-class Loader : public Plugin {
+class Loader : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// voidPtr (Plugin*)
 	
@@ -20,7 +20,11 @@ public:
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-	virtual void on(PluginMessage&, Plugin*, void*) throw();
+//	virtual void on(PluginMessage&, Plugin*, void*) throw();
+
+	virtual void on(ChDir, const string&, Client*) throw();
+	virtual void on(Help, const string&, Client*) throw();
+	virtual void on(Exec, const string&, Client*, const StringList&) throw();
 
 private:
 	VirtualFs* virtualfs;

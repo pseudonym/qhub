@@ -159,6 +159,11 @@ public:
 	bool const isActive() const throw() {
 		return has(UIID('U','4')) || has(UIID('U','6'));
 	}
+	bool const hasSupport(const string& feat) const throw()
+	{
+		const StringList& sl = Util::stringTokenize(get(UIID('S','U')), ',');
+		return find(sl.begin(), sl.end(), feat) != sl.end();
+	}
 
 private:
 	Socket* sock;

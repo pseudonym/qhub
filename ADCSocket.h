@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
+#include "Timer.h"
 #include "Util.h"
 
 using namespace std;
@@ -19,7 +20,7 @@ namespace qhub {
 
 class Hub;
 
-class ADCSocket : public Socket {
+class ADCSocket : public Socket, public TimerListener {
 public:
 	/*
 	 * Pseudo-FOURCC stuff
@@ -77,7 +78,7 @@ public:
 	virtual void onWrite() throw();
 	virtual void onTimeout() throw();
 	
-	virtual void onAlarm() throw();
+	virtual void on(TimerListener::Timeout) throw();
 
 	/*
 	 * Do protocol stuff / Handle events
@@ -88,7 +89,7 @@ protected:
 	/*
 	 * Do protocol stuff / Handle events
 	 */
-	virtual void onLine(StringList& sl, string const& full) throw() = 0;
+	virtual void onLine(StringList& sl, string const& full) throw(command_error) = 0;
 	virtual void onConnected() throw() = 0;
 	virtual void onDisconnected(string const& clue) throw() = 0;
 
@@ -97,6 +98,7 @@ protected:
 
 	// much easier than changing all the assignments to setState() :)
 	State state;
+	Timer* timer;
 
 private:
 	void handleOnRead();

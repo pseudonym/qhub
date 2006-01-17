@@ -61,7 +61,7 @@ protected:
 	/*
 	 * Calls from ADCSocket
 	 */
-	virtual void onLine(StringList& sl, string const& full) throw();
+	virtual void onLine(StringList& sl, string const& full) throw(command_error);
 	virtual void onConnected() throw();
 	virtual void onDisconnected(string const& clue) throw();
 
@@ -69,7 +69,7 @@ private:
 	/*
 	 * Data handlers	
 	 */
-	void handle(StringList& sl, uint32_t const cmd, string& full) throw();
+	void handle(StringList& sl, uint32_t const cmd, string& full) throw(command_error);
 	void handleSupports(StringList& sl) throw();
 	void handleLogin(StringList& sl) throw();
 	void handlePassword(StringList& sl) throw();
@@ -92,6 +92,8 @@ private:
 	// Invalid
 	ADCClient() : ADCSocket(-1, Socket::IP4, NULL) {};
 };
+
+typedef ADCClient Client;	// plan to eventually change over...
 
 }
 

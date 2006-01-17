@@ -13,7 +13,7 @@ using namespace qhub;
 
 
 ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
-		: Socket(fd, domain), state(PROTOCOL),
+		: Socket(fd, domain), state(PROTOCOL), timer(NULL),
 		readBuffer(new char[BUF_SIZE]), readPos(0), hub(parent)
 {
 	enableMe(ev_read);
@@ -102,7 +102,7 @@ void ADCSocket::onWrite() throw()
 	}
 }
 
-void ADCSocket::onAlarm() throw()
+void ADCSocket::on(TimerListener::Timeout) throw()
 {
 	if(!disconnected) {
 		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
