@@ -18,7 +18,7 @@ EventHandler::~EventHandler() throw()
 {
 	if(ev != NULL){
 		if(event_del(ev) == -1){
-			exit(1);	
+			exit(2);	
 		}
 	}
 	delete ev;
@@ -53,7 +53,7 @@ void EventHandler::disableMe(type e) throw()
 	//has flags we want to monitor, and the re-add it, 
 	//instead of just signalling the changes...
 	if(event_del(ev) == -1){
-		exit(1);
+		exit(3);
 	}
 	if(enabledFlags == 0){
 		delete ev;
@@ -69,7 +69,7 @@ void EventHandler::disableMe(type e) throw()
 		}
 		event_set(ev, fd, use_flags, demux, this);
 		if(event_add(ev, NULL) == -1){
-			exit(1);
+			exit(4);
 		}
 	}
 }
@@ -78,7 +78,7 @@ void EventHandler::enableMe(type e, timeval* const timeout) throw()
 {
 	if(enabledFlags != 0){
 		if(event_del(ev) == -1){
-			exit(1);
+			exit(5);
 		}
 		assert(ev != NULL && "We are enabled yet have no event-struct!");
 	}
