@@ -288,6 +288,19 @@ void Hub::acceptInterHub(int fd, Socket::Domain d)
 	new InterHub(this, fd, d);
 }
 
+bool Hub::hasNick(const string& nick) throw()
+{
+	// O(n)... not very pretty
+	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i)
+		if(nick == i->second->getUserInfo()->getNick())
+			return true;
+	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i)
+		if(nick == i->second->getUserInfo()->getNick())
+			return true;
+	// FIXME interhubs
+	return false;
+}
+
 void Hub::activate(InterHub* ih) throw()
 {
 	interhubs.push_back(ih);

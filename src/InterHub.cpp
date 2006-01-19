@@ -18,17 +18,16 @@ using namespace std;
 using namespace qhub;
 
 
-class DNSLookup: public DNSAdapter
-{
-	public:
-        DNSLookup(InterHub* ih, string s) : DNSAdapter(s), interHub(ih) {}
-        virtual void complete(const string& r)
-        {
-			interHub->onLookup(r);
-		}
-	
-	protected:
-		InterHub *interHub;
+class DNSLookup: public DNSAdapter {
+public:
+	DNSLookup(InterHub* ih, string s) : DNSAdapter(s), interHub(ih) {}
+	virtual void complete(const string& r)
+	{
+		interHub->onLookup(r);
+	}
+
+protected:
+	InterHub *interHub;
 };
 
 
@@ -47,16 +46,18 @@ void InterHub::onLookup(const string& ip)
 	assert(getState() == PROTOCOL);
 
 	sockaddr_in dest_addr;
+	memset(&dest_addr, '\0', sizeof(sockaddr_in));
 	dest_addr.sin_family = AF_INET;
 	dest_addr.sin_port = htons(getPort());
-	//dest_addr.sin_addr = reply->rrs.inaddr[0];
 	dest_addr.sin_addr.s_addr = inet_addr(ip.c_str());
-	memset(&(dest_addr.sin_zero), '\0', 8);
+	if(dest_addr.sin_addr.s_addr == INADDR_NONE) {
+		Logs::err << "lookup of " << hostname << "failed!" << endl;
+		return;
+	}
 
 	::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr));
 	enableMe(ev_read);
 	doSupports();
-
 }
 
 void InterHub::onConnected() throw()

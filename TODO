@@ -16,10 +16,6 @@ More work on multihub support (much has been accomplished however)
 
 re-work UserData class, possibly using just a hash_map<string,boost::any>
 
-use fork() when there are multiple hubs to be run -- gives benefits of multithreading
-	without having to deal with locks, etc, and plugins don't need to keep track of
-	several different hubs
-
 Polish plugins
 	add operator functions plugin for bans, etc
 	what about controlling chains of plugins? Can plugins stop following plugins

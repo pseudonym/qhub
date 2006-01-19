@@ -64,6 +64,8 @@ public:
 
 	void motd(ADCClient* c) throw();
 
+	bool hasNick(const string& nick) throw();
+
 	void getUserList(ADCSocket* c) throw();
 
 	void userDisconnect(string const& actor, string const& victim, string const& msg) throw();

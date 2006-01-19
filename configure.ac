@@ -149,6 +149,7 @@ AC_CHECK_HEADERS([event.h])
 AC_CHECK_HEADERS([ares.h])
 AC_CHECK_HEADERS([boost/shared_ptr.hpp boost/format.hpp],
 		,[AC_MSG_ERROR([Boost library required - http://boost.org/])])
+##AC_CHECK_LIB(boost_program_options,,,[AC_MSG_ERROR([boost::program_options needed])])
 
 AC_CHECK_HEADERS([dlfcn.h]) 
 AC_CHECK_HEADERS([arpa/inet.h])
