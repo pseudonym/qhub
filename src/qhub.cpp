@@ -27,17 +27,6 @@ void end(int)
 	exit(EXIT_SUCCESS);
 }
 
-class majs: public DNSAdapter
-{
-public:
-	majs(string s) : DNSAdapter(s) {} 
-	
-	virtual void complete(const string& r)
-	{
-		Logs::stat << query << ": " << r << endl;
-	}
-};
-
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &end);
@@ -52,8 +41,6 @@ int main(int argc, char **argv)
 	EventHandler::init();
 	DNSAdapter::init();
 
-	majs* p  = new majs("www.google.com");
-	
 	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 	//do this here so we don't wind up doing extra
