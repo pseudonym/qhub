@@ -1,7 +1,12 @@
 // vim:ts=4:sw=4:noet
 #include <cassert>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "Util.h"
+#include "Logs.h"
 #include "UserData.h"
 
 using namespace std;
@@ -18,6 +23,47 @@ vector<u_int8_t> Util::genRand(int bytes) throw() {
 	generate_n(buf, sizeof(buf)/sizeof(int), rand);
 	u_int8_t* b = reinterpret_cast<u_int8_t*>(buf);
 	return vector<u_int8_t>(b, b + bytes);
+}
+
+void Util::daemonize() throw()
+{
+	switch(fork()) {
+	case -1:
+		Logs::err << "error with first fork(): " << errnoToString(errno) << endl;
+		exit(EXIT_FAILURE);
+	case 0:
+		break;
+	default:
+		exit(EXIT_SUCCESS);
+	}
+
+	umask(0);
+	chdir("/");
+
+	if(setsid() < 0) {
+		Logs::err << "error with setsid(): " << errnoToString(errno) << endl;
+	}
+
+	switch(fork()) {
+	case -1:
+		Logs::err << "error with second fork(): " << errnoToString(errno) << endl;
+		exit(EXIT_FAILURE);
+	case 0:
+		break;
+	default:
+		exit(EXIT_SUCCESS);
+	}
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+
+	if(open("/dev/null", O_RDWR) < 0) {
+		Logs::err << "error opening /dev/null:" << errnoToString(errno) << endl;
+		exit(EXIT_FAILURE);
+	}
+	dup(0);
+	dup(0);
 }
 
 StringList Util::stringTokenize(string const& msg, char token /*= ' '*/) throw()

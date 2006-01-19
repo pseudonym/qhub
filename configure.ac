@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT([qhub], [0.9.3])
-AC_CONFIG_SRCDIR([qhub.cpp])
+AC_CONFIG_SRCDIR([src/qhub.cpp])
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
 
@@ -11,8 +11,6 @@ AC_LANG([C++])
 
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
-## Using `AC_PROG_RANLIB' is rendered obsolete by `AC_PROG_LIBTOOL'
-##AC_PROG_RANLIB
 
 
 AM_CONFIG_HEADER(config.h)
@@ -173,5 +171,5 @@ AC_HEADER_TIME
 AC_HEADER_STDBOOL
 AC_HEADER_STDC
 
-AC_CONFIG_FILES([Makefile plugins/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile plugins/Makefile])
 AC_OUTPUT

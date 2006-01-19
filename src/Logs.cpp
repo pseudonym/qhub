@@ -6,9 +6,9 @@
 using namespace std;
 using namespace qhub;
 
-ostream& Logs::err = cerr;
-ostream& Logs::stat = cout;
-ostream& Logs::line = (clog.rdbuf(0), clog);
+ostream Logs::err(cerr.rdbuf());
+ostream Logs::stat(cout.rdbuf());
+ostream Logs::line(0);
 
 void Logs::setErr(const string& fn)
 {

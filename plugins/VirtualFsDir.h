@@ -2,7 +2,8 @@
 #ifndef _INCLUDED_PLUGINS_DIR_H_
 #define _INCLUDED_PLUGINS_DIR_H_
 
-#include "../Util.h"
+#include "Util.h"
+
 #include <map>
 #include <cassert>
 

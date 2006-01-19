@@ -1,9 +1,10 @@
 // vim:ts=4:sw=4:noet
 #include "Loader.h"
-#include "../XmlTok.h"
-#include "../Util.h"
-#include "../Logs.h"
-#include "../Settings.h"
+
+#include "XmlTok.h"
+#include "Util.h"
+#include "Logs.h"
+#include "Settings.h"
 
 using namespace qhub;
 

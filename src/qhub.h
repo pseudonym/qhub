@@ -20,11 +20,6 @@
 #include "Socket.h"
 
 
-extern "C" {
-#include <oop.h>
-#include <adns.h>
-}
-
 #define PROTO_DEBUG
 
 namespace qhub {

@@ -1,11 +1,11 @@
 // vim:ts=4:sw=4:noet
 #include "FsUtil.h"
 
-#include "../UserInfo.h"
-#include "../UserData.h"
-#include "../XmlTok.h"
-#include "../Logs.h"
-#include "../Settings.h"
+#include "UserInfo.h"
+#include "UserData.h"
+#include "XmlTok.h"
+#include "Logs.h"
+#include "Settings.h"
 
 using namespace qhub;
 

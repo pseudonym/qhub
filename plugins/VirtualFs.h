@@ -2,10 +2,10 @@
 #ifndef _INCLUDED_PLUGIN_VIRTUALFS_H_
 #define _INCLUDED_PLUGIN_VIRTUALFS_H_
 
-#include "../Plugin.h"
-#include "../UserData.h"
-#include "../Speaker.h"
-#include "../ADCClient.h"
+#include "Plugin.h"
+#include "UserData.h"
+#include "Speaker.h"
+#include "ADCClient.h"
 
 using namespace std;
 

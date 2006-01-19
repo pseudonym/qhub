@@ -9,10 +9,9 @@ namespace qhub {
 
 class Logs {
 public:
-	// these are just aliases for standard streams to save on memory
-	static std::ostream& err;
-	static std::ostream& stat;
-	static std::ostream& line;
+	static std::ostream err;
+	static std::ostream stat;
+	static std::ostream line;
 
 	static void setErr(const std::string& filename);
 	static void setStat(const std::string& filename);

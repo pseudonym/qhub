@@ -48,6 +48,7 @@ public:
 	}
 
 	static vector<u_int8_t> genRand(int bytes) throw();
+	static void daemonize() throw();
 
 	static StringList stringTokenize(string const& msg, char token = ' ') throw();
 	static StringList lazyStringTokenize(string const& msg, char token = ' ') throw();
