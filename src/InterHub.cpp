@@ -17,35 +17,46 @@
 using namespace std;
 using namespace qhub;
 
+
+class DNSLookup: public DNSAdapter
+{
+	public:
+        DNSLookup(InterHub* ih, string s) : DNSAdapter(s), interHub(ih) {}
+        virtual void complete(const string& r)
+        {
+			interHub->onLookup(r);
+		}
+	
+	protected:
+		InterHub *interHub;
+};
+
+
 InterHub::InterHub(Hub* h, const string& hn, short p) throw()
 		: ADCSocket(h), hostname(hn), port(p), outgoing(true)
 {
+	new DNSLookup(this, hn);
 }
 
 InterHub::InterHub(Hub* h, int fd, Domain d) throw()
 		: ADCSocket(fd, d, h), outgoing(false) {}
 
-void InterHub::onLookup()
+void InterHub::onLookup(const string& ip)
 {
-/*	assert(getState() == PROTOCOL);
-	Logs::stat << "InterHub::onLookup: " << reply->owner << endl;
+	Logs::stat << "Connecting to hub at ip " << ip << " and port " << getPort() << endl;
+	assert(getState() == PROTOCOL);
 
-	if (reply->status != adns_s_ok) {
-		Logs::err <<"InterHub::onLookup error: " << adns_strerror(reply->status) << endl;
-		return;
-	}
-	assert(reply->type == adns_r_a);
-	if(reply->nrrs > 0) {
-		sockaddr_in dest_addr;
-		dest_addr.sin_family = AF_INET;
-		dest_addr.sin_port = htons(getPort());
-		dest_addr.sin_addr = reply->rrs.inaddr[0];
-		memset(&(dest_addr.sin_zero), '\0', 8);
+	sockaddr_in dest_addr;
+	dest_addr.sin_family = AF_INET;
+	dest_addr.sin_port = htons(getPort());
+	//dest_addr.sin_addr = reply->rrs.inaddr[0];
+	dest_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+	memset(&(dest_addr.sin_zero), '\0', 8);
 
-		::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr));
-		enableMe(ev_read);
-		doSupports();
-	}*/
+	::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr));
+	enableMe(ev_read);
+	doSupports();
+
 }
 
 void InterHub::onConnected() throw()

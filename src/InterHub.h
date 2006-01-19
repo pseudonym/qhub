@@ -25,8 +25,8 @@ public:
 	//we have nothing to add to onWrite() and onRead(),
 	//so just let them fall through to ADCSocket
 
-	//from DNSUser
-	virtual void onLookup();
+	//for DNSLookup callback
+	virtual void onLookup(const string& ip);
 
 	short getPort() const { return port; }
 	const string& getCID32() const { return cid; }
