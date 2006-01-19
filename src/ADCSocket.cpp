@@ -21,7 +21,7 @@ ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
 }
 
 ADCSocket::ADCSocket(Hub* parent) throw()
-		: Socket(), state(PROTOCOL), readBuffer(new char[BUF_SIZE]),
+		: Socket(), state(PROTOCOL), timer(NULL), readBuffer(new char[BUF_SIZE]),
 		readPos(0), hub(parent) {}
 
 ADCSocket::~ADCSocket() throw()
