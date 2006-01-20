@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 	EventHandler::init();
 	DNSAdapter::init();
 
-	Logs::stat << "starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
+	Logs::stat << "Starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help
