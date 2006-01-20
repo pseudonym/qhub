@@ -26,6 +26,8 @@ ADCSocket::ADCSocket(Hub* parent) throw()
 
 ADCSocket::~ADCSocket() throw()
 {
+	if(timer)
+		timer->removeListener(this);
 	delete[] readBuffer;
 }
 
@@ -56,7 +58,9 @@ void ADCSocket::handleOnRead()
 		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i)
 			*i = ADC::CSE(*i);
 		line += '\n';
+#ifdef DEBUG
 		Logs::line << getFd() << "<< " << line;
+#endif
 		onLine(sl, line);
 		if(disconnected)
 			return;

@@ -21,8 +21,6 @@ ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
 
 ADCClient::~ADCClient() throw()
 {
-	if(timer)
-		timer->removeListener(this);
 	if(userInfo)
 		delete userInfo;
 	if(userData)

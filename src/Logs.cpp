@@ -8,7 +8,9 @@ using namespace qhub;
 
 ostream Logs::err(cerr.rdbuf());
 ostream Logs::stat(cout.rdbuf());
+#ifdef DEBUG
 ostream Logs::line(0);
+#endif
 
 void Logs::setErr(const string& fn)
 {
@@ -17,7 +19,6 @@ void Logs::setErr(const string& fn)
 	if(!tmp->is_open()) {
 		throw Exception("could not reassign error stream to \"" + fn + '"');
 	}
-	// can't delete original iostream buffers..
 	err.rdbuf(tmp.release());
 }
 
@@ -31,6 +32,7 @@ void Logs::setStat(const string& fn)
 	stat.rdbuf(tmp.release());
 }
 
+#ifdef DEBUG
 void Logs::setLine(const string& fn)
 {
 	auto_ptr<filebuf> tmp(new filebuf);
@@ -40,6 +42,7 @@ void Logs::setLine(const string& fn)
 	}
 	line.rdbuf(tmp.release());
 }
+#endif
 
 void Logs::set(std::ostream& s, const std::string& filename)
 {
@@ -49,16 +52,10 @@ void Logs::set(std::ostream& s, const std::string& filename)
 		throw Exception("Logs::set(): could not reassign stream to \""
 				+ filename + '"');
 	}
-	std::streambuf* t = s.rdbuf(tmp.release());
-	//if(dynamic_cast<std::filebuf*>(t))
-		// ok, we allocated it, delete it
-	//	delete t;
+	s.rdbuf(tmp.release());
 }
 
 void Logs::copy(const ostream& src, ostream& dest)
 {
-	std::streambuf* t = dest.rdbuf(src.rdbuf());
-	//if(dynamic_cast<std::filebuf*>(t))
-		// ok, we allocated it, delete it
-	//	delete t;
+	dest.rdbuf(src.rdbuf());
 }

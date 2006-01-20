@@ -155,15 +155,17 @@ void Settings::parseArgs(int argc, char** argv)
 {
 	using namespace boost::program_options;
 
-	options_description desc("Options:");
+	options_description desc("Options");
 	desc.add_options()
 		("help", "display this help and exit")
 		("version", "display version information and exit")
 		("statfile", value<string>(), "status messages logged to 'arg' (default stdout)")
 		("errfile", value<string>(), "error messages logged to 'arg' (default stderr)")
+#ifdef DEBUG
 		("linefile", value<string>(), "protocol lines logged to 'arg'")
-		("daemonize,d", "run as daemon")
 		("verbose,v", "protocol lines logged to stdout (only for debugging)")
+#endif
+		("daemonize,d", "run as daemon")
 		("quiet,q", "no output");
 
 	variables_map vm;
@@ -182,12 +184,16 @@ void Settings::parseArgs(int argc, char** argv)
 		Logs::copy(Logs::stat, Logs::line);
 	if(vm.count("statfile"))
 		Logs::setStat(vm["statfile"].as<string>());
+#ifdef DEBUG
 	if(vm.count("linefile"))
 		Logs::setLine(vm["statfile"].as<string>());
+#endif
 	if(vm.count("errfile"))
 		Logs::setErr(vm["errfile"].as<string>());
 	if(vm.count("quiet")) {
+#ifdef DEBUG
 		Logs::line.rdbuf(0);
+#endif
 		Logs::stat.rdbuf(0);
 		Logs::err.rdbuf(0);
 	}

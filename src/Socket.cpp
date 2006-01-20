@@ -167,7 +167,9 @@ void Socket::writeb(Buffer::Ptr b)
 		// no 0-byte sends, please
 		return;
 	}
+#ifdef DEBUG
 	Logs::line << getFd() << ">> " << b->getBuf();
+#endif
 	queue.push(b);
 	if(!writeEnabled){
 		enableMe(ev_write);

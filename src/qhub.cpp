@@ -38,14 +38,14 @@ int main(int argc, char **argv)
 	signal(SIGCHLD, SIG_IGN);
 #endif
 
+	//do this here so we don't wind up doing extra
+	//work if all they want is --version or --help
+	Settings::parseArgs(argc, argv);
+
 	EventHandler::init();
 	DNSAdapter::init();
 
 	Logs::stat << "Starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
-
-	//do this here so we don't wind up doing extra
-	//work if all they want is --version or --help
-	Settings::parseArgs(argc, argv);
 
 	Settings::load();
 
