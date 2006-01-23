@@ -55,12 +55,12 @@ public:
 	void removeClient(string const& cid) throw();
 	void switchClientMode(bool toActive, string const& cid, ADCClient* client) throw();
 
-	void broadcast(string const& data, ADCSocket* except = NULL) throw();
-	void broadcastActive(string const& data, ADCSocket* except = NULL) throw();
-	void broadcastPassive(string const& data, ADCSocket* except = NULL) throw();
+	void broadcast(string const& data, ConnectionBase* except = NULL) throw();
+	void broadcastActive(string const& data, ConnectionBase* except = NULL) throw();
+	void broadcastPassive(string const& data, ConnectionBase* except = NULL) throw();
 	void broadcastInter(string const& data, InterHub* except = NULL) throw();
-	void broadcastFeature(string const& data, const string& feat, bool yes, ADCSocket* except = NULL) throw();
-	void direct(string const& data, string const& cid, ADCClient* from = NULL) throw();
+	void broadcastFeature(string const& data, const string& feat, bool yes, ConnectionBase* except = NULL) throw();
+	void direct(string const& data, string const& cid, Client* from = NULL) throw();
 
 	void motd(ADCClient* c) throw();
 

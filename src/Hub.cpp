@@ -35,16 +35,15 @@ void Hub::openClientPort(int port)
 #ifdef ENABLE_IPV6
 	try {
 		tmp = new ServerSocket(Socket::IP6, port, ServerSocket::LEAF_HANDLER, this);
-		tmp->enableMe(EventHandler::ev_read);
 		return;
 	} catch(const socket_error&) {
 		delete tmp;
 		// oh well, just try using IPv4...
 	}
 #endif
+
 	try {
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER, this);
-		tmp->enableMe(EventHandler::ev_read);
 		return;
 	} catch(const socket_error& e) {
 		delete tmp;
@@ -65,6 +64,7 @@ void Hub::openInterPort(int port)
 		delete tmp;
 	}
 #endif
+
 	try {
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::INTER_HUB, this);
 		tmp->enableMe(EventHandler::ev_read);
@@ -78,7 +78,7 @@ void Hub::openInterPort(int port)
 void Hub::acceptLeaf(int fd, Socket::Domain d)
 {
 	// looks odd, but does what it's supposed to
-	new ADCClient(fd, d, this);
+	new ADCClient(this, new ADCSocket(fd, d));
 }
 
 void Hub::getUserList(ADCSocket* c) throw()
@@ -112,91 +112,91 @@ void Hub::motd(ADCClient* c) throw()
 	c->doHubMessage(fmt.str());
 }
 
-void Hub::direct(string const& cid, string const& data, ADCClient* from) throw()
+void Hub::direct(string const& cid, string const& data, Client* from) throw()
 {
 	Users::iterator i;
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if((i = activeUsers.find(cid)) != activeUsers.end() || (i = passiveUsers.find(cid)) != passiveUsers.end()) {
 		if(from)
-			from->writeb(tmp);
-		i->second->writeb(tmp);
+			from->getSocket()->writeb(tmp);
+		i->second->getSocket()->writeb(tmp);
 	} else {
 		//send it along to the correct connected hub
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i)
 			if((*i)->hasClient(cid))
-				(*i)->writeb(tmp);
+				(*i)->getSocket()->writeb(tmp);
 	}
 }
 
-void Hub::broadcast(string const& data, ADCSocket* except/* = NULL*/) throw()
+void Hub::broadcast(string const& data, ConnectionBase* except/* = NULL*/) throw()
 {
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
 		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
-			i->second->writeb(tmp);
+			i->second->getSocket()->writeb(tmp);
 		}
 		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
-			i->second->writeb(tmp);
+			i->second->getSocket()->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->writeb(tmp);
+			(*i)->getSocket()->writeb(tmp);
 		}
 	} else {
 		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
 			if(i->second != except)
-				i->second->writeb(tmp);
+				i->second->getSocket()->writeb(tmp);
 		}
 		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			if(i->second != except)
-				i->second->writeb(tmp);
+				i->second->getSocket()->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
 			if(*i != except)
-				(*i)->writeb(tmp);
+				(*i)->getSocket()->writeb(tmp);
 		}
 	}
 }
 
-void Hub::broadcastActive(string const& data, ADCSocket* except/* = NULL*/) throw()
+void Hub::broadcastActive(string const& data, ConnectionBase* except/* = NULL*/) throw()
 {
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
 		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
-			i->second->writeb(tmp);
+			i->second->getSocket()->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->writeb(tmp);
+			(*i)->getSocket()->writeb(tmp);
 		}
 	} else {
 		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
 			if(i->second != except)
-				i->second->writeb(tmp);
+				i->second->getSocket()->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
 			if(*i != except)
-				(*i)->writeb(tmp);
+				(*i)->getSocket()->writeb(tmp);
 		}
 	}
 }
 
-void Hub::broadcastPassive(string const& data, ADCSocket* except/* = NULL*/) throw()
+void Hub::broadcastPassive(string const& data, ConnectionBase* except/* = NULL*/) throw()
 {
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	if(!except) {
 		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
-			i->second->writeb(tmp);
+			i->second->getSocket()->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->writeb(tmp);
+			(*i)->getSocket()->writeb(tmp);
 		}
 	} else {
 		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
 			if(i->second != except)
-				i->second->writeb(tmp);
+				i->second->getSocket()->writeb(tmp);
 		}
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
 			if(*i != except)
-				(*i)->writeb(tmp);
+				(*i)->getSocket()->writeb(tmp);
 		}
 	}
 }
@@ -209,13 +209,17 @@ void Hub::broadcastInter(string const& data, InterHub* except/* = NULL*/) throw(
 	}
 }
 
-void Hub::broadcastFeature(string const& data, const string& feat, bool yes, ADCSocket* except/* = NULL*/) throw()
+void Hub::broadcastFeature(string const& data, const string& feat, bool yes, ConnectionBase* except/* = NULL*/) throw()
 {
 	broadcastInter(data, dynamic_cast<InterHub*>(except)); // NULL on error, what we want...
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
 	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
 		if(i->second->getUserInfo()->hasSupport(feat) == yes)
-			i->second->writeb(tmp);
+			i->second->getSocket()->writeb(tmp);
+	}
+	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
+		if(i->second->getUserInfo()->hasSupport(feat) == yes)
+			i->second->getSocket()->writeb(tmp);
 	}
 }
 
@@ -285,7 +289,7 @@ void Hub::openInterConnection(const string& host, int port) throw()
 void Hub::acceptInterHub(int fd, Socket::Domain d)
 {
 	//see comment above
-	new InterHub(this, fd, d);
+	new InterHub(this, new ADCSocket(fd, d));
 }
 
 bool Hub::hasNick(const string& nick) throw()

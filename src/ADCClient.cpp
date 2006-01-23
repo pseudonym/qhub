@@ -13,8 +13,8 @@
 using namespace std;
 using namespace qhub;
 
-ADCClient::ADCClient(int fd, Domain domain, Hub* parent) throw()
-		: ADCSocket(fd, domain, parent), added(false), userData(NULL), userInfo(NULL), active(false)
+ADCClient::ADCClient(Hub* h, ADCSocket* s) throw()
+		: ConnectionBase(h, s), added(false), userData(NULL), userInfo(NULL), active(false)
 {
 	onConnected();
 }
@@ -36,17 +36,16 @@ UserData* ADCClient::getUserData() throw()
 
 void ADCClient::login() throw()
 {
-	if(timer) {
-		timer->removeListener(this); // Stop alarm. Else we'd get booted.
-		timer = NULL;
-	}
+	// Stop alarm. Else we'd get booted.
+	getSocket()->enableMe(EventHandler::ev_none, NULL);
+
 	state = NORMAL;
 	Plugin::UserConnected action;
 	Plugin::fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
 	// Send INFs
-	getHub()->getUserList(this);
+	getHub()->getUserList(getSocket());
 	// Add user
 	active = userInfo->isActive();
 
@@ -107,7 +106,7 @@ void ADCClient::doDisconnect(string const& msg) throw()
 			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ID" +
 					getHub()->getCID32() + " MS" + ADC::ESC(msg) + '\n');
 	}
-	disconnect(msg);
+	getSocket()->disconnect(msg);
 }
 
 void ADCClient::doHubMessage(string const& msg) throw()
@@ -126,7 +125,7 @@ void ADCClient::doDisconnectBy(string const& kicker, string const& msg) throw()
 	getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + " ID" + kicker +
 			" MS" + ADC::ESC(msg) + '\n');
 	logout();
-	disconnect();
+	getSocket()->disconnect();
 }
 
 
@@ -190,7 +189,7 @@ void ADCClient::onLine(StringList& sl, string const& fullmsg) throw(command_erro
 	if(state == PROTOCOL) {
 		// Do a silent disconnect, we don't want scanners to find us that easily.
 		assert(!added);
-		disconnect();
+		getSocket()->disconnect();
 		return;
 	} else if(state != NORMAL) {
 		PROTOCOL_ERROR("State mismatch: NORMAL expected");
@@ -227,21 +226,26 @@ void ADCClient::onLine(StringList& sl, string const& fullmsg) throw(command_erro
 
 void ADCClient::onConnected() throw()
 {
-	timer = Timer::makeTimer(15);
-	timer->addListener(this);
+	timeval tv;
+	tv.tv_sec = 15;
+	tv.tv_usec = 0;
+	getSocket()->enableMe(EventHandler::ev_none, &tv);
 	Plugin::ClientConnected action;
 	Plugin::fire(action, this);
 }
 
 void ADCClient::onDisconnected(string const& clue) throw()
 {
-	timer = Timer::makeTimer(15);
-	timer->addListener(this);
+	timeval tv;
+	tv.tv_sec = 15;
+	tv.tv_usec = 0;
+	getSocket()->enableMe(EventHandler::ev_none, &tv);
 	if(added) {
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
 		// remove us when doing e.g. the Kick, so that added is false here.
-		Logs::stat << format("onDisconnected %d %p GUID: %s") % fd % this % getCID32() << endl;
+		Logs::stat << format("onDisconnected %d %p GUID: %s")
+				% getSocket()->getFd() % this % getCID32() << endl;
 		logout();
 		if(clue.empty())
 			getHub()->broadcast("IQUI " + getHub()->getCID32() + ' ' + getCID32() + '\n');
@@ -251,6 +255,7 @@ void ADCClient::onDisconnected(string const& clue) throw()
 	}
 	Plugin::ClientDisconnected action;
 	Plugin::fire(action, this);
+	delete this;	// hope this doesn't cause segfaults :)
 }
 
 
@@ -320,7 +325,7 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	assert(state == IDENTIFY);
 	if(!ADC::checkCID(sl[1])) {
 		doError("invalid CID: " + sl[1]);
-		disconnect("invalid CID: " + sl[1]);
+		getSocket()->disconnect("invalid CID: " + sl[1]);
 		return;
 	}
 	cid = sl[1];
@@ -334,8 +339,7 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	}
 
 	// Load info
-	userInfo = new UserInfo(this);
-	userInfo->fromADC(sl);
+	userInfo = new UserInfo(getSocket(), sl);
 	userInfo->del("OP"); //can't have them opping themselves...
 
 	// Guarantee NI and (I4 or I6)
@@ -358,7 +362,7 @@ void ADCClient::handleInfo(StringList& sl, u_int32_t const cmd, string& full) th
 {
 	assert(state == NORMAL);
 
-	UserInfo newUserInfo(this, sl);
+	UserInfo newUserInfo(getSocket(), sl);
 
 	Plugin::ClientInfo action;
 	Plugin::fire(action, this, newUserInfo);
@@ -490,7 +494,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	if(Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE) != sl[2]) {
 		send("ISTA " + getHub()->getCID32() + " 223 " + ADC::ESC("Bad username or password") + '\n');
 		assert(!added);
-		disconnect();
+		getSocket()->disconnect();
 		return;
 	}
 	salt.clear();
@@ -498,7 +502,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	if(getHub()->hasClient(getCID32())) {
 		send("ISTA " + getHub()->getCID32() + " 224 " + ADC::ESC("CID taken") + '\n');
 		assert(!added);
-		disconnect();
+		getSocket()->disconnect();
 		return;
 	}
 	// Oki, do login

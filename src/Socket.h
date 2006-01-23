@@ -51,9 +51,8 @@ public:
 	bool setNonBlocking() throw();
 	bool setSendTimeout(size_t seconds) throw();
 
-	void setPort(int p) throw();
-	void setBindAddress(string const& a = Util::emptyString) throw();
-	void bind() throw();
+	void connect(const string& ip, short port) throw(socket_error);
+	void bind(const string& a, short port) throw();
 	void listen(int backlog = 8192) throw();
 	void accept(int& fd, Domain& d) throw();
 
@@ -61,7 +60,6 @@ public:
 	void write(string const& s, int prio = PRIO_NORM);
 	void writeb(Buffer::Ptr b);
 
-	int getFd() const { return fd; };
 	Domain getDomain() const throw() { return ip4OverIp6 ? IP4 : domain; };
 	string const& getSockName() const throw() { return sockName; };
 	string const& getPeerName() const throw() { return peerName; };

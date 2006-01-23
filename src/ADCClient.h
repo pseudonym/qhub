@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Buffer.h"
+#include "ConnectionBase.h"
 #include "Timer.h"
 #include "Util.h"
 
@@ -22,12 +23,12 @@ class Hub;
 class UserData;
 class UserInfo;
 
-class ADCClient : public ADCSocket {
+class ADCClient : public ConnectionBase {
 public:
 	/*
 	 * Constructor / Destructor
 	 */
-	ADCClient(int fd, Domain domain, Hub* parent) throw();
+	ADCClient(Hub* h, ADCSocket* s) throw();
 	virtual ~ADCClient() throw();
 
 	/*
@@ -57,7 +58,6 @@ public:
 	// Disconnect
 	void doDisconnectBy(string const& kicker, string const& msg) throw();
 
-protected:
 	/*
 	 * Calls from ADCSocket
 	 */
@@ -88,9 +88,6 @@ private:
 	string password;
 	vector<u_int8_t> salt;
 	bool active;
-
-	// Invalid
-	ADCClient() : ADCSocket(-1, Socket::IP4, NULL) {};
 };
 
 typedef ADCClient Client;	// plan to eventually change over...

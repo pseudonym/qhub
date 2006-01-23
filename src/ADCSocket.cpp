@@ -5,6 +5,7 @@
 #include "Logs.h"
 #include "error.h"
 #include "ADC.h"
+#include "ConnectionBase.h"
 
 #define BUF_SIZE 1024
 
@@ -12,22 +13,20 @@ using namespace std;
 using namespace qhub;
 
 
-ADCSocket::ADCSocket(int fd, Domain domain, Hub* parent) throw()
-		: Socket(fd, domain), state(PROTOCOL), timer(NULL),
-		readBuffer(new char[BUF_SIZE]), readPos(0), hub(parent)
+ADCSocket::ADCSocket(int fd, Domain domain) throw()
+		: Socket(fd, domain),
+		readBuffer(new char[BUF_SIZE]), readPos(0), conn(NULL)
 {
 	enableMe(ev_read);
 	setNoLinger();
 }
 
-ADCSocket::ADCSocket(Hub* parent) throw()
-		: Socket(), state(PROTOCOL), timer(NULL), readBuffer(new char[BUF_SIZE]),
-		readPos(0), hub(parent) {}
+ADCSocket::ADCSocket() throw()
+		: Socket(), readBuffer(new char[BUF_SIZE]),
+		readPos(0), conn(NULL) {}
 
 ADCSocket::~ADCSocket() throw()
 {
-	if(timer)
-		timer->removeListener(this);
 	delete[] readBuffer;
 }
 
@@ -61,7 +60,7 @@ void ADCSocket::handleOnRead()
 #ifdef DEBUG
 		Logs::line << getFd() << "<< " << line;
 #endif
-		onLine(sl, line);
+		conn->onLine(sl, line);
 		if(disconnected)
 			return;
 	}
@@ -74,6 +73,14 @@ void ADCSocket::handleOnRead()
 
 void ADCSocket::onTimeout() throw()
 {
+	if(!disconnected) {
+		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
+		//(we could try sending an NMDC-style message here)
+		disconnect("send timeout");
+	} else {
+		//last thing before we return control to event-system: the right thing to do! :)
+		realDisconnect();
+	}
 }
 
 bool ADCSocket::onRead() throw()
@@ -81,7 +88,7 @@ bool ADCSocket::onRead() throw()
 	try {
 		handleOnRead();
 	} catch(const exception& e) {
-		doError(e.what());
+		conn->doError(e.what());
 		disconnect(e.what());
 	}
 	// do this as the last thing before we return, see notes in realDisconnect
@@ -106,22 +113,10 @@ void ADCSocket::onWrite() throw()
 	}
 }
 
-void ADCSocket::on(TimerListener::Timeout) throw()
-{
-	if(!disconnected) {
-		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
-		//(we could try sending an NMDC-style message here)
-		disconnect("send timeout");
-	} else {
-		//last thing before we return control to event-system: the right thing to do! :)
-		realDisconnect();
-	}
-}
-
 void ADCSocket::disconnect(string const& msg)
 {
 	Socket::disconnect(msg);
-	onDisconnected(msg);
+	conn->onDisconnected(msg);
 }
 
 void ADCSocket::realDisconnect()

@@ -29,7 +29,7 @@ ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(doma
 	}
 	int yes = 1;
 
-	if(setsockopt(getSocket(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+	if(setsockopt(getFd(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
 		Logs::err << "warning: setsockopt:SO_REUSEADDR: " << Util::errnoToString(errno) << endl;
 	}
 
@@ -44,9 +44,7 @@ ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(doma
 		printf("Error setting receive buffer.\n");
 	   }*/
 
-	setPort(port);
-	setBindAddress(); // empty = use INADDR_ANY
-	bind();
+	bind(Util::emptyString, port);	// empty = use INADDR_ANY
 	listen();
 
 	enableMe(ev_read);

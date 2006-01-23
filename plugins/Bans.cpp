@@ -194,7 +194,7 @@ void Bans::killUser(ADCClient* client, const Bans::BanInfo& bi) throw()
 void Bans::on(ClientLogin& action, ADCClient* client) throw()
 {
 	BanList::iterator i;
-	if((i = ipBans.find(client->getPeerName())) != ipBans.end()) {
+	if((i = ipBans.find(client->getSocket()->getPeerName())) != ipBans.end()) {
 		if(i->second.timeout < time(0))
 			ipBans.erase(i);
 		else {

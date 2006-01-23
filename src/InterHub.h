@@ -2,6 +2,7 @@
 #define __INTERHUB_H_
 
 #include "ADCSocket.h"
+#include "ConnectionBase.h"
 #include "DNSAdapter.h"
 #include "UserInfo.h"
 
@@ -16,14 +17,11 @@ namespace qhub {
 
 class Hub;
 
-class InterHub : public ADCSocket {
+class InterHub : public ConnectionBase {
 public:
 	InterHub(Hub* h, const string& hn, short p) throw();
-	InterHub(Hub* h, int fd, Domain d) throw();
+	InterHub(Hub* h, ADCSocket* s) throw();
 	virtual ~InterHub() throw() {};
-
-	//we have nothing to add to onWrite() and onRead(),
-	//so just let them fall through to ADCSocket
 
 	//for DNSLookup callback
 	virtual void onLookup(const string& ip);

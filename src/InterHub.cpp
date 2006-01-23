@@ -32,38 +32,31 @@ protected:
 
 
 InterHub::InterHub(Hub* h, const string& hn, short p) throw()
-		: ADCSocket(h), hostname(hn), port(p), outgoing(true)
+		: ConnectionBase(h), hostname(hn), port(p), outgoing(true)
 {
 	new DNSLookup(this, hn);
 }
 
-InterHub::InterHub(Hub* h, int fd, Domain d) throw()
-		: ADCSocket(fd, d, h), outgoing(false) {}
+InterHub::InterHub(Hub* h, ADCSocket* s) throw()
+		: ConnectionBase(h, s), outgoing(false)
+{
+}
 
 void InterHub::onLookup(const string& ip)
 {
 	Logs::stat << "Connecting to hub at ip " << ip << " and port " << getPort() << endl;
 	assert(getState() == PROTOCOL);
 
-	sockaddr_in dest_addr;
-	memset(&dest_addr, '\0', sizeof(sockaddr_in));
-	dest_addr.sin_family = AF_INET;
-	dest_addr.sin_port = htons(getPort());
-	dest_addr.sin_addr.s_addr = inet_addr(ip.c_str());
-	if(dest_addr.sin_addr.s_addr == INADDR_NONE) {
-		Logs::err << "lookup of " << hostname << "failed!" << endl;
-		return;
-	}
-
-	::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr));
-	enableMe(ev_read);
+	getSocket()->connect(ip, getPort());
 	doSupports();
 }
 
 void InterHub::onConnected() throw()
 {
-	timer = Timer::makeTimer(15);
-	timer->addListener(this);
+	timeval tv;
+	tv.tv_sec = 15;
+	tv.tv_usec = 0;
+	getSocket()->enableMe(EventHandler::ev_none, &tv);
 	Plugin::InterConnected action;
 	Plugin::fire(action, this);
 }
@@ -80,6 +73,7 @@ void InterHub::onDisconnected(const string& clue) throw()
 	users.clear();
 	Plugin::InterDisconnected action;
 	Plugin::fire(action, this);
+	delete this;	// hope this doesn't cause segfaults :)
 }
 
 bool InterHub::hasClient(const string& cid) const
@@ -104,13 +98,11 @@ void InterHub::doError(const string& msg) throw()
 
 void InterHub::onLine(StringList& sl, const string& fullmsg) throw(command_error)
 {
-	if(timer) {
-		timer->removeListener(this);
-		timer = NULL;
-	}
+	// get rid of timeout
+	getSocket()->enableMe(EventHandler::ev_none, NULL);
 
 	if(sl[0].size() != 4) {
-		disconnect("bad FOURCC");
+		getSocket()->disconnect("bad FOURCC");
 		return;
 	}
 	
@@ -131,12 +123,12 @@ void InterHub::onLine(StringList& sl, const string& fullmsg) throw(command_error
 	switch(state) {
 	case PROTOCOL:
 		if(command != (SUP | 'L')) {
-			disconnect("bad command type in state PROTOCOL");
+			getSocket()->disconnect("bad command type in state PROTOCOL");
 			return;
 		}
 		if (sl.size() < 4 || find(sl.begin()+2, sl.end(), "+BASE") == sl.end() ||
 				find(sl.begin()+2, sl.end(), "+IHUB") == sl.end()) {
-			disconnect("invalid supports");
+			getSocket()->disconnect("invalid supports");
 			return;
 		}
 		if(!outgoing)
@@ -147,12 +139,12 @@ void InterHub::onLine(StringList& sl, const string& fullmsg) throw(command_error
 	case IDENTIFY:
 		if(command != (INF | 'S')) {
 			doError("bad command type");
-			disconnect("InterHub::onLine bad command type in state IDENTIFY");
+			getSocket()->disconnect("InterHub::onLine bad command type in state IDENTIFY");
 			return;
 		}
 		cid = sl[1];
 		if(!ADC::checkCID(cid)) {
-			disconnect("InterHub::onLine invalid CID: " + sl[1]);
+			getSocket()->disconnect("InterHub::onLine invalid CID: " + sl[1]);
 			return;
 		}
 		//TODO: verify INF stuff
@@ -162,7 +154,7 @@ void InterHub::onLine(StringList& sl, const string& fullmsg) throw(command_error
 	case VERIFY:
 		if(command != (PAS | 'L') && command != (GPA | 'L')) {
 			doError("bad command type");
-			disconnect("InterHub::onLine bad command type in state VERIFY");
+			getSocket()->disconnect("InterHub::onLine bad command type in state VERIFY");
 			return;
 		}
 		if((command & 0xFFFFFF00) == GPA) {
@@ -170,7 +162,7 @@ void InterHub::onLine(StringList& sl, const string& fullmsg) throw(command_error
 		} else if((command & 0xFFFFFF00) == PAS) {
 			handlePassword(sl);
 			state = NORMAL;
-			getHub()->getUserList(this);
+			getHub()->getUserList(getSocket());
 			getHub()->activate(this);
 		} else
 			assert(0);
@@ -224,9 +216,9 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 	case 'B':
 		if(command == (INF | 'B')) {
 			if(users.find(sl[1]) == users.end()) {
-				users.insert(make_pair(sl[1], new UserInfo(this, sl)));
+				users.insert(make_pair(sl[1], new UserInfo(getSocket(), sl)));
 			} else {
-				users.find(sl[1])->second->update(UserInfo(this, sl));
+				users.find(sl[1])->second->update(UserInfo(getSocket(), sl));
 			}
 		}
 		getHub()->broadcast(full, this);
@@ -248,7 +240,7 @@ void InterHub::handle(const StringList& sl, const string& full, uint32_t command
 	case 'L':
 		if(sl[1] != cid) {
 			doError("CID mismatch");
-			disconnect("CID mismatch");
+			getSocket()->disconnect("CID mismatch");
 		}
 		break;
 	case 'I':
@@ -285,7 +277,7 @@ void InterHub::handlePassword(const StringList& sl) throw()
 	string result32 = Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE);
 	if(result32 != sl[2]) {
 		send("LSTA " + getHub()->getCID32() + " 223 " + ADC::ESC("Bad password") + '\n');
-		disconnect("bad password: expected " + result32);
+		getSocket()->disconnect("bad password: expected " + result32);
 		return;
 	}
 	salt.clear();

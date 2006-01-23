@@ -16,7 +16,7 @@ Socket::Socket(Domain d, int t, int p) throw(socket_error)
 	create();
 
 	fd = ::socket(d, t, p);
-	if(getSocket() == -1){
+	if(getFd() == -1){
 		throw socket_error("Could not allocate socket: " + Util::errnoToString(errno) + '\n');
 	}
 
@@ -48,18 +48,16 @@ void Socket::create() throw()
 		inaddrp = &((struct sockaddr_in*)saddrp)->sin_addr;
 		af = AF_INET;
 		((struct sockaddr_in*)saddrp)->sin_family = af;
-	}
 #ifdef ENABLE_IPV6
-	else if(domain == Socket::IP6) {
+	} else if(domain == Socket::IP6) {
 		saddrp = (struct sockaddr*)new sockaddr_in6;
 		saddrl = sizeof(sockaddr_in6);
 		memset(saddrp, '\0', saddrl);
 		inaddrp = &((struct sockaddr_in6*)saddrp)->sin6_addr;
 		af = AF_INET6;
 		((struct sockaddr_in6*)saddrp)->sin6_family = af;
-	}
 #endif    
-	else {
+	} else {
 		assert(0);
 	}
 }
@@ -76,19 +74,29 @@ void Socket::destroy() throw()
 #endif
 }
 
-void Socket::setPort(int p) throw()
+void Socket::connect(const string& ip, short port) throw(socket_error)
 {
-	if(domain == Socket::IP4) {
-		((struct sockaddr_in*)saddrp)->sin_port = htons(p);
-	}
-#ifdef ENABLE_IPV6    
-	else if(domain == Socket::IP6) {
-		((struct sockaddr_in6*)saddrp)->sin6_port = htons(p);
-	}
-#endif
+	sockaddr_in dest_addr;
+
+	memset(&dest_addr, '\0', sizeof(sockaddr_in));
+	dest_addr.sin_family = AF_INET;
+	dest_addr.sin_port = htons(port);
+	dest_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+	if(dest_addr.sin_addr.s_addr == INADDR_NONE)
+		throw socket_error(ip + " is not a valid IP address");
+
+	if(!::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr)))
+		throw socket_error("can't connect to " + ip + ": " + Util::errnoToString(errno));
+
+	enableMe(ev_read);
 }
 
-void Socket::setBindAddress(string const& a) throw()
+void Socket::listen(int backlog) throw()
+{
+	::listen(fd, backlog);
+}
+
+void Socket::bind(const string& a, short p) throw()
 {
 #ifdef HAVE_INET_PTON
 	if(inet_pton(af, a.c_str(), inaddrp) == 0) {
@@ -124,17 +132,17 @@ void Socket::setBindAddress(string const& a) throw()
 		}
 #endif //ENABLE_IPV6       
 	}
-
 #endif //HAVE_INET_PTON
-}
 
-void Socket::listen(int backlog) throw()
-{
-	::listen(fd, backlog);
-}
+	if(domain == Socket::IP4) {
+		((struct sockaddr_in*)saddrp)->sin_port = htons(p);
+	}
+#ifdef ENABLE_IPV6    
+	else if(domain == Socket::IP6) {
+		((struct sockaddr_in6*)saddrp)->sin6_port = htons(p);
+	}
+#endif
 
-void Socket::bind() throw()
-{
 	int ret = ::bind(fd, saddrp, saddrl);
 	if(ret == -1) {
 		Logs::err << "error: bind: " << Util::errnoToString(errno) << endl;
