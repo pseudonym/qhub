@@ -324,8 +324,7 @@ void ADCClient::handleLogin(StringList& sl) throw()
 {
 	assert(state == IDENTIFY);
 	if(!ADC::checkCID(sl[1])) {
-		doError("invalid CID: " + sl[1]);
-		getSocket()->disconnect("invalid CID: " + sl[1]);
+		PROTOCOL_ERROR("invalid CID: " + sl[1]);
 		return;
 	}
 	cid = sl[1];
@@ -494,7 +493,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	if(Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE) != sl[2]) {
 		send("ISTA " + getHub()->getCID32() + " 223 " + ADC::ESC("Bad username or password") + '\n');
 		assert(!added);
-		getSocket()->disconnect();
+		doDisconnect("bad nick/pass");
 		return;
 	}
 	salt.clear();
@@ -502,7 +501,7 @@ void ADCClient::handlePassword(StringList& sl) throw()
 	if(getHub()->hasClient(getCID32())) {
 		send("ISTA " + getHub()->getCID32() + " 224 " + ADC::ESC("CID taken") + '\n');
 		assert(!added);
-		getSocket()->disconnect();
+		doDisconnect("CID taken");
 		return;
 	}
 	// Oki, do login

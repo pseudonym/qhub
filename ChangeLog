@@ -26,6 +26,7 @@ generally pointless
 * reworked class Timer to better integrate with libevent
 * added real support for F type messages
 * command line parsing uses Boost.Program Options
+* added initial setup on first start, to get hub name, port, etc.
 
 - 0.9 -
 * Pseudo is now in charge :)
