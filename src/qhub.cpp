@@ -1,20 +1,13 @@
 #include "config.h"
 #include "qhub.h"
-#include "error.h"
-
-#include <stdio.h>
 
 #include "EventHandler.h"
 #include "DNSAdapter.h"
 #include "Hub.h"
-#include "Timer.h"
 
 #include "Plugin.h"
 #include "Settings.h"
-#include "Util.h"
 #include "Logs.h"
-
-#include <string>
 
 using namespace std;
 using namespace qhub;

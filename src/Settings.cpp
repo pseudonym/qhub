@@ -77,10 +77,11 @@ void Settings::load() throw()
 	while((pp = p->getNextChild())) {
 		string host = pp->getAttr("host");
 		int port = Util::toInt(pp->getAttr("port"));
+		string pass = pp->getAttr("password");
 		if(host.empty() || port <= 0 || port > 65535)
 			continue;
 		Logs::stat << "Connecting to " << host << ':' << port << endl; 
-		hub->openInterConnection(host, port);
+		hub->openInterConnection(host, port, pass);
 	}
 }
 

@@ -19,7 +19,7 @@ class Hub;
 
 class InterHub : public ConnectionBase {
 public:
-	InterHub(Hub* h, const string& hn, short p) throw();
+	InterHub(Hub* h, const string& hn, short p, const string& pa) throw();
 	InterHub(Hub* h, ADCSocket* s) throw();
 	virtual ~InterHub() throw() {};
 
@@ -28,17 +28,13 @@ public:
 
 	short getPort() const { return port; }
 	const string& getCID32() const { return cid; }
-	bool hasClient(const string& cid) const;
 
-	size_t getNumUsers() const { return users.size(); }
-	void appendUserList(string& tmp) throw();
-
-	// from ADCSocket
+	// from ConnectionBase
 	virtual void doError(const string& msg) throw();
 
 protected:
 	/*
-	 * Calls from ADCSocket
+	 * Calls from ConnectionBase
 	 */
 	virtual void onLine(StringList& sl, const string& full) throw(command_error);
 	virtual void onConnected() throw();
@@ -50,16 +46,14 @@ private:
 	void doAskPassword() throw();
 	void doPassword(const StringList& sl) throw();
 
-	void handle(const StringList& sl, const string& full, uint32_t command) throw(command_error);
-	void handlePassword(const StringList& sl) throw();
+	void handle(const StringList& sl, string& full, uint32_t command) throw(command_error);
+	void handlePassword(const StringList& sl) throw(command_error);
 
 	string cid;
 	string hostname;
 	short port;
+	string password;
 	const bool outgoing;
-
-	typedef hash_map<string,UserInfo*> Users;
-	Users users;
 
 	vector<u_int8_t> salt;
 };

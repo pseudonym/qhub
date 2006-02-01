@@ -21,7 +21,7 @@ public:
 	const_iterator end() throw() { return infMap.end(); };
 
 	// Constructor
-	UserInfo(Socket* p, const StringList& sl = Util::emptyStringList) : sock(p) {
+	UserInfo(Socket* p = NULL, const StringList& sl = Util::emptyStringList) : sock(p) {
 		if(sl.size() > 2)
 			fromADC(sl);
 	}
@@ -152,6 +152,9 @@ public:
 	// Quick access
 	string const& getNick() const throw() {
 		return get(UIID('N','I'));
+	}
+	string const& getRealHub() const throw() {
+		return get(UIID('C','H'));
 	}
 	int const getOp() const throw() {
 		return Util::toInt(get(UIID('O','P')));

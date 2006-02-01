@@ -45,7 +45,7 @@ void ADCClient::login() throw()
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
 	// Send INFs
-	getHub()->getUserList(getSocket());
+	getHub()->getUserList(this);
 	// Add user
 	active = userInfo->isActive();
 
@@ -340,6 +340,7 @@ void ADCClient::handleLogin(StringList& sl) throw()
 	// Load info
 	userInfo = new UserInfo(getSocket(), sl);
 	userInfo->del("OP"); //can't have them opping themselves...
+	userInfo->set("CH", getHub()->getCID32()); // for IHUB compatibility
 
 	// Guarantee NI and (I4 or I6)
 	if(!userInfo->has("NI")) {
@@ -475,7 +476,6 @@ void ADCClient::handleDisconnect(StringList& sl) throw()
 	}
 	if(!userInfo->getOp()) {
 		send("ISTA " + getHub()->getCID32() + " 125 " + ADC::ESC("Access denied") + " FCHDSC\n");
-		//doDisconnect("Access denied");
 		return;
 	}
 	// TODO add plugin stuff

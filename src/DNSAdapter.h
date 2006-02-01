@@ -1,11 +1,10 @@
 #ifndef __DNSADAPTER_H_
 #define __DNSADAPTER_H_
 
-#include <string>
-extern "C" {
-#include <ares.h>
-}
 #include "qhub.h"
+#include "EventHandler.h"
+#include <string>
+#include <ares.h>
 
 using namespace std;
 

@@ -12,6 +12,7 @@
 
 #include <cstdlib>
 #include <algorithm>
+#include <iterator>
 #include <boost/format.hpp>
 
 using namespace qhub;
@@ -81,7 +82,7 @@ void Hub::acceptLeaf(int fd, Socket::Domain d)
 	new ADCClient(this, new ADCSocket(fd, d));
 }
 
-void Hub::getUserList(ADCSocket* c) throw()
+void Hub::getUserList(ConnectionBase* c) throw()
 {
 	Buffer::Ptr t(new Buffer(Util::emptyString));
 	string& tmp = t->getBuf();
@@ -91,25 +92,24 @@ void Hub::getUserList(ADCSocket* c) throw()
 	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); i++) {
 		tmp += i->second->getAdcInf();
 	}
-	for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); i++) {
-		(*i)->appendUserList(tmp);
+	for(RemoteUsers::iterator i = remoteUsers.begin(); i != remoteUsers.end(); i++) {
+		tmp += i->second.toADC(i->first);
 	}
-	c->writeb(t);
+	c->getSocket()->writeb(t);
 }
 
-inline size_t Hub::motdHelper()
+void Hub::getInterList(InterHub* ih) throw()
 {
-	size_t sum = 0;
-	for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i)
-		sum += (*i)->getNumUsers();
-	return sum;
+	for(RemoteHubs::iterator i = remoteHubs.begin(); i != remoteHubs.end(); ++i) {
+		ih->send(i->second->getUserInfo()->toADC(i->first));
+	}
 }
 
 void Hub::motd(ADCClient* c) throw()
 {
-	boost::format fmt("Hubconnections: %d.\nWe have %d (of which %d are passive) local users, and %d remote users.");
-	fmt % interhubs.size() % (activeUsers.size()+passiveUsers.size()) % passiveUsers.size() % motdHelper();
-	c->doHubMessage(fmt.str());
+	boost::format f("Hubconnections: %d.\nWe have %d (of which %d are passive) local users, and %d remote users.");
+	f % interhubs.size() % (activeUsers.size()+passiveUsers.size()) % passiveUsers.size() % remoteUsers.size();
+	c->doHubMessage(f.str());
 }
 
 void Hub::direct(string const& cid, string const& data, Client* from) throw()
@@ -121,92 +121,55 @@ void Hub::direct(string const& cid, string const& data, Client* from) throw()
 			from->getSocket()->writeb(tmp);
 		i->second->getSocket()->writeb(tmp);
 	} else {
-		//send it along to the correct connected hub
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i)
-			if((*i)->hasClient(cid))
-				(*i)->getSocket()->writeb(tmp);
+		RemoteUsers::iterator j = remoteUsers.find(cid);
+		if(j == remoteUsers.end())
+			return;
+		RemoteHubs::iterator k = remoteHubs.find(j->second.getRealHub());
+		if(k == remoteHubs.end())
+			return;
+		k->second->getInterHub()->send(data);  // wow. ugly as sin
 	}
 }
 
 void Hub::broadcast(string const& data, ConnectionBase* except/* = NULL*/) throw()
 {
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
-	if(!except) {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+	broadcastInter(data, dynamic_cast<InterHub*>(except));
+	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		if(i->second != except)
 			i->second->getSocket()->writeb(tmp);
-		}
-		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
+	}
+	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
+		if(i->second != except)
 			i->second->getSocket()->writeb(tmp);
-		}
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->getSocket()->writeb(tmp);
-		}
-	} else {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
-			if(i->second != except)
-				i->second->getSocket()->writeb(tmp);
-		}
-		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
-			if(i->second != except)
-				i->second->getSocket()->writeb(tmp);
-		}
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			if(*i != except)
-				(*i)->getSocket()->writeb(tmp);
-		}
 	}
 }
 
 void Hub::broadcastActive(string const& data, ConnectionBase* except/* = NULL*/) throw()
 {
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
-	if(!except) {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+	broadcastInter(data, dynamic_cast<InterHub*>(except));
+	for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
+		if(i->second != except)
 			i->second->getSocket()->writeb(tmp);
-		}
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->getSocket()->writeb(tmp);
-		}
-	} else {
-		for(Users::iterator i = activeUsers.begin(); i != activeUsers.end(); ++i) {
-			if(i->second != except)
-				i->second->getSocket()->writeb(tmp);
-		}
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			if(*i != except)
-				(*i)->getSocket()->writeb(tmp);
-		}
 	}
 }
 
 void Hub::broadcastPassive(string const& data, ConnectionBase* except/* = NULL*/) throw()
 {
 	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
-	if(!except) {
-		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
+	broadcastInter(data, dynamic_cast<InterHub*>(except));
+	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
+		if(i->second != except)
 			i->second->getSocket()->writeb(tmp);
-		}
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			(*i)->getSocket()->writeb(tmp);
-		}
-	} else {
-		for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i) {
-			if(i->second != except)
-				i->second->getSocket()->writeb(tmp);
-		}
-		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
-			if(*i != except)
-				(*i)->getSocket()->writeb(tmp);
-		}
 	}
 }
 
 void Hub::broadcastInter(string const& data, InterHub* except/* = NULL*/) throw()
 {
-	for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
+	for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i)
 		if(*i != except)
 			(*i)->send(data);
-	}
 }
 
 void Hub::broadcastFeature(string const& data, const string& feat, bool yes, ConnectionBase* except/* = NULL*/) throw()
@@ -225,14 +188,14 @@ void Hub::broadcastFeature(string const& data, const string& feat, bool yes, Con
 
 bool Hub::hasClient(string const& cid, bool localonly) const throw()
 {
-	if(activeUsers.find(cid) != activeUsers.end())
+	if(activeUsers.count(cid))
 		return true;
-	if(passiveUsers.find(cid) != passiveUsers.end())
+	if(passiveUsers.count(cid))
 		return true;
-	if(!localonly)
-		for(Interhubs::const_iterator i = interhubs.begin(); i != interhubs.end(); ++i)
-			if((*i)->hasClient(cid))
-				return true;
+	if(!localonly && remoteUsers.count(cid))
+		return true;
+	if(!localonly && remoteHubs.count(cid))
+		return true;
 	return false;
 }
 
@@ -246,6 +209,13 @@ void Hub::addPassiveClient(string const& cid, ADCClient* client) throw()
 {
 	assert(!hasClient(cid));
 	passiveUsers[cid] = client;
+}
+
+void Hub::addRemoteClient(string const& cid, UserInfo const& ui) throw()
+{
+	assert(!hasClient(cid) || remoteUsers.count(cid));
+	remoteUsers[cid].update(ui);
+	assert(ADC::checkCID(remoteUsers[cid].get("CH")));
 }
 
 void Hub::switchClientMode(bool toActive, string const& cid, ADCClient* client) throw()
@@ -266,8 +236,37 @@ void Hub::removeClient(string const& cid) throw()
 	assert(hasClient(cid));
 	if(activeUsers.count(cid))
 		activeUsers.erase(cid);
-	else
+	else if(passiveUsers.count(cid))
 		passiveUsers.erase(cid);
+	else
+		remoteUsers.erase(cid);
+}
+
+void Hub::addRemoteHub(string const& cid, const UserInfo& ui, InterHub* conn) throw()
+{
+	if(remoteHubs.count(cid)) {
+		assert(conn == remoteHubs[cid]->getInterHub());
+		remoteHubs[cid]->getUserInfo()->update(ui);
+	} else {
+		remoteHubs.insert(make_pair(cid, new RemoteHub(cid, ui, conn)));
+	}
+}
+
+void Hub::removeRemoteHub(string const& cid) throw()
+{
+	for(RemoteUsers::iterator i = remoteUsers.begin(); i != remoteUsers.end(); ) {
+		if(i->second.getRealHub() == cid) {
+			broadcast("IQUI " + getCID32() + ' ' + i->first + '\n');
+			remoteUsers.erase(i++);
+		} else {
+			++i;
+		}
+	}
+	RemoteHubs::iterator i = remoteHubs.find(cid);
+	if(i != remoteHubs.end()) {
+		delete i->second;
+		remoteHubs.erase(i);
+	}
 }
 
 void Hub::userDisconnect(string const& actor, string const& victim, string const& msg) throw()
@@ -279,11 +278,11 @@ void Hub::userDisconnect(string const& actor, string const& victim, string const
 		i->second->doDisconnectBy(actor, msg);
 }
 
-void Hub::openInterConnection(const string& host, int port) throw()
+void Hub::openInterConnection(const string& host, int port, const string& pass) throw()
 {
 	//we don't want this added anywhere until it's functional
 	//it will add itself once it's ready to carry traffic
-	new InterHub(this, host, (short)port);
+	new InterHub(this, host, (short)port, pass);
 }
 
 void Hub::acceptInterHub(int fd, Socket::Domain d)
@@ -301,7 +300,9 @@ bool Hub::hasNick(const string& nick) throw()
 	for(Users::iterator i = passiveUsers.begin(); i != passiveUsers.end(); ++i)
 		if(nick == i->second->getUserInfo()->getNick())
 			return true;
-	// FIXME interhubs
+	for(RemoteUsers::iterator i = remoteUsers.begin(); i != remoteUsers.end(); ++i)
+		if(nick == i->second.getNick())
+			return true;
 	return false;
 }
 
@@ -320,7 +321,7 @@ void Hub::deactivate(InterHub* ih) throw()
 void Hub::killAll() throw()
 {
 	while(!hubs.empty())
-		delete *hubs.begin();
+		delete hubs.back();
 }
 
 void Hub::add(Hub* h) throw()

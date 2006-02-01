@@ -87,8 +87,11 @@ bool ADCSocket::onRead() throw()
 {
 	try {
 		handleOnRead();
-	} catch(const exception& e) {
+	} catch(const command_error& e) {
 		conn->doError(e.what());
+		disconnect(e.what());
+	} catch(const parse_error& e) {
+		// stuff that's not even valid ADC -> silent disconnect
 		disconnect(e.what());
 	}
 	// do this as the last thing before we return, see notes in realDisconnect

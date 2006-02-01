@@ -1,14 +1,11 @@
 #ifndef _qhub_h_
 #define _qhub_h_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#if 0
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <netdb.h>
-#include <errno.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
 #include <sys/poll.h>
@@ -16,9 +13,7 @@
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#include "Socket.h"
-
+#endif
 
 #define PROTO_DEBUG
 
