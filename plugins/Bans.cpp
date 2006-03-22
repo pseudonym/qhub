@@ -6,7 +6,7 @@
 #include "Bans.h"
 #include "VirtualFs.h"
 
-#include "ADCClient.h"
+#include "Client.h"
 #include "Hub.h"
 #include "UserInfo.h"
 #include "UserData.h"
@@ -34,7 +34,7 @@ UserData::key_type Bans::idVirtualFs = "virtualfs";
 
 bool Bans::load() throw()
 {
-	XmlTok* p = Settings::getConfig("bans");
+	XmlTok* p = Settings::instance()->getConfig("bans");
 	ipBans.clear(), nickBans.clear(), cidBans.clear(); // clean old bans
 	if(p->findChild("ipbans")) {
 		p = p->getNextChild();
@@ -83,7 +83,7 @@ bool Bans::load() throw()
 
 bool Bans::save() throw()
 {
-	XmlTok* p = Settings::getConfig("bans");
+	XmlTok* p = Settings::instance()->getConfig("bans");
 	p->clear();
 	p = p->addChild("ipbans");
 	for(BanList::iterator i = ipBans.begin(); i != ipBans.end(); ) {
@@ -180,18 +180,18 @@ void Bans::on(PluginStopped&, Plugin* p) throw()
 	}
 }
 
-void Bans::killUser(ADCClient* client, const Bans::BanInfo& bi) throw()
+void Bans::killUser(Client* client, const Bans::BanInfo& bi) throw()
 {
 	string msg = ADC::ESC(bi.reason + " //" + bi.banner);
 	if(bi.timeout == numeric_limits<time_t>::max())
-		client->send("ISTA " + client->getHub()->getCID32() + " 231 " + msg + '\n');
+		client->send(Command('I', Command::STA) << "231" << msg);
 	else
-		client->send("ISTA " + client->getHub()->getCID32() + " 232 " + msg +
-				" TL" + Util::toString(bi.timeout - time(0)) + '\n');
+		client->send(Command('I', Command::STA) << "232" << msg
+				<< CmdParam("TL", Util::toString(bi.timeout - time(0))));
 	client->doDisconnect("banned: " + ADC::CSE(msg));
 }
 
-void Bans::on(ClientLogin& action, ADCClient* client) throw()
+void Bans::on(ClientLogin& action, Client* client) throw()
 {
 	BanList::iterator i;
 	if((i = ipBans.find(client->getSocket()->getPeerName())) != ipBans.end()) {
@@ -212,7 +212,7 @@ void Bans::on(ClientLogin& action, ADCClient* client) throw()
 			return;
 		}
 	}
-	if((i = cidBans.find(client->getCID32())) != cidBans.end()) {
+	if((i = cidBans.find(client->getUserInfo()->get("ID"))) != cidBans.end()) {
 		if(i->second.timeout < time(0))
 			cidBans.erase(i);
 		else {
@@ -465,5 +465,6 @@ time_t Bans::parseTime(const string& tmp)
 		}
 		return t;
 	} else
-		throw Exception("invalid ban time value");
+		// FIXME get a real exception class
+		throw runtime_error("invalid ban time value");
 }

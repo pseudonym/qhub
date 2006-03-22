@@ -7,8 +7,6 @@
 #include <utility>
 #include "Util.h"
 
-using namespace std;
-
 namespace qhub {
 
 class XmlTok {
@@ -17,41 +15,41 @@ public:
 	/*
 	 * Getters
 	 */
-	XmlTok(string const& name = "", XmlTok* parent = NULL) throw();
+	XmlTok(std::string const& name = "", XmlTok* parent = NULL) throw();
 	virtual ~XmlTok() throw();
-	bool findChild(string const& name) throw();
+	bool findChild(std::string const& name) throw();
 	XmlTok* getNextChild() throw();
 	XmlTok* getParent() throw();
-	string const& getAttr(string const& name) const throw();
+	std::string const& getAttr(std::string const& name) const throw();
 	// NOTE: see setData
-	string toString(int indent = 0) const throw();
+	std::string toString(int indent = 0) const throw();
 	// NOTE: see setData
-	const string& getData() const throw();
+	const std::string& getData() const throw();
 	/*
 	 * Setters
 	 */
-	XmlTok* addChild(string const& name) throw();
-	void setAttr(string const& name, string const& attr) throw();
+	XmlTok* addChild(std::string const& name) throw();
+	void setAttr(std::string const& name, std::string const& attr) throw();
 	// NOTE: DATA is not get'able if you have children as well!
-	void setData(string const& data) throw();
+	void setData(std::string const& data) throw();
 	/*
 	 * Load/Save
 	 */
-	bool load(string const& filename) throw();
-	bool save(string const& filename) const throw();
+	bool load(std::string const& filename) throw();
+	bool save(std::string const& filename) const throw();
 	/*
 	 * Iterators
 	 */
-	typedef vector<XmlTok*>::iterator iterator;
+	typedef std::vector<XmlTok*>::iterator iterator;
 	iterator begin() { return children.begin(); };
 	iterator end() { return children.end(); };
 
 	void clear() throw();
 private:
-	string data;
+	std::string data;
 	XmlTok* parent;
-	string name;
-	typedef vector<XmlTok*> Children;
+	std::string name;
+	typedef std::vector<XmlTok*> Children;
 	Children children;
 	Children::iterator found;
 	StringMap attributes;

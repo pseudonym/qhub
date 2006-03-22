@@ -4,14 +4,12 @@
 
 #include "Plugin.h"
 #include "UserData.h"
-#include "Speaker.h"
-#include "ADCClient.h"
-
-using namespace std;
+#include "Util.h"
 
 namespace qhub {
 
 class Dir;
+class Client;
 
 struct VirtualFsListener {
 	template<int I> struct X { enum { TYPE = I }; };
@@ -20,9 +18,11 @@ struct VirtualFsListener {
 	typedef X<1> Help;
 	typedef X<2> Exec;
 
-	virtual void on(ChDir, const string&, Client*) throw() {}
-	virtual void on(Help, const string&, Client*) throw() {}
-	virtual void on(Exec, const string&, Client*, const StringList&) throw() {}
+	virtual void on(ChDir, const std::string&, Client*) throw() {}
+	virtual void on(Help, const std::string&, Client*) throw() {}
+	virtual void on(Exec, const std::string&, Client*, const StringList&) throw() {}
+
+	virtual ~VirtualFsListener() {} // to make the compiler shut up
 };
 
 class VirtualFs : public Plugin, public VirtualFsListener {
@@ -30,38 +30,19 @@ public:
 	static UserData::key_type idVirtualFs;	// voidPtr
 	static UserData::key_type idVirtualPath;	// string
 
-	/*
-	 * IPC structure
-	 *
-	struct Message {
-		enum Type {
-			CHDIR,
-			HELP,
-			EXEC
-		};
-		Message(Type t, string const& i, ADCClient* c, StringList const& a = Util::emptyStringList) throw()
-		: type(t), cwd(i), client(c), arg(a) {};
-		void reply(string const& msg) throw();
-		Type const type;
-		string const cwd;
-		ADCClient* const client;
-		StringList const& arg;
-	};*/
-	
 	VirtualFs() throw() {};
 	virtual ~VirtualFs() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-//	virtual void on(PluginMessage&, Plugin*, void*) throw();
-	virtual void on(UserCommand&, ADCClient*, string&) throw();
+	virtual void on(UserCommand&, Client*, std::string&) throw();
 
-	virtual void on(Help, const string&, Client*) throw();
+	virtual void on(Help, const std::string&, Client*) throw();
 
-	bool mkdir(string const& dir, VirtualFsListener* plugin) throw();
-	bool mknod(string const& node, VirtualFsListener* plugin) throw();
-	bool rmdir(string const& dir) throw();
-	bool rmnod(string const& dir) throw();
+	bool mkdir(std::string const& dir, VirtualFsListener* plugin) throw();
+	bool mknod(std::string const& node, VirtualFsListener* plugin) throw();
+	bool rmdir(std::string const& dir) throw();
+	bool rmnod(std::string const& dir) throw();
 
 private:
 	Dir* root;

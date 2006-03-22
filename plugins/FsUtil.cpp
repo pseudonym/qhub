@@ -28,7 +28,7 @@ UserData::key_type FsUtil::idVirtualFs = "virtualfs";
 bool FsUtil::load() throw()
 {
 	aliases.clear(); // clean old data
-	XmlTok* p = Settings::getConfig("fsutil");
+	XmlTok* p = Settings::instance()->getConfig("fsutil");
 	if(p->findChild("aliases")) {
 		p = p->getNextChild();
 		aliasPrefix = p->getAttr("prefix");
@@ -47,7 +47,7 @@ bool FsUtil::load() throw()
 
 bool FsUtil::save() const throw()
 {
-	XmlTok* p = Settings::getConfig("fsutil");
+	XmlTok* p = Settings::instance()->getConfig("fsutil");
 	p->clear();
 	p = p->addChild("aliases");
 	p->setAttr("prefix", aliasPrefix);
@@ -238,7 +238,7 @@ void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
 	}
 }*/
 
-void FsUtil::on(UserCommand& a, ADCClient* client, string& msg) throw()
+void FsUtil::on(UserCommand& a, Client* client, string& msg) throw()
 {
 	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
 		string::size_type i = msg.find(' ');
@@ -252,7 +252,7 @@ void FsUtil::on(UserCommand& a, ADCClient* client, string& msg) throw()
 	}
 }
 
-void FsUtil::on(UserMessage& a, ADCClient* c, u_int32_t const cmd, string& msg) throw()
+void FsUtil::on(UserMessage& a, Client* c, u_int32_t const cmd, string& msg) throw()
 {
 	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
 		string::size_type i = msg.find(' ');
@@ -268,7 +268,7 @@ void FsUtil::on(UserMessage& a, ADCClient* c, u_int32_t const cmd, string& msg) 
 	}
 }
 
-void FsUtil::on(UserPrivateMessage& a, ADCClient* c, u_int32_t const cmd, string& msg, string& pm) throw()
+void FsUtil::on(UserPrivateMessage& a, Client* c, u_int32_t const cmd, string& msg, string& pm) throw()
 {
 	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
 		string::size_type i = msg.find(' ');

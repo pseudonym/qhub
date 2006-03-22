@@ -1,122 +1,46 @@
 // vim:ts=4:sw=4:noet
-#ifndef __HUB_H_
-#define __HUB_H_
+#ifndef QHUB_HUB_H
+#define QHUB_HUB_H
 
-#include "compat_hash_map.h"
 #include <string>
-#include <map>
-#include <boost/utility.hpp>
 
-#include "Buffer.h"
-#include "UserInfo.h"
-#include "Socket.h"
-#include "ADCClient.h"
-
-using namespace std;
+#include "Client.h"
+#include "Singleton.h"
 
 namespace qhub {
 
-class InterHub;
-class ADCSocket;
-class ConnectionBase;
+class Client;
 
-class RemoteHub {
+class Hub : public Singleton<Hub> {
 public:
-	RemoteHub(const string& cid_, const UserInfo& u, InterHub* i) throw()
-			: cid(cid_), ui(u), ih(i) {}
-	~RemoteHub() throw() {}
-
-	UserInfo* getUserInfo() throw() { return &ui; }
-	const string& getCID32() const throw() { return cid; }
-	InterHub* getInterHub() throw() { return ih; }
-
-private:
-	std::string cid;
-	UserInfo ui;
-	InterHub* ih;
-};
-
-class Hub : boost::noncopyable {
-public:
-	static void killAll() throw();
-
-	Hub(const string& cid32, const string& name);
-	virtual ~Hub();
-
-	void openClientPort(int port);
-	void openInterPort(int port);
-	void openInterConnection(const string& host, int port, const string& pass) throw();
-
 	//these should never change during the life of the hub
-	const string& getCID32() const { return cid32; };
-	const string& getHubName() const { return name; };
+	void setSidPrefix(const std::string& s) { assert(s.size() == 2); sidpre = s; }
+	const std::string& getSidPrefix() const { return sidpre; }
 
-	void setDescription(const string& d) { description = d; };
-	const string& getDescription() const { return description; };
+	void setName(const std::string& n) { name = n; }
+	const std::string& getName() const { return name; }
 
-	void setInterPass(const string& p) { interPass = p; }
-	const string& getInterPass() const { return interPass; }
+	void setDescription(const std::string& d) { description = d; }
+	const std::string& getDescription() const { return description; }
 
-	void acceptLeaf(int fd, Socket::Domain d);
-	void acceptInterHub(int fd, Socket::Domain d);
+	void setInterPass(const std::string& p) { interPass = p; }
+	const std::string& getInterPass() const { return interPass; }
 
-	void activate(InterHub* ih) throw();
-	void deactivate(InterHub* ih) throw();
+	void motd(Client* c) throw();
+	Command getAdcInf() const throw();
 
-	bool hasClient(string const& cid, bool localonly = false) const throw();
-	void addActiveClient(string const& cid, ADCClient* client) throw();
-	void addPassiveClient(string const& cid, ADCClient* client) throw();
-	void addRemoteClient(string const& cid, UserInfo const&) throw();
-	void removeClient(string const& cid) throw();
-	void switchClientMode(bool toActive, string const& cid, ADCClient* client) throw();
-
-	void addRemoteHub(string const& cid, UserInfo const& ui, InterHub* conn) throw();
-	void removeRemoteHub(string const& cid) throw();
-
-	void broadcast(string const& data, ConnectionBase* except = NULL) throw();
-	void broadcastActive(string const& data, ConnectionBase* except = NULL) throw();
-	void broadcastPassive(string const& data, ConnectionBase* except = NULL) throw();
-	void broadcastInter(string const& data, InterHub* except = NULL) throw();
-	void broadcastFeature(string const& data, string const& feat, bool yes, ConnectionBase* except = NULL) throw();
-	void direct(string const& data, string const& cid, Client* from = NULL) throw();
-
-	void motd(ADCClient* c) throw();
-
-	bool hasNick(const string& nick) throw();
-
-	void getUserList(ConnectionBase* c) throw();
-	void getInterList(InterHub* ih) throw();
-
-	void userDisconnect(string const& actor, string const& victim, string const& msg) throw();
 private:
-	static void add(Hub* h) throw();
-	static void remove(Hub* h) throw();
+	friend class Singleton<Hub>;
 
-	typedef vector<Hub*> Hubs;
-	static Hubs hubs;
-
-	const string name;
-	const string cid32;
-	string description;
-	string interPass;
+	std::string name;
+	std::string sidpre;
+	std::string description;
+	std::string interPass;
 	
-	typedef hash_map<string, ADCClient*> Users;
-	Users passiveUsers;
-	Users activeUsers;
-
-	typedef hash_map<string, UserInfo> RemoteUsers;
-	RemoteUsers remoteUsers;
-
-	// for hubs on the network
-	typedef map<string, RemoteHub*> RemoteHubs;
-	RemoteHubs remoteHubs;
-
-	//for actual connections
-	typedef vector<InterHub*> Interhubs;
-	//working connections
-	Interhubs interhubs;
+	Hub() throw();
+	~Hub() throw() {}
 };
 
-}
+} // namespace qhub
 
-#endif
+#endif // QHUB_HUB_H

@@ -5,8 +5,8 @@
 using namespace qhub;
 using namespace std;
 
-ConnectionBase::ConnectionBase(Hub* h, ADCSocket* s) throw()
-		: state(PROTOCOL), hub(h), sock(s)
+ConnectionBase::ConnectionBase(ADCSocket* s) throw()
+		: state(PROTOCOL), sock(s)
 {
 	if(!sock)
 		sock = new ADCSocket;

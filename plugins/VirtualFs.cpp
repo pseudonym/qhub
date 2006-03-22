@@ -1,7 +1,7 @@
 // vim:ts=4:sw=4:noet
 #include "VirtualFs.h"
 
-#include "ADCClient.h"
+#include "Client.h"
 #include "UserData.h"
 #include "Logs.h"
 
@@ -104,7 +104,7 @@ bool VirtualFs::rmnod(string const& path) throw()
 	return root->rmNode(path);
 }
 
-void VirtualFs::on(UserCommand& a, ADCClient* client, string& msg) throw()
+void VirtualFs::on(UserCommand& a, Client* client, string& msg) throw()
 {
 	UserData* data = client->getUserData();
 	StringList sl = Util::lazyQuotedStringTokenize(msg);

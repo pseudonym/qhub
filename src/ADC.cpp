@@ -1,10 +1,10 @@
 // vim:ts=4:sw=4:noet
 #include "ADC.h"
-#include <string>
 #include <cassert>
 #include "Util.h"
 
 using namespace qhub;
+using namespace std;
 
 string ADC::ESC(string const& in) throw()
 {
@@ -55,6 +55,15 @@ string ADC::CSE(string const& in) throw(parse_error)
 		tmp += *i;
 	}
 	return tmp;
+}
+string ADC::fromSid(sid_type s) throw() {
+	return string(reinterpret_cast<const char*>(&s), sizeof(sid_type));
+}
+
+sid_type ADC::toSid(const string& s) throw(parse_error) {
+	if(s.size() != 4)
+		throw parse_error("invalid sid parameter");
+	return *reinterpret_cast<const sid_type*>(s.c_str());
 }
 
 string& ADC::toString(StringList const& sl, string& out) throw()

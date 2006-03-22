@@ -3,8 +3,6 @@
 #include "DNSAdapter.h"
 #include "Logs.h"
 
-using namespace qhub;
-
 #include <sys/types.h>
 
 #ifdef WIN32
@@ -18,9 +16,10 @@ using namespace qhub;
 #endif
 
 #include <cstdlib>
-extern "C" {
 #include <ares.h>
-}
+
+using namespace std;
+using namespace qhub;
 
 static void callback(void *arg, int status, struct hostent *host);
 

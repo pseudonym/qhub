@@ -1,7 +1,6 @@
 // vim:ts=4:sw=4:noet
 #include "Socket.h"
 #include "Logs.h"
-#include "qhub.h"
 
 #include "config.h"
 #include "error.h"
@@ -10,14 +9,14 @@ using namespace std;
 using namespace qhub;
 
 Socket::Socket(Domain d, int t, int p) throw(socket_error)
-		: domain(d), ip4OverIp6(false), err(false),
+		: domain(d), ip4OverIp6(false),
 		writeEnabled(false), written(0), disconnected(false)
 {
 	create();
 
 	fd = ::socket(d, t, p);
 	if(getFd() == -1){
-		throw socket_error("Could not allocate socket: " + Util::errnoToString(errno) + '\n');
+		throw socket_error("Could not allocate socket: " + Util::errnoToString(errno));
 	}
 
 	setNonBlocking();
@@ -26,7 +25,7 @@ Socket::Socket(Domain d, int t, int p) throw(socket_error)
 }
 
 Socket::Socket(int f, Domain d) throw()
-		: domain(d), ip4OverIp6(false), err(false),
+		: domain(d), ip4OverIp6(false),
 		writeEnabled(false), written(0), disconnected(false)
 {
 	fd = f;
@@ -163,20 +162,38 @@ void Socket::disconnect(const string& msg)
 	disconnected = true;
 }
 
-void Socket::write(string const& s, int prio)
+int Socket::read(void* buf, int len) throw(socket_error)
+{
+	int ret = ::read(getFd(), buf, len);
+	if(ret < 0)
+		throw socket_error(Util::errnoToString(errno));
+	if(ret == 0)
+		throw socket_error("normal disconnect");
+	return ret;
+}
+
+int Socket::write(void* buf, int len) throw(socket_error)
+{
+	int ret = ::write(getFd(), buf, len);
+	if(ret < 0)
+		throw socket_error(Util::errnoToString(errno));
+	return ret;
+}
+
+void Socket::write(string const& s, int prio) throw()
 {
 	Buffer::Ptr tmp(new Buffer(s, prio));
 	writeb(tmp);
 }
 
-void Socket::writeb(Buffer::Ptr b)
+void Socket::writeb(Buffer::Ptr b) throw()
 {
-	if(b->getBuf().size() == 0){
+	if(b->size() == 0){
 		// no 0-byte sends, please
 		return;
 	}
 #ifdef DEBUG
-	Logs::line << getFd() << ">> " << b->getBuf();
+	Logs::line << getFd() << ">> " << string(b->data(), b->data() + b->size());
 #endif
 	queue.push(b);
 	if(!writeEnabled){
@@ -191,13 +208,9 @@ void Socket::partialWrite()
 
 	Buffer::Ptr top = queue.front();
 
-	assert(written < (int)top->getBuf().size() && "We have already written the entirety of this buffer");
+	assert(written < (int)top->size() && "We have already written the entirety of this buffer");
 
-	const char* d = top->getBuf().c_str();
-
-	d += written;
-
-	int w = ::write(fd, d, top->getBuf().size()-written);
+	int w = ::write(fd, top->data() + written, top->size() - written);
 
 	if(w < 0){
 		switch(errno){
@@ -211,7 +224,7 @@ void Socket::partialWrite()
 	} else {
 		written += w;
 
-		if(written == (int)top->getBuf().size()){
+		if(written == (int)top->size()){
 			queue.pop();
 			written = 0;
 		}

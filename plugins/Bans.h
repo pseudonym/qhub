@@ -22,7 +22,7 @@ public:
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
 //	virtual void on(PluginMessage&, Plugin*, void*) throw();
-	virtual void on(ClientLogin&, ADCClient*) throw();
+	virtual void on(ClientLogin&, Client*) throw();
 
 	virtual void on(ChDir, const string&, Client*) throw();
 	virtual void on(Help, const string&, Client*) throw();
@@ -35,7 +35,7 @@ private:
 	void deinitVFS() throw();
 	static time_t parseTime(const string&);
 	struct BanInfo;	// silly forward declarations...
-	static void killUser(ADCClient*, const BanInfo&) throw();
+	static void killUser(Client*, const BanInfo&) throw();
 
 	VirtualFs* virtualfs;
 

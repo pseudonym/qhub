@@ -2,7 +2,10 @@
 #define __DNSUSER_H_
 
 #include <adns.h>
-#include "qhub.h"
+
+/**
+ * @deprecated
+ */
 
 namespace qhub {
 

@@ -7,8 +7,9 @@
 #include "Util.h"
 #include "Logs.h"
 #include <cstdio>
-#include <cassert>
 #include <cerrno>
+
+#include <boost/static_assert.hpp>
 
 #if defined(HAVE_EXPAT_H)
 # include <expat.h>
@@ -20,6 +21,8 @@
 
 using namespace std;
 using namespace qhub;
+
+BOOST_STATIC_ASSERT(sizeof(XML_Char) == 1);
 
 static void startElement(void *userData, char const* name, char const** atts)
 {
@@ -53,9 +56,6 @@ char XmlTok::indentChar = '\t';
 XmlTok::XmlTok(string const& n, XmlTok* p) throw()
 		: parent(p), name(n)
 {
-	if(sizeof(XML_Char) != 1) {
-		assert(0 && "XmlTok::XmlTok UTF8 compilation.. not supported FIXME");
-	}
 }
 
 XmlTok::~XmlTok() throw()

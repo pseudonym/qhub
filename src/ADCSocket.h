@@ -3,18 +3,8 @@
 #define _INCLUDED_ADCSOCKET_H_
 
 #include "Socket.h"
-#include "compat_hash_map.h"
-#include <vector>
-#include <string>
-#include <queue>
 
-#include <boost/shared_ptr.hpp>
-
-#include "Buffer.h"
-#include "Timer.h"
 #include "Util.h"
-
-using namespace std;
 
 namespace qhub {
 
@@ -39,7 +29,7 @@ public:
 	virtual void onWrite() throw();
 	virtual void onTimeout() throw();
 
-	virtual void disconnect(string const& msg = Util::emptyString);
+	virtual void disconnect(std::string const& msg = Util::emptyString);
 
 protected:
 	/*

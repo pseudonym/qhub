@@ -1,24 +1,21 @@
 #ifndef __DNSADAPTER_H_
 #define __DNSADAPTER_H_
 
-#include "qhub.h"
 #include "EventHandler.h"
 #include <string>
 #include <ares.h>
-
-using namespace std;
 
 namespace qhub {
 
 //abstract/portable DNS lookup/completion notification
 class DNSAdapter: public EventHandler {
 public:
-	DNSAdapter(const string& hostname);
+	DNSAdapter(const std::string& hostname);
 	virtual ~DNSAdapter() throw();
 	
 	static void init();
 
-	virtual void complete(const string& result) = 0;
+	virtual void complete(const std::string& result) = 0;
 	
 protected:
 	virtual bool onRead() throw();
@@ -28,7 +25,7 @@ protected:
 	bool doHack();
 	
 	ares_channel channel;
-	string query;
+	std::string query;
 };
 
 

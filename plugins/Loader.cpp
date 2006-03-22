@@ -28,7 +28,7 @@ int Loader::load() throw()
 {
 	int success = 0;
 	int failure = 0;
-	XmlTok* p = Settings::getConfig("plugins");
+	XmlTok* p = Settings::instance()->getConfig("plugins");
 	if(p->findChild("plugin")) {
 		XmlTok* tmp;
 		while((tmp = p->getNextChild())) {
@@ -51,7 +51,7 @@ int Loader::load() throw()
 bool Loader::save() const throw()
 {
 	XmlTok root;
-	XmlTok* p = Settings::getConfig("plugins");
+	XmlTok* p = Settings::instance()->getConfig("plugins");
 	p->clear();
 	for(Plugin::iterator i = Plugin::begin(); i != Plugin::end(); ++i) {
 		XmlTok* tmp = p->addChild("plugin");

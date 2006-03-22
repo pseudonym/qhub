@@ -3,11 +3,13 @@
 #define _INCLUDED_USERINFO_H_
 
 #include <map>
+#include <string>
 
 #include "config.h"
 #include "Util.h"
 #include "Socket.h"
 #include "ADC.h"
+#include "Command.h"
 
 namespace qhub {
 
@@ -15,42 +17,39 @@ namespace qhub {
 
 class UserInfo {
 public:
-	typedef std::map<u_int16_t, string> InfMap;
+	typedef std::map<uint16_t, string> InfMap;
 	typedef InfMap::const_iterator const_iterator;
 	const_iterator begin() throw() { return infMap.begin(); };
 	const_iterator end() throw() { return infMap.end(); };
 
 	// Constructor
-	UserInfo(Socket* p = NULL, const StringList& sl = Util::emptyStringList) : sock(p) {
-		if(sl.size() > 2)
-			fromADC(sl);
+	UserInfo(const Command& c) throw() : cmd(c) {
+		fromADC(cmd);
 	}
 	
 	// ADC
-	void fromADC(const StringList& sl) throw() {
-		for(StringList::const_iterator sli = sl.begin() + 2; sli != sl.end(); ++sli) {
-			if(sli->length() >= 2) {
-				set(*sli);
+	void fromADC(const Command& c) throw() {
+		modified = true;
+		for(Command::ConstParamIter i = c.begin(); i != c.end(); ++i) {
+			if(i->length() >= 2) {
+				set(*i);
 			}
 		}
 	}
 
-	string const& toADC(string const& cid32) throw() {
+	Command const& toADC(sid_type sid) throw() {
 		if(modified) {
-			adcString = "BINF ";
-			adcString += cid32;
-			string temp;
+			Command(get("HU").empty() ? 'B' : 'S', Command::INF, sid).swap(cmd);
+			string temp(2, ' ');
 			for(InfMap::const_iterator i = infMap.begin(); i != infMap.end(); ++i) {
 				temp.clear();
 				temp += (char)(i->first >> 8);
 				temp += (char)(i->first & 0xFF);
-				temp += i->second;
-				adcString += ' ' + ADC::ESC(temp);
+				cmd << CmdParam(temp, i->second);
 			}
-			adcString += '\n';
 			modified = false;
 		}
-		return adcString;
+		return cmd;
 	}
 
 	// Merge
@@ -73,7 +72,7 @@ public:
 	void set(u_int16_t key, string const& val) throw() {
 		modified = true;
 		// Fix I4 and I6
-		if(key == UIID('I','4') && val == "0.0.0.0") {
+		/*if(key == UIID('I','4') && val == "0.0.0.0") {
 			if(sock->getDomain() == Socket::IP4)
 				infMap[key] = sock->getPeerName();
 		}
@@ -83,9 +82,9 @@ public:
 				infMap[key] = sock->getPeerName();
 		}
 #endif
-       	else {
+       	else {*/
 			infMap[key] = val;
-		}
+		//}
 	}
 	void set(char const* key, string const& val) throw() {
 		assert(strlen(key) == 2);
@@ -153,14 +152,14 @@ public:
 	string const& getNick() const throw() {
 		return get(UIID('N','I'));
 	}
+	string const& getCID() const throw() {
+		return get(UIID('I','D'));
+	}
 	string const& getRealHub() const throw() {
 		return get(UIID('C','H'));
 	}
 	int const getOp() const throw() {
 		return Util::toInt(get(UIID('O','P')));
-	}
-	bool const isActive() const throw() {
-		return has(UIID('U','4')) || has(UIID('U','6'));
 	}
 	bool const hasSupport(const string& feat) const throw()
 	{
@@ -169,10 +168,11 @@ public:
 	}
 
 private:
-	Socket* sock;
 	InfMap infMap;
 	bool modified;
-	string adcString;
+	Command cmd;
+
+	UserInfo() throw();
 };
 
 } //namespace qhub

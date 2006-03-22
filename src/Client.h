@@ -1,18 +1,11 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_ADCCLIENT_H_
-#define _INCLUDED_ADCCLIENT_H_
+#ifndef _INCLUDED_CLIENT_H_
+#define _INCLUDED_CLIENT_H_
 
-#include "ADCSocket.h"
-#include "compat_hash_map.h"
 #include <vector>
 #include <string>
-#include <queue>
 
-#include <boost/shared_ptr.hpp>
-
-#include "Buffer.h"
 #include "ConnectionBase.h"
-#include "Timer.h"
 #include "Util.h"
 
 namespace qhub {
@@ -22,26 +15,27 @@ using namespace std;
 class Hub;
 class UserData;
 class UserInfo;
+class ADCSocket;
 
-class ADCClient : public ConnectionBase {
+class Client : public ConnectionBase {
 public:
 	/*
 	 * Constructor / Destructor
 	 */
-	ADCClient(Hub* h, ADCSocket* s) throw();
-	virtual ~ADCClient() throw();
+	Client(ADCSocket* s) throw();
+	virtual ~Client() throw();
 
 	/*
 	 * ADC protocol
 	 */
-	string const& getAdcInf() throw();
+	Command const& getAdcInf() throw();
 
 	/*
 	 * Object information
 	 */
 	UserData* getUserData() throw();
 	UserInfo* getUserInfo() throw() { return userInfo; };
-	string const& getCID32() const throw() { return cid; };
+	sid_type getSid() const throw() { return sid; };
 
 	/*
 	 * Various calls (don't send in bad states!)
@@ -56,12 +50,12 @@ public:
 	void doHubMessage(string const& msg) throw();
 	void doPrivateMessage(string const& msg) throw();
 	// Disconnect
-	void doDisconnectBy(string const& kicker, string const& msg) throw();
+	void doDisconnectBy(sid_type kicker, string const& msg) throw();
 
 	/*
 	 * Calls from ADCSocket
 	 */
-	virtual void onLine(StringList& sl, string const& full) throw(command_error);
+	virtual void onLine(Command& cmd) throw(command_error);
 	virtual void onConnected() throw();
 	virtual void onDisconnected(string const& clue) throw();
 
@@ -69,13 +63,13 @@ private:
 	/*
 	 * Data handlers	
 	 */
-	void handle(StringList& sl, uint32_t const cmd, string& full) throw(command_error);
-	void handleSupports(StringList& sl) throw();
-	void handleLogin(StringList& sl) throw();
-	void handlePassword(StringList& sl) throw();
-	void handleDisconnect(StringList& sl) throw();
-	void handleInfo(StringList& sl, uint32_t const cmd, string& full) throw();
-	void handleMessage(StringList& sl, uint32_t const cmd, string& full) throw();
+	void handle(Command&) throw(command_error);
+	void handleSupports(Command&) throw();
+	void handleLogin(Command&) throw(command_error);
+	void handlePassword(Command&) throw();
+	void handleDisconnect(Command&) throw();
+	void handleInfo(Command&) throw();
+	void handleMessage(Command&) throw();
 
 	void login() throw();
 	void logout() throw();
@@ -84,14 +78,11 @@ private:
 	UserData* userData;
 	UserInfo* userInfo;
 
-	string cid;
+	sid_type sid;
 	string password;
 	vector<u_int8_t> salt;
-	bool active;
 };
-
-typedef ADCClient Client;	// plan to eventually change over...
 
 }
 
-#endif //_INCLUDED_ADCCLIENT_H_
+#endif //_INCLUDED_CLIENT_H_

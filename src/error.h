@@ -7,20 +7,6 @@
 
 namespace qhub {
 
-struct Exception : public std::exception
-{
-	Exception(const std::string& m) : msg(m) {}
-	~Exception() throw() {}
-	
-	virtual const char* what() const throw()
-	{
-		return msg.c_str();
-	}
-
-private:
-	std::string msg;
-};
-
 // used for parsing ex. bad escapes
 struct parse_error : public std::runtime_error {
 	parse_error() : runtime_error("parse_error: error parsing ADC string") {}
@@ -37,6 +23,12 @@ struct command_error : public std::runtime_error {
 struct socket_error : public std::runtime_error {
 	socket_error() : runtime_error("socket_error: low-level socket problem") {}
 	explicit socket_error(const std::string& arg) : runtime_error(arg) {}
+};
+
+// used by Logs class for errors
+struct logs_error : public std::runtime_error {
+	logs_error() : runtime_error("logs_error: problem with logging streams") {}
+	explicit logs_error(const std::string& arg) : runtime_error(arg) {}
 };
 
 } // namespace qhub

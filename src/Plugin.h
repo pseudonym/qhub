@@ -3,33 +3,28 @@
 #define _INCLUDED_PLUGIN_H_
 
 #include <string>
-#include <cassert>
-#include <stdint.h>
-
-#include "compat_hash_map.h"
-#include <list>
+#include <vector>
 
 #include "Util.h"
-#include "UserData.h"
-
-using namespace std;
+#include "id.h"
 
 namespace qhub {
 
-class ADCClient;
+class Client;
 class UserInfo;
 class InterHub;
+class Command;
 
 class Plugin {
 public:
-	static const string PLUGIN_EXTENSION;
+	static const std::string PLUGIN_EXTENSION;
 	
 	/*
 	 * Some stuff
 	 */
 	Plugin() throw() {};
 	virtual ~Plugin() throw() {};
-	string const& getId() const throw() { return name; };
+	std::string const& getId() const throw() { return name; };
 
 	/*
 	 * Plugin calls
@@ -172,39 +167,38 @@ public:
 	virtual void on(PluginMessage&, Plugin*, void*) throw() {};
 	// Called when a client connects
 	// note: not everything may be initialized
-	// parm: ADCClient* = the client
-	virtual void on(ClientConnected&, ADCClient*) throw() {};
+	// parm: Client* = the client
+	virtual void on(ClientConnected&, Client*) throw() {};
 	// Called when a client disconnects
 	// note: the client may not have been added to the userlist
-	// parm: ADCClient* = the client
-	virtual void on(ClientDisconnected&, ADCClient*) throw() {};
+	// parm: Client* = the client
+	virtual void on(ClientDisconnected&, Client*) throw() {};
 	// Called on every client input
-	// parm: ADCClient* = the client
-	// parm: uint32_t = FOURCC of command
-	// parm: StringList: list of command arguments
-	virtual void on(ClientLine&, ADCClient*, uint32_t const, StringList) throw() {};
+	// parm: Client* = the client
+	// parm: Command&: command that was sent
+	virtual void on(ClientLine&, Client*, Command&) throw() {};
 	// Called when a client sends first BINF
-	// parm: ADCClient* = the client
-	virtual void on(ClientLogin&, ADCClient*) throw() {};
+	// parm: Client* = the client
+	virtual void on(ClientLogin&, Client*) throw() {};
 	// Called when a client sends BINF
-	// parm: ADCClient* = the client
+	// parm: Client* = the client
 	// parm: UserInfo = the new userinfo
-	virtual void on(ClientInfo&, ADCClient*, UserInfo&) throw() {};
+	virtual void on(ClientInfo&, Client*, UserInfo&) throw() {};
 	// Called when client succesfully logs in
-	// parm: ADCClient* = the client
-	virtual void on(UserConnected&, ADCClient*) throw() {};
+	// parm: Client* = the client
+	virtual void on(UserConnected&, Client*) throw() {};
 	// Called when a logged in client logs off
-	// parm: ADCClient* = the client
-	virtual void on(UserDisconnected&, ADCClient*) throw() {};
+	// parm: Client* = the client
+	virtual void on(UserDisconnected&, Client*) throw() {};
 	// Called when a client sends a direct PM to the hub CID
-	// parm: ADCClient* = the client
+	// parm: Client* = the client
 	// parm: string = the message
-	virtual void on(UserCommand&, ADCClient*, string&) throw() {};
+	virtual void on(UserCommand&, Client*, const std::string&) throw() {};
 	// Called when a client sends a normal broadcast chat message
-	// parm: ADCClient* = the client
+	// parm: Client* = the client
 	// parm: string = the message
-	virtual void on(UserMessage&, ADCClient*, uint32_t const, string&) throw() {};
-	virtual void on(UserPrivateMessage&, ADCClient*, uint32_t const, string&, string&) throw() {};
+	virtual void on(UserMessage&, Client*, Command&, std::string&) throw() {};
+	virtual void on(UserPrivateMessage&, Client*, Command&, std::string&, sid_type&) throw() {};
 	// Called when another hub connects
 	// parm: InterHub* = the interhub connection
 	virtual void on(InterConnected&, InterHub*) throw() {};
@@ -213,32 +207,31 @@ public:
 	virtual void on(InterDisconnected&, InterHub*) throw() {};
 	// Called on interhub input
 	// parm: InterHub* = the interhub connection
-	// parm: uint32_t = FOURCC of command
-	// parm: StringList = list of command arguments
-	virtual void on(InterLine&, InterHub*, const uint32_t, StringList&) throw() {};
+	// parm: Command& = command that was sent
+	virtual void on(InterLine&, InterHub*, Command&) throw() {};
 
 	/*
 	 * Static methods
 	 */
 	static void init() throw();
 	static void deinit() throw();
-	static bool openModule(string const& name, string const& insertBefore = Util::emptyString) throw();
-	static bool removeModule(string const& name) throw();
+	static bool openModule(std::string const& name, std::string const& insertBefore = Util::emptyString) throw();
+	static bool removeModule(std::string const& name) throw();
 	static void removeAllModules() throw();
-	static bool hasModule(string const& name) throw();
+	static bool hasModule(std::string const& name) throw();
 
 	/*
 	 * Iterators
 	 */
-	typedef list<Plugin*>::iterator iterator;
+	typedef std::vector<Plugin*>::iterator iterator;
 	static iterator begin() throw() { return plugins.begin(); };
 	static iterator end() throw() { return plugins.end(); };
 
 private:
-	typedef list<Plugin*> Plugins;
+	typedef std::vector<Plugin*> Plugins;
 	static Plugins plugins;
 	typedef void* (*get_plugin_t)();
-	string name;
+	std::string name;
 	void* handle;
 };
 

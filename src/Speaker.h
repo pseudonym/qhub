@@ -1,7 +1,7 @@
 // vim:ts=4:sw=4:noet
 
-#ifndef SPEAKER_H
-#define SPEAKER_H
+#ifndef QHUB_SPEAKER_H
+#define QHUB_SPEAKER_H
 
 #include <set>
 
@@ -20,11 +20,10 @@ public:
 
 	void removeListener(Listener* l)
 	{
-		if(listeners.count(l))
-			listeners.erase(l);
+		listeners.erase(l);
 	}
 
-	void removeAll()
+	void removeAllListeners()
 	{
 		listeners.clear();
 	}
@@ -75,4 +74,4 @@ public:
 
 } // namespace qhub
 
-#endif // SPEAKER_H
+#endif // QHUB_SPEAKER_H

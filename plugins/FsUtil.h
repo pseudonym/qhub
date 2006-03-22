@@ -4,7 +4,7 @@
 
 #include "Plugin.h"
 #include "UserData.h"
-#include "ADCClient.h"
+#include "Client.h"
 
 #include "VirtualFs.h"
 

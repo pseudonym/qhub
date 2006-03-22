@@ -6,6 +6,7 @@
 #include "error.h"
 
 using namespace qhub;
+using namespace std;
 
 Plugin::Plugins Plugin::plugins;
 const string Plugin::PLUGIN_EXTENSION = ".so";
@@ -103,5 +104,4 @@ bool Plugin::hasModule(string const& name) throw()
 			return true;
 	}
 	return false;
-	//return find_if(begin(), end(), bind2nd(equals<string>(mem_fun(&getId)), name));
 }

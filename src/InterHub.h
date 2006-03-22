@@ -1,17 +1,10 @@
 #ifndef __INTERHUB_H_
 #define __INTERHUB_H_
 
-#include "ADCSocket.h"
 #include "ConnectionBase.h"
-#include "DNSAdapter.h"
-#include "UserInfo.h"
 
 #include <string>
-#include "Util.h"
-#include "compat_hash_map.h"
-
-using namespace std;
-
+#include <vector>
 
 namespace qhub {
 
@@ -19,46 +12,46 @@ class Hub;
 
 class InterHub : public ConnectionBase {
 public:
-	InterHub(Hub* h, const string& hn, short p, const string& pa) throw();
-	InterHub(Hub* h, ADCSocket* s) throw();
+	InterHub(const std::string& hn, short p, const std::string& pa) throw();
+	InterHub(ADCSocket* s) throw();
 	virtual ~InterHub() throw() {};
 
 	//for DNSLookup callback
-	virtual void onLookup(const string& ip);
+	virtual void onLookup(const std::string& ip);
 
 	short getPort() const { return port; }
-	const string& getCID32() const { return cid; }
+	//const string& getCID32() const { return cid; }
 
 	// from ConnectionBase
-	virtual void doError(const string& msg) throw();
+	virtual void doError(const std::string& msg) throw();
+	virtual void doWarning(const std::string& msg) throw();
 
 protected:
 	/*
 	 * Calls from ConnectionBase
 	 */
-	virtual void onLine(StringList& sl, const string& full) throw(command_error);
+	virtual void onLine(Command&) throw(command_error);
 	virtual void onConnected() throw();
-	virtual void onDisconnected(string const& clue) throw();
+	virtual void onDisconnected(std::string const& clue) throw();
 
 private:
 	void doSupports() throw();
 	void doInf() throw();
 	void doAskPassword() throw();
-	void doPassword(const StringList& sl) throw();
+	void doPassword(const Command& cmd) throw();
 
-	void handle(const StringList& sl, string& full, uint32_t command) throw(command_error);
-	void handlePassword(const StringList& sl) throw(command_error);
+	void handle(const Command& cmd) throw(command_error);
+	void handlePassword(const Command& cmd) throw(command_error);
 
-	string cid;
-	string hostname;
+	std::string hostname;
 	short port;
-	string password;
+	std::string password;
 	const bool outgoing;
 
-	vector<u_int8_t> salt;
+	std::vector<uint8_t> salt;
 };
 
-}
+} // namespace qhub
 
 
-#endif
+#endif // __INTERHUB_H

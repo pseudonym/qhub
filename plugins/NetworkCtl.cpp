@@ -1,16 +1,16 @@
 // vim:ts=4:sw=4:noet
 #include <boost/cast.hpp>
-#include <iterator>
 
 #include "NetworkCtl.h"
 #include "VirtualFs.h"
 
-#include "ADCClient.h"
+#include "Client.h"
 #include "Hub.h"
 #include "XmlTok.h"
 #include "Logs.h"
 #include "Settings.h"
 #include "InterHub.h"
+#include "ConnectionManager.h"
 
 using namespace qhub;
 
@@ -113,14 +113,14 @@ void NetworkCtl::on(Exec, const string& cwd, Client* c, const StringList& arg) t
 			int port;
 			try {
 				port = Util::toInt(arg[2]);
-			} catch(boost::bad_lexical_cast&) {
+			} catch(const boost::bad_lexical_cast&) {
 				c->doPrivateMessage("Port parameter is not a number.");
 				return;
 			}
-			c->getHub()->openInterConnection(arg[1], port, arg[3]);
+			ConnectionManager::instance()->openInterConnection(arg[1], port, arg[3]);
 		}
 	} else if(arg[0] == "disconnect") {
-		if(arg.size() != 2) {
+	/*	if(arg.size() != 2) {
 			c->doPrivateMessage("Usage: disconnect <cid>");
 		} else if(!ADC::checkCID(arg[1])) {
 			c->doPrivateMessage("CID invalid");
@@ -131,12 +131,12 @@ void NetworkCtl::on(Exec, const string& cwd, Client* c, const StringList& arg) t
 					return;
 				}
 			}
-		}
+		}*/
 	} else if(arg[0] == "list") {
 		string ret = "Connected Hubs:";
 		for(Interhubs::iterator i = interhubs.begin(); i != interhubs.end(); ++i) {
 			ret += "\n  ";
-			ret += (*i)->getCID32();
+			//ret += (*i)->getCID32();
 			ret += "   ";
 			ret += (*i)->getSocket()->getPeerName();
 		}

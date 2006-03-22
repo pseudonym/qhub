@@ -1,23 +1,31 @@
-#ifndef __SETTINGS_H_
-#define __SETTINGS_H_
+#ifndef QHUB_SETTINGS_H
+#define QHUB_SETTINGS_H
 
 #include <string>
+
+#include "Singleton.h"
 #include "XmlTok.h"
 
 namespace qhub {
 
-class Settings {
-	static XmlTok root;
+class Settings : public Singleton<Settings> {
 public:
-	static XmlTok* getConfig(const std::string& name) throw();
-	static bool isValid() throw();
-	static void load() throw();
-	static void loadInteractive() throw();
-	static void save() throw();
-	//static void readFromXML();
-	static void parseArgs(int, char**);
+	XmlTok* getConfig(const std::string& name) throw();
+	bool isValid() throw();
+	void load() throw();
+	void loadInteractive() throw();
+	void save() throw();
+	void parseArgs(int, char**);
+
+private:
+	friend class Singleton<Settings>;
+
+	XmlTok root;
+
+	Settings() throw() { load(); }
+	~Settings() throw() { save(); }
 };
 
-}
+} // namespace qhub
 
-#endif
+#endif // QHUB_SETTINGS_H

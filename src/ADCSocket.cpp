@@ -1,10 +1,8 @@
 // vim:ts=4:sw=4:noet
 #include "ADCSocket.h"
-#include "qhub.h"
 #include "Util.h"
 #include "Logs.h"
 #include "error.h"
-#include "ADC.h"
 #include "ConnectionBase.h"
 
 #define BUF_SIZE 1024
@@ -33,34 +31,23 @@ ADCSocket::~ADCSocket() throw()
 //this is an ugly way to "factor out" the check for disconnectedness
 void ADCSocket::handleOnRead()
 {
-	int ret = ::read(fd, readBuffer+readPos, BUF_SIZE-readPos);
-	if(ret <= 0) {
-		// we're done, either by EOF or error
-		while(!queue.empty())
-			queue.pop();
-		if(ret == 0) {
-			disconnect("normal disconnect"); // normal disconnect
-		} else {
-			disconnect(Util::errnoToString(errno)); // error
-		}
-		return;
-	}
+	int ret = read(readBuffer+readPos, BUF_SIZE-readPos);
+
 	char* l = readBuffer;
 	char* r = readBuffer + readPos + ret;
 	char* tmp = readBuffer + readPos;
-	while((tmp = find(tmp, r, '\n')) != r) {
-		string line(l, tmp);
-		l = ++tmp;
-		if(line.empty())
-			continue;	//ignore keepalives
-		StringList sl = Util::stringTokenize(line);
-		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i)
-			*i = ADC::CSE(*i);
-		line += '\n';
+
+	while((tmp = find(l, r, '\n')) != r) {
+		if(tmp == l) {
+			l = tmp+1;
+			continue;	// ignore keepalives
+		}
+		Command cmd(l, tmp);
+		l = tmp+1;
 #ifdef DEBUG
-		Logs::line << getFd() << "<< " << line;
+		Logs::line << getFd() << "<< " << cmd.toString();
 #endif
-		conn->onLine(sl, line);
+		conn->onLine(cmd);
 		if(disconnected)
 			return;
 	}
@@ -92,6 +79,10 @@ bool ADCSocket::onRead() throw()
 		disconnect(e.what());
 	} catch(const parse_error& e) {
 		// stuff that's not even valid ADC -> silent disconnect
+		disconnect(e.what());
+	} catch(const socket_error& e) {
+		while(!queue.empty())
+			queue.pop();
 		disconnect(e.what());
 	}
 	// do this as the last thing before we return, see notes in realDisconnect

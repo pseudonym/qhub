@@ -6,12 +6,11 @@
 #include <string>
 #include "Util.h"
 
-using namespace std;
-
 namespace qhub {
 
 class UserData {
 public:
+	typedef std::string string;
 	typedef string key_type;
 
 #define GET_AND_SET(type, Type) \
@@ -37,7 +36,7 @@ public: \
 		return Util::empty##Type; \
 	} \
 private: \
-	typedef map<key_type, type> Type##Map; \
+	typedef std::map<key_type, type> Type##Map; \
 	Type##Map type##Map;
 			 
 	GET_AND_SET(int, Int)

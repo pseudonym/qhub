@@ -20,13 +20,12 @@
 #include "ServerSocket.h"
 #include "InterHub.h"
 #include "Hub.h"
+#include "ConnectionManager.h"
 
+using namespace std;
 using namespace qhub;
 
-ServerSocket::ServerSocket(Domain domain, int port, int t, Hub* h) : Socket(domain), type(t), hub(h) {
-	if(error()){
-		return;
-	}
+ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), type(t) {
 	int yes = 1;
 
 	if(setsockopt(getFd(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
@@ -60,11 +59,11 @@ bool ServerSocket::onRead() throw()
 			switch(type){
 			case INTER_HUB:
 				Logs::stat << "accepted ihub socket " << fd << endl;
-				hub->acceptInterHub(fd, d);
+				ConnectionManager::instance()->acceptInterHub(fd, d);
 				break;
 			case LEAF_HANDLER:
 				Logs::stat << "accepted leaf socket " << fd << endl;
-				hub->acceptLeaf(fd, d);
+				ConnectionManager::instance()->acceptLeaf(fd, d);
 				break;
 			default:
 				assert(0 && "unknown type for listening socket.");

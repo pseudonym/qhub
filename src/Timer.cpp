@@ -4,6 +4,7 @@
 
 #include "Timer.h"
 
+using namespace std;
 using namespace qhub;
 
 static void callback(int, short event, void* arg) throw()

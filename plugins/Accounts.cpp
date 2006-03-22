@@ -2,7 +2,7 @@
 #include "Accounts.h"
 #include "VirtualFs.h"
 
-#include "ADCClient.h"
+#include "Client.h"
 #include "UserInfo.h"
 #include "UserData.h"
 #include "XmlTok.h"
@@ -10,6 +10,7 @@
 #include "Settings.h"
 
 using namespace qhub;
+using namespace std;
 
 /*
  * Plugin loader
@@ -30,7 +31,7 @@ UserData::key_type Accounts::idVirtualFs = "virtualfs";
 
 bool Accounts::load() throw()
 {
-	XmlTok* p = Settings::getConfig("accounts");
+	XmlTok* p = Settings::instance()->getConfig("accounts");
 	users.clear(); // clean old users
 	p->findChild("user");
 	XmlTok* tmp;
@@ -50,7 +51,7 @@ bool Accounts::load() throw()
 
 bool Accounts::save() const throw()
 {
-	XmlTok* p = Settings::getConfig("accounts");
+	XmlTok* p = Settings::instance()->getConfig("accounts");
 	p->clear();
 	for(Users::const_iterator i = users.begin(); i != users.end(); ++i) {
 		XmlTok* tmp = p->addChild("user");
@@ -110,7 +111,7 @@ void Accounts::on(PluginStopped&, Plugin* p) throw()
 	}
 }
 
-void Accounts::on(ClientLogin&, ADCClient* client) throw()
+void Accounts::on(ClientLogin&, Client* client) throw()
 {
 	UserInfo* inf = client->getUserInfo();
 	Users::const_iterator i = users.find(inf->getNick());
@@ -124,7 +125,7 @@ void Accounts::on(ClientLogin&, ADCClient* client) throw()
 	inf->del(UIID('O','P'));
 }
 
-void Accounts::on(ClientInfo& a, ADCClient* client, UserInfo& inf) throw()
+void Accounts::on(ClientInfo& a, Client* client, UserInfo& inf) throw()
 {
 	UserData* data = client->getUserData();
 
@@ -146,7 +147,7 @@ void Accounts::on(ClientInfo& a, ADCClient* client, UserInfo& inf) throw()
 		a.setState(Plugin::MODIFIED);
 }
 
-void Accounts::on(UserConnected&, ADCClient* client) throw()
+void Accounts::on(UserConnected&, Client* client) throw()
 {
 	UserData* data = client->getUserData();
 	if(data->getInt(idUserLevel) >= 3) {

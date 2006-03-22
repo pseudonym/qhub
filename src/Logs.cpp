@@ -17,7 +17,7 @@ void Logs::setErr(const string& fn)
 	auto_ptr<filebuf> tmp(new filebuf);
 	tmp->open(fn.c_str(), ios::app | ios::out);
 	if(!tmp->is_open()) {
-		throw Exception("could not reassign error stream to \"" + fn + '"');
+		throw logs_error("could not reassign error stream to \"" + fn + '"');
 	}
 	err.rdbuf(tmp.release());
 }
@@ -27,7 +27,7 @@ void Logs::setStat(const string& fn)
 	auto_ptr<filebuf> tmp(new filebuf);
 	tmp->open(fn.c_str(), ios::app | ios::out);
 	if(!tmp->is_open()) {
-		throw Exception("could not reassign status stream to \"" + fn + '"');
+		throw logs_error("could not reassign status stream to \"" + fn + '"');
 	}
 	stat.rdbuf(tmp.release());
 }
@@ -38,7 +38,7 @@ void Logs::setLine(const string& fn)
 	auto_ptr<filebuf> tmp(new filebuf);
 	tmp->open(fn.c_str(), ios::app | ios::out);
 	if(!tmp->is_open()) {
-		throw Exception("could not reassign protocol line stream to \"" + fn + '"');
+		throw logs_error("could not reassign protocol line stream to \"" + fn + '"');
 	}
 	line.rdbuf(tmp.release());
 }
@@ -49,7 +49,7 @@ void Logs::set(std::ostream& s, const std::string& filename)
 	auto_ptr<filebuf> tmp(new filebuf);
 	tmp->open(filename.c_str(), ios::app | ios::out);
 	if(!tmp->is_open()) {
-		throw Exception("Logs::set(): could not reassign stream to \""
+		throw logs_error("Logs::set(): could not reassign stream to \""
 				+ filename + '"');
 	}
 	s.rdbuf(tmp.release());

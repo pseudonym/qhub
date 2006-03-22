@@ -1,5 +1,5 @@
-#ifndef _SOCKET_H_
-#define _SOCKET_H_
+#ifndef QHUB_SOCKET_H
+#define QHUB_SOCKET_H
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -56,15 +56,15 @@ public:
 	void listen(int backlog = 8192) throw();
 	void accept(int& fd, Domain& d) throw();
 
+	int read(void* buf, int len) throw(socket_error);
+	int write(void* buf, int len) throw(socket_error);
 	//beware: this will copy string. Limit use.
-	void write(string const& s, int prio = PRIO_NORM);
-	void writeb(Buffer::Ptr b);
+	void write(string const& s, int prio = PRIO_NORM) throw();
+	void writeb(Buffer::Ptr b) throw();
 
 	Domain getDomain() const throw() { return ip4OverIp6 ? IP4 : domain; };
 	string const& getSockName() const throw() { return sockName; };
 	string const& getPeerName() const throw() { return peerName; };
-
-	bool error() { return err; };
 
 protected:
 	Domain domain;
@@ -76,10 +76,8 @@ protected:
 	string sockName, peerName;
 	bool ip4OverIp6;
 	
-	bool err;
-
 	//output queue
-	//priority_queue<Buffer::writeBuffer> queue;
+	//priority_queue<Buffer::Ptr> queue;
 	queue<Buffer::Ptr> queue;
 
 	void partialWrite();
@@ -97,7 +95,6 @@ private:
 	void initSocketNames() throw();
 };
 
-}
+} // namespace qhub
 
-
-#endif
+#endif // QHUB_SOCKET_H

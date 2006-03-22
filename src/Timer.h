@@ -15,6 +15,7 @@ struct TimerListener {
 	typedef X<0> Timeout;
 
 	virtual void on(Timeout) throw() = 0;
+	virtual ~TimerListener() throw() {}
 };
 
 class Timer : public Speaker<TimerListener> {

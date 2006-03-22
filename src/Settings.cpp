@@ -16,8 +16,6 @@
 using namespace qhub;
 using namespace std;
 
-XmlTok Settings::root;
-
 XmlTok* Settings::getConfig(const string& name) throw()
 {
 	XmlTok* p = (root.findChild("qhub"), root.getNextChild());
@@ -33,9 +31,11 @@ bool Settings::isValid() throw()
 	XmlTok* p;
 	return root.findChild("qhub")
 	    && (p = root.getNextChild())
-	    && p->findChild("__core")
-	    && (p = p->getNextChild())
-	    && ADC::checkCID(p->getAttr("cid")); // enough checks for now :)
+	    && p->findChild("__connections")
+	    && p->findChild("__hub")
+//	    && (p = p->getNextChild())
+//	    && ADC::checkCID(p->getAttr("cid")) // enough checks for now :)
+	    ;
 }
 
 void Settings::load() throw()
@@ -44,50 +44,11 @@ void Settings::load() throw()
 		Logs::err << "Config file missing or corrupt, entering interactive setup\n";
 		loadInteractive();
 	}
-
-	XmlTok* p = getConfig("__core");
-
-	string name, cid;
-	name = p->getAttr("name");
-	Logs::stat << "Hub Name: " << name << endl;
-	cid = p->getAttr("cid");
-
-	Hub* hub = new Hub(cid, name);
-	hub->setInterPass(p->getAttr("interpass"));
-
-	XmlTok* pp;
-
-	p->findChild("clientport");
-	while((pp = p->getNextChild())) {
-		int port = Util::toInt(pp->getData());
-		Logs::stat << "Client Port: " << port << '\n';
-		if(port > 0 && port <= 65535)
-			hub->openClientPort(port);
-	}
-
-	p->findChild("interport");
-	while((pp = p->getNextChild())) {
-		int port = Util::toInt(pp->getData());
-		Logs::stat << "Inter-hub Port: " << port << '\n';
-		if(port > 0 && port <= 65535)
-			hub->openInterPort(port);
-	}
-
-	p->findChild("interconnect");
-	while((pp = p->getNextChild())) {
-		string host = pp->getAttr("host");
-		int port = Util::toInt(pp->getAttr("port"));
-		string pass = pp->getAttr("password");
-		if(host.empty() || port <= 0 || port > 65535)
-			continue;
-		Logs::stat << "Connecting to " << host << ':' << port << endl; 
-		hub->openInterConnection(host, port, pass);
-	}
 }
 
 void Settings::loadInteractive() throw()
 {
-	string name, interpass, cid32;
+	string name, interpass, prefix;
 	vector<u_int16_t> cports, iports;
 	cout << "Hub name: ";
 	getline(cin, name);
@@ -111,7 +72,7 @@ void Settings::loadInteractive() throw()
 		cout << "Interconnect password: ";
 		cin >> interpass;
 	}
-	cout << "Generating CID..." << endl;
+	cout << "Generating SID..." << endl;
 	// throw a bunch of data at Tiger, then take first 64 bits
 	// not to spec, but should be effective
 	TigerHash th;
@@ -125,15 +86,18 @@ void Settings::loadInteractive() throw()
 	th.update(interpass.data(), interpass.size());
 	th.update(&Util::genRand(24).front(), 24);
 	th.finalize();
-	Encoder::toBase32(th.getResult(), 64/8, cid32);
+	Encoder::toBase32(th.getResult(), 64/8, prefix);
+	prefix.erase(2);
 
 	root.clear();
 	XmlTok* p = root.addChild("qhub");
-	p = p->addChild("__core");
+	p = p->addChild("__hub");
 	p->setAttr("name", name);
-	p->setAttr("cid", cid32);
+	p->setAttr("prefix", prefix);
 	if(!interpass.empty())
 		p->setAttr("interpass", interpass);
+	p = p->getParent();
+	p = p->addChild("__connections");
 	for(vector<u_int16_t>::iterator i = cports.begin(); i != cports.end(); ++i)
 		p->addChild("clientport")->setData(Util::toString(*i));
 	for(vector<u_int16_t>::iterator i = iports.begin(); i != iports.end(); ++i)
@@ -181,8 +145,10 @@ void Settings::parseArgs(int argc, char** argv)
 		cout << _version_str;
 		exit(EXIT_SUCCESS);
 	}
+#ifdef DEBUG
 	if(vm.count("verbose"))
 		Logs::copy(Logs::stat, Logs::line);
+#endif
 	if(vm.count("statfile"))
 		Logs::setStat(vm["statfile"].as<string>());
 #ifdef DEBUG

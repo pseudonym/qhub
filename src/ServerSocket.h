@@ -1,5 +1,5 @@
-#ifndef _serversocket_h_
-#define _serversocket_h_
+#ifndef QHUB_SERVERSOCKET_H
+#define QHUB_SERVERSOCKET_H
 
 #include "Socket.h"
 
@@ -9,7 +9,7 @@ class Hub;
 
 class ServerSocket : public Socket {
 public:
-	ServerSocket(Domain domain, int port, int type, Hub* h);
+	ServerSocket(Domain domain, int port, int type);
 
 	enum socketTypes {
 	    INTER_HUB,
@@ -23,9 +23,8 @@ protected:
 	virtual void onTimeout() throw();
 	
 	int type;
-	Hub* hub;
 };
 
 }
 
-#endif
+#endif // QHUB_SERVERSOCKET_H
