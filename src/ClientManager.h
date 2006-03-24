@@ -16,11 +16,7 @@ public:
 	void addLocalClient(sid_type sid, Client* client) throw();
 	void addRemoteClient(sid_type sid, UserInfo const&) throw();
 	void removeClient(sid_type sid) throw();
-	void getAllInHub(const std::string&, std::vector<sid_type>&) const throw();
-
-	void broadcast(Command const& data, Client* except = NULL) throw();
-	void broadcastFeature(Command const& data, Client* except = NULL) throw();
-	void direct(Command const& data, sid_type sid, Client* from = NULL) throw();
+	void getAllInHub(sid_type, std::vector<sid_type>&) const throw();
 
 	void getUserList(ConnectionBase*) throw();
 

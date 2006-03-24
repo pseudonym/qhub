@@ -1,9 +1,7 @@
 #include "Command.h"
 #include "Util.h"
 #include "ADC.h"
-
-#include <algorithm>
-#include <boost/bind.hpp>
+#include "Logs.h"
 
 using namespace std;
 using namespace qhub;
@@ -80,7 +78,7 @@ Command::Command(const char* first, const char* last) throw(parse_error)
 		loc = 1;
 		break;
 	default:
-		throw parse_error("invalid action type");
+		throw parse_error(string("invalid action type '") + action + '\'');
 	}
 
 	if(numPosParams.count(cmd)) {
@@ -88,15 +86,15 @@ Command::Command(const char* first, const char* last) throw(parse_error)
 		if(loc + numPosParams[cmd] > sl.size())
 			throw parse_error("missing parameters");
 		params.resize(numPosParams[cmd]);
-		transform(sl.begin() + loc, sl.begin() + loc + numPosParams[cmd], params.begin(), &ADC::CSE);
+		copy(sl.begin() + loc, sl.begin() + loc + numPosParams[cmd], params.begin());
 		for(StringList::iterator i = sl.begin() + loc + numPosParams[cmd]; i != sl.end(); ++i) {
 			// param name parts can't be escaped chars
-			assert(ADC::CSE(i->substr(0, 2)).size() == 2);
-			if(i->size() < 2)
+			if(i->size() < 2 || ADC::CSE(i->substr(0, 2)).size() != 2)
 				throw parse_error("invalid named parameter");
 			else
-				*this << NamedParam(i->substr(0, 2), ADC::CSE(i->substr(2)));
+				*this << *i;
 		}
+		transform(params.begin(), params.end(), params.begin(), &ADC::CSE);
 	} else {
 		// unknown command
 		// assume all are positional
@@ -202,9 +200,9 @@ const string& Command::toString() const throw()
 	if(dirty) {
 		full.clear();
 		full += action;
-		full += char((cmd >> 24) & 0xFF);
-		full += char((cmd >> 16) & 0xFF);
 		full += char((cmd >>  8) & 0xFF);
+		full += char((cmd >> 16) & 0xFF);
+		full += char((cmd >> 24) & 0xFF);
 		full += ' ';
 
 		switch(action) {
@@ -227,9 +225,10 @@ const string& Command::toString() const throw()
 			break;
 		case 'I':
 		case 'L':
+		case 'H':
 			break;
 		default:
-			// we should not be sending any of the other types
+			// we should not be seeing any of the other types
 			assert(0);
 		}
 

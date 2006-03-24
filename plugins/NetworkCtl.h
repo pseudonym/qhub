@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef NETWORK_CTL_H
-#define NETWORK_CTL_H
+#ifndef QHUB_PLUGIN_NETWORK_CTL_H
+#define QHUB_PLUGIN_NETWORK_CTL_H
 
 #include <set>
 
@@ -40,4 +40,4 @@ private:
 
 } //namespace qhub
 
-#endif //NETWORK_CTL_H
+#endif // QHUB_PLUGIN_NETWORK_CTL_H

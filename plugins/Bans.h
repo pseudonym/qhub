@@ -21,7 +21,6 @@ public:
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-//	virtual void on(PluginMessage&, Plugin*, void*) throw();
 	virtual void on(ClientLogin&, Client*) throw();
 
 	virtual void on(ChDir, const string&, Client*) throw();

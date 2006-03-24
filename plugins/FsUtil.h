@@ -21,10 +21,9 @@ public:
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-//	virtual void on(PluginMessage&, Plugin*, void*) throw();
 	virtual void on(UserCommand&, Client*, string&) throw();
-	virtual void on(UserMessage&, Client*, u_int32_t const, string&) throw();
-	virtual void on(UserPrivateMessage&, Client*, u_int32_t const, string&, string&) throw();
+	virtual void on(UserMessage&, Client*, Command&, string&) throw();
+	virtual void on(UserPrivateMessage&, Client*, Command&, string&, sid_type) throw();
 
 	virtual void on(ChDir, const string&, Client*) throw();
 	virtual void on(Help, const string&, Client*) throw();

@@ -152,7 +152,7 @@ void InterHub::doSupports() throw()
 
 void InterHub::doInf() throw()
 {
-	send(Command('S', Command::INF, ADC::toSid(Hub::instance()->getSidPrefix()+"AA"))
+	send(Command('S', Command::INF, Hub::instance()->getSid())
 			<< CmdParam("HU", "1")
 			<< CmdParam("NI", Hub::instance()->getName())
 			<< CmdParam("DE", Hub::instance()->getDescription())

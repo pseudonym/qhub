@@ -71,20 +71,7 @@ public:
 	// Setters
 	void set(u_int16_t key, string const& val) throw() {
 		modified = true;
-		// Fix I4 and I6
-		/*if(key == UIID('I','4') && val == "0.0.0.0") {
-			if(sock->getDomain() == Socket::IP4)
-				infMap[key] = sock->getPeerName();
-		}
-#ifdef ENABLE_IPV6
-       	else if(key == UIID('I','6') && val == "[0:0:0:0:0:0:0:0]") {
-			if(sock->getDomain() == Socket::IP6)
-				infMap[key] = sock->getPeerName();
-		}
-#endif
-       	else {*/
-			infMap[key] = val;
-		//}
+		infMap[key] = val;
 	}
 	void set(char const* key, string const& val) throw() {
 		assert(strlen(key) == 2);
@@ -155,11 +142,8 @@ public:
 	string const& getCID() const throw() {
 		return get(UIID('I','D'));
 	}
-	string const& getRealHub() const throw() {
-		return get(UIID('C','H'));
-	}
 	int const getOp() const throw() {
-		return Util::toInt(get(UIID('O','P')));
+		return get("OP").empty() ? 0 : 1;
 	}
 	bool const hasSupport(const string& feat) const throw()
 	{

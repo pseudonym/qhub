@@ -11,9 +11,6 @@
 #include "XmlTok.h"
 #include "Settings.h"
 
-#include <cstdlib>
-#include <boost/format.hpp>
-
 using namespace qhub;
 using namespace std;
 
@@ -22,19 +19,18 @@ Hub::Hub() throw()
 	XmlTok* p = Settings::instance()->getConfig("__hub");
 	setName(p->getAttr("name"));
 	Logs::stat << "Name: " << getName() << endl;
-	sidpre = p->getAttr("prefix");
+	const string& sidpre = p->getAttr("prefix");
 	assert(sidpre.size() == 2);
-	Logs::stat << "SID prefix: " << getSidPrefix() << endl;
+	Logs::stat << "SID prefix: " << sidpre << endl;
+	sid = (sid_type(sidpre[0]) << 24) | (sid_type(sidpre[1]) << 16) | HUB_SID_END;
 	setDescription(p->getAttr("description"));
-
 	setInterPass(p->getAttr("interpass"));
 }
 
 void Hub::motd(Client* c) throw()
 {
-	//boost::format f("Hubconnections: %d.\nWe have %d (of which %d are passive) local users, and %d remote users.");
-	//f % interhubs.size() % (activeUsers.size()+passiveUsers.size()) % passiveUsers.size() % remoteUsers.size();
-	//c->doHubMessage(f.str());
+	c->doHubMessage("This hub is running " PACKAGE_NAME "/" PACKAGE_VERSION);
+	c->doHubMessage("Have a nice day, and behave ;)");
 }
 
 Command Hub::getAdcInf() const throw()
@@ -42,7 +38,7 @@ Command Hub::getAdcInf() const throw()
 	return Command('I', Command::INF) << CmdParam("NI", getName())
 			<< CmdParam("VE", PACKAGE_NAME "/" PACKAGE_VERSION)
 			<< CmdParam("DE", getDescription())
-			<< CmdParam("HU", "1") << CmdParam("BO", "1") << CmdParam("OP", "1");
+			<< "HU1" << "BO1" << "HI1";
 }
 
 /*void Hub::userDisconnect(string const& actor, string const& victim, string const& msg) throw()

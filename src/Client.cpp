@@ -44,6 +44,14 @@ void Client::login() throw()
 	Plugin::fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
+
+	// send INF of hub bot to ops
+	if(userInfo->getOp())
+		send(Command('B', Command::INF, Hub::instance()->getSid())
+				<< "NIqhub" << "BO1" << "DEBOT -- pm to control hub"
+				<< "VE" PACKAGE_NAME "/" PACKAGE_VERSION
+				<< "HO1" << "OP1"
+				<< "IDTHISISTHECIDOFTHEQHUBBOTAAAAAAAAAAAAAAA");
 	// Send INFs
 	ClientManager::instance()->getUserList(this);
 
@@ -96,10 +104,10 @@ void Client::doDisconnect(string const& msg) throw()
 	if(added) {
 		logout();
 		if(msg.empty())
-			ClientManager::instance()->broadcast(Command('I', Command::QUI)
+			dispatch(Command('I', Command::QUI)
 					<< ADC::fromSid(getSid()));
 		else
-			ClientManager::instance()->broadcast(Command('I', Command::QUI)
+			dispatch(Command('I', Command::QUI)
 					<< ADC::fromSid(getSid()) << CmdParam("MS", msg));
 	}
 	getSocket()->disconnect(msg);
@@ -113,7 +121,7 @@ void Client::doHubMessage(string const& msg) throw()
 void Client::doPrivateMessage(string const& msg) throw()
 {
 	send(Command('I', Command::MSG) << msg
-			<< CmdParam("PM", Hub::instance()->getSidPrefix()+"AA"));
+			<< CmdParam("PM", ADC::fromSid(Hub::instance()->getSid())));
 }
 
 void Client::doDisconnectBy(sid_type kicker, string const& msg) throw()
@@ -214,10 +222,10 @@ void Client::onDisconnected(string const& clue) throw()
 				% getSocket()->getFd() % this % ADC::fromSid(getSid()) << endl;
 		logout();
 		if(clue.empty())
-			ClientManager::instance()->broadcast(Command('I', Command::QUI)
+			dispatch(Command('I', Command::QUI)
 					<< ADC::fromSid(getSid()));
 		else
-			ClientManager::instance()->broadcast(Command('I', Command::QUI)
+			dispatch(Command('I', Command::QUI)
 					<< ADC::fromSid(getSid()) << CmdParam("MS", clue));
 	}
 	Plugin::ClientDisconnected action;
@@ -277,12 +285,25 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 	userInfo = new UserInfo(cmd);
 	userInfo->del("OP"); //can't have them opping themselves...
 
-	// Guarantee NI and (I4 or I6)
-	if(!userInfo->has("NI")) {
-		PROTOCOL_ERROR("Missing parameters in INF");
-		return;
-	}
+	// Guarantee NI and (I4 xor I6)
+	if(!(userInfo->has("NI") && (userInfo->has("I4") ^ userInfo->has("I6"))))
+		throw command_error("Missing/extraneous parameters in INF");
 
+	// Fix I4 and I6
+	if(userInfo->has("I4") && userInfo->get("I4") == "0.0.0.0") {
+		if(getSocket()->getDomain() == Socket::IP4)
+			userInfo->set("I4", getSocket()->getPeerName());
+		else
+			throw command_error("'I4' sent in INF but not connected via IPv4");
+	}
+#ifdef ENABLE_IPV6
+	else if(userInfo->has("I6") && userInfo->get("I6") == "[0:0:0:0:0:0:0:0]") {
+		if(getSocket()->getDomain() == Socket::IP6)
+			userInfo->set("I6", getSocket()->getPeerName());
+		else
+			throw command_error("'I6' sent in INF but not connected via IPv6");
+	}
+#endif
 	const string& pid32 = userInfo->get("PD");
 	const string& cid32 = userInfo->get("ID");
 	if(pid32.empty())
@@ -341,7 +362,7 @@ void Client::handleInfo(Command& cmd) throw()
 
 void Client::handleMessage(Command& cmd) throw()
 {
-	if(cmd.getAction() == 'D' && cmd.getDest() == ADC::toSid(Hub::instance()->getSidPrefix()+"AA")) {
+	if(cmd.getAction() == 'D' && cmd.getDest() == Hub::instance()->getSid()) {
 		Plugin::UserCommand action;
 		Plugin::fire(action, this, cmd[0]);
 		if(action.isSet(Plugin::DISCONNECTED))
@@ -365,18 +386,6 @@ void Client::handleMessage(Command& cmd) throw()
 			if(!action.isSet(Plugin::STOPPED))
 				dispatch(cmd);
 		}
-	}
-
-	dispatch(cmd);
-	switch(cmd.getAction()) {
-	case 'B':
-		ClientManager::instance()->broadcast(cmd);
-		break;
-	case 'F':
-		ClientManager::instance()->broadcastFeature(cmd);
-		break;
-	default:
-		assert(0);
 	}
 }
 

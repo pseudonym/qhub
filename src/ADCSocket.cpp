@@ -42,11 +42,12 @@ void ADCSocket::handleOnRead()
 			l = tmp+1;
 			continue;	// ignore keepalives
 		}
+#ifdef DEBUG
+		Logs::line << getFd() << "<< " << string(l, tmp) << endl;
+#endif
 		Command cmd(l, tmp);
 		l = tmp+1;
-#ifdef DEBUG
-		Logs::line << getFd() << "<< " << cmd.toString();
-#endif
+
 		conn->onLine(cmd);
 		if(disconnected)
 			return;

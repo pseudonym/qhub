@@ -34,7 +34,6 @@ class ServerManager : public Singleton<ServerManager> {
 public:
 	void add(sid_type sid, UserInfo const& ui, InterHub* conn) throw();
 	void remove(sid_type sid) throw();
-	void direct(const Command&, const string&) throw();
 	void getInterList(InterHub* ih) throw();
 	void activate(InterHub* ih) throw();
 	void deactivate(InterHub* ih) throw();

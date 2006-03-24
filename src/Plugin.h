@@ -198,7 +198,7 @@ public:
 	// parm: Client* = the client
 	// parm: string = the message
 	virtual void on(UserMessage&, Client*, Command&, std::string&) throw() {};
-	virtual void on(UserPrivateMessage&, Client*, Command&, std::string&, sid_type&) throw() {};
+	virtual void on(UserPrivateMessage&, Client*, Command&, std::string&, sid_type) throw() {};
 	// Called when another hub connects
 	// parm: InterHub* = the interhub connection
 	virtual void on(InterConnected&, InterHub*) throw() {};

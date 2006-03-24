@@ -57,13 +57,21 @@ string ADC::CSE(string const& in) throw(parse_error)
 	return tmp;
 }
 string ADC::fromSid(sid_type s) throw() {
-	return string(reinterpret_cast<const char*>(&s), sizeof(sid_type));
+	string str;
+	for(int i = 3; i >= 0; i--)
+		str += char((s >> (i*8)) & 0xFF);
+	return str;
 }
 
-sid_type ADC::toSid(const string& s) throw(parse_error) {
-	if(s.size() != 4)
+sid_type ADC::toSid(const string& str) throw(parse_error) {
+	if(str.size() != 4 || str.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") != string::npos)
 		throw parse_error("invalid sid parameter");
-	return *reinterpret_cast<const sid_type*>(s.c_str());
+	sid_type s = 0;
+	for(int i = 0; i < 4; i++) {
+		s <<= 8;
+		s |= sid_type(str[i]) & 0xFF;
+	}
+	return s;
 }
 
 string& ADC::toString(StringList const& sl, string& out) throw()

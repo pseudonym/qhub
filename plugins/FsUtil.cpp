@@ -252,7 +252,7 @@ void FsUtil::on(UserCommand& a, Client* client, string& msg) throw()
 	}
 }
 
-void FsUtil::on(UserMessage& a, Client* c, u_int32_t const cmd, string& msg) throw()
+void FsUtil::on(UserMessage& a, Client* c, Command&, string& msg) throw()
 {
 	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
 		string::size_type i = msg.find(' ');
@@ -268,7 +268,7 @@ void FsUtil::on(UserMessage& a, Client* c, u_int32_t const cmd, string& msg) thr
 	}
 }
 
-void FsUtil::on(UserPrivateMessage& a, Client* c, u_int32_t const cmd, string& msg, string& pm) throw()
+void FsUtil::on(UserPrivateMessage& a, Client* c, Command&, string& msg, sid_type) throw()
 {
 	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
 		string::size_type i = msg.find(' ');

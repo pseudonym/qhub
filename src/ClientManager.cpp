@@ -12,11 +12,13 @@ using namespace qhub;
 sid_type ClientManager::nextSid() throw()
 {
 	sid_type sid;
-	const string& pre = Hub::instance()->getSidPrefix();
+	sid_type pre = Hub::instance()->getSid() & HUB_SID_MASK;
+	string post;
+	// horrible for production, but ok for small load averages
 	while(true) {
-		vector<uint8_t> r = Util::genRand(2);
-		const string& post = Encoder::toBase32(&r[0], r.size()).substr(0, 2);
-		sid = ADC::toSid(pre + post);
+		const vector<uint8_t>& r = Util::genRand(4);
+		Encoder::toBase32(&r[0], r.size(), post).erase(2);
+		sid = pre | (sid_type(post[1]) << 8) | sid_type(post[0]);
 		if(hasClient(sid) || post == "AA")
 			continue;
 		return sid;
@@ -33,39 +35,6 @@ void ClientManager::getUserList(ConnectionBase* c) throw()
 		t->append(i->second->toADC(i->first));
 	}
 	c->getSocket()->writeb(t);
-}
-
-void ClientManager::direct(Command const& data, sid_type sid, Client* from /*=NULL*/) throw()
-{
-	dispatch(data, from);
-/*	if(localUsers.count(sid)) {
-		Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
-		if(from)
-			from->getSocket()->writeb(tmp);
-		localUsers[sid]->getSocket()->writeb(tmp);
-	} else if(remoteUsers.count(sid)) {
-		ServerManager::instance()->direct(data, remoteUsers[sid]->getRealHub());
-	}*/
-}
-
-void ClientManager::broadcast(Command const& data, Client* except/* = NULL*/) throw()
-{
-	dispatch(data, except);
-/*	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
-	for(LocalUsers::iterator i = localUsers.begin(); i != localUsers.end(); ++i) {
-		if(i->second != except)
-			i->second->getSocket()->writeb(tmp);
-	}*/
-}
-
-void ClientManager::broadcastFeature(Command const& data, Client* except/* = NULL*/) throw()
-{
-	broadcast(data, except);
-/*	Buffer::Ptr tmp(new Buffer(data, PRIO_NORM));
-	for(LocalUsers::iterator i = localUsers.begin(); i != localUsers.end(); ++i) {
-		if(i->second->getUserInfo()->hasSupport(feat) == yes)
-			i->second->getSocket()->writeb(tmp);
-	}*/
 }
 
 bool ClientManager::hasClient(sid_type sid, bool localonly) const throw()
@@ -98,12 +67,12 @@ void ClientManager::removeClient(sid_type sid) throw()
 	}
 }
 
-void ClientManager::getAllInHub(const std::string& pre, std::vector<sid_type>& ret) const throw()
+void ClientManager::getAllInHub(sid_type hsid, std::vector<sid_type>& ret) const throw()
 {
 	// should not be looking for local users
 	ret.clear();
 	for(RemoteUsers::const_iterator i = remoteUsers.begin(); i != remoteUsers.end(); ++i)
-		if(i->second->getRealHub() == pre)
+		if((i->first & HUB_SID_MASK) == (hsid & HUB_SID_MASK))
 			ret.push_back(i->first);
 }
 

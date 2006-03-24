@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 }
 
 namespace qhub {
-#if 1
+
 void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 {
 	typedef ServerManager::Interhubs Interhubs;
@@ -92,7 +92,8 @@ void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 		} else if(others.count(cmd.getDest())) {
 			sid_type s = cmd.getDest();
 			// set last two bytes to "AA"
-			*(reinterpret_cast<uint16_t*>(&s)+1) = 0x4141;
+			s &= HUB_SID_MASK;
+			s |= 0x4141;
 			if(us.count(cmd.getSource()))
 				us.find(cmd.getSource())->second->getSocket()->writeb(tmp);
 			ServerManager::instance()->remoteHubs[s]->getInterHub()->getSocket()->writeb(tmp);
@@ -104,11 +105,26 @@ void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 		for(Interhubs::const_iterator i = ih.begin(); i != ih.end(); ++i)
 			if(*i != except)
 				(*i)->getSocket()->writeb(tmp);
+		const string& feat = cmd.getFeatures();
 		for(LocalUsers::const_iterator i = us.begin(); i != us.end(); ++i) {
-			const string& feat = cmd.getFeatures();
+			Client* c = i->second;
+			bool send = false;
+			for(string::size_type j = 0; j < feat.size(); j += 5) {
+				if(feat[j] == '+' && c->getUserInfo()->hasSupport(feat.substr(j+1, 4)))
+					send = true;
+				if(feat[j] == '-' && !c->getUserInfo()->hasSupport(feat.substr(j+1, 4)))
+					send = true;
+				else {
+					send = false;
+					break;
+				}
+			}
+			if(send)
+				c->getSocket()->writeb(tmp);
 		}
 		break;
 	}
 }
-#endif
+
 } // namespace qhub
+

@@ -13,9 +13,7 @@ class Client;
 
 class Hub : public Singleton<Hub> {
 public:
-	//these should never change during the life of the hub
-	void setSidPrefix(const std::string& s) { assert(s.size() == 2); sidpre = s; }
-	const std::string& getSidPrefix() const { return sidpre; }
+	sid_type getSid() const { return sid; }
 
 	void setName(const std::string& n) { name = n; }
 	const std::string& getName() const { return name; }
@@ -32,8 +30,9 @@ public:
 private:
 	friend class Singleton<Hub>;
 
+	sid_type sid;
+
 	std::string name;
-	std::string sidpre;
 	std::string description;
 	std::string interPass;
 	
