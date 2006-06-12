@@ -38,6 +38,8 @@ public:
 	void activate(InterHub* ih) throw();
 	void deactivate(InterHub* ih) throw();
 	bool hasServer(sid_type) const throw();
+	sid_type getHubSidMask() const throw() { return sidMask; }
+	sid_type getClientSidMask() const throw() { return ~getHubSidMask(); }
 
 	typedef map<sid_type, RemoteHub*> RemoteHubs;
 	typedef vector<InterHub*> Interhubs;
@@ -45,11 +47,16 @@ private:
 	friend void dispatch(const Command&, ConnectionBase*) throw();
 	friend class Singleton<ServerManager>;
 
+	sid_type sidMask;
+
 	// for hubs on the network
 	RemoteHubs remoteHubs;
 
 	//for actual connections
 	Interhubs interhubs;
+
+	ServerManager() throw();
+	~ServerManager() throw() {}
 };
 
 } // namespace qhub

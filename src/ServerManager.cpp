@@ -1,8 +1,18 @@
 #include "ServerManager.h"
 #include "InterHub.h"
+#include "XmlTok.h"
+#include "Settings.h"
 
 using namespace std;
 using namespace qhub;
+
+ServerManager::ServerManager() throw() : sidMask(0xFFF00000)
+{
+	XmlTok* p = Settings::instance()->getConfig("__hub");
+	int i = Util::toInt(p->getAttr("hubsidbits"));
+	for(int x = 1 << 19; i; i--, x >>= 1)
+		sidMask |= x;
+}
 
 void ServerManager::getInterList(InterHub* ih) throw()
 {

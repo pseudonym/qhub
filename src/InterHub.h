@@ -20,10 +20,9 @@ public:
 	virtual void onLookup(const std::string& ip);
 
 	short getPort() const { return port; }
-	//const string& getCID32() const { return cid; }
 
 	// from ConnectionBase
-	virtual void doError(const std::string& msg) throw();
+	virtual void doError(string const& msg, int code, string const& flag) throw();
 	virtual void doWarning(const std::string& msg) throw();
 
 protected:

@@ -2,6 +2,8 @@
 #include "ADC.h"
 #include <cassert>
 #include "Util.h"
+#include "TigerHash.h"
+#include "Encoder.h"
 
 using namespace qhub;
 using namespace std;
@@ -57,19 +59,22 @@ string ADC::CSE(string const& in) throw(parse_error)
 	return tmp;
 }
 string ADC::fromSid(sid_type s) throw() {
-	string str;
+	string str(4, '0');
 	for(int i = 3; i >= 0; i--)
-		str += char((s >> (i*8)) & 0xFF);
+		str[3-i] = Encoder::toBase32((s >> (i*5)) & 31);
 	return str;
 }
 
 sid_type ADC::toSid(const string& str) throw(parse_error) {
-	if(str.size() != 4 || str.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") != string::npos)
+	if(str.size() != 4)
 		throw parse_error("invalid sid parameter");
 	sid_type s = 0;
 	for(int i = 0; i < 4; i++) {
-		s <<= 8;
-		s |= sid_type(str[i]) & 0xFF;
+		int8_t t = Encoder::fromBase32(str[i]);
+		if(t == -1)
+			throw parse_error("invalid Base32 characters in sid");
+		s <<= 5;
+		s |= t;
 	}
 	return s;
 }
@@ -86,8 +91,7 @@ string& ADC::toString(StringList const& sl, string& out) throw()
 
 bool ADC::checkCID(const string& cid) throw()
 {
-	return cid.size() == 13
-			&& cid.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") == string::npos
-			//bit 0 of last one cannot be 1
-			&& cid.find_first_not_of("ACEGIKMOQSUWY246", 12) == string::npos;
+	vector<uint8_t> tmp(TigerHash::HASH_SIZE);
+	Encoder::fromBase32(cid.c_str(), &tmp.front(), TigerHash::HASH_SIZE);
+	return cid == Encoder::toBase32(&tmp.front(), TigerHash::HASH_SIZE);
 }

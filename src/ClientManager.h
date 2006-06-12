@@ -10,8 +10,6 @@ namespace qhub {
 
 class ClientManager : public Singleton<ClientManager> {
 public:
-	sid_type nextSid() throw();
-
 	bool hasClient(sid_type sid, bool localonly = false) const throw();
 	void addLocalClient(sid_type sid, Client* client) throw();
 	void addRemoteClient(sid_type sid, UserInfo const&) throw();

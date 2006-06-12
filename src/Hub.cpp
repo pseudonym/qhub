@@ -4,6 +4,7 @@
 #include "error.h"
 #include "ServerSocket.h"
 #include "Client.h"
+#include "ServerManager.h"
 #include "InterHub.h"
 #include "Buffer.h"
 #include "EventHandler.h"
@@ -19,10 +20,9 @@ Hub::Hub() throw()
 	XmlTok* p = Settings::instance()->getConfig("__hub");
 	setName(p->getAttr("name"));
 	Logs::stat << "Name: " << getName() << endl;
-	const string& sidpre = p->getAttr("prefix");
-	assert(sidpre.size() == 2);
-	Logs::stat << "SID prefix: " << sidpre << endl;
-	sid = (sid_type(sidpre[0]) << 24) | (sid_type(sidpre[1]) << 16) | HUB_SID_END;
+	sid = Util::toInt(p->getAttr("sid"));
+	assert(sid == (sid & ServerManager::instance()->getHubSidMask()));
+	Logs::stat << "SID: " << ADC::fromSid(sid) << endl;
 	setDescription(p->getAttr("description"));
 	setInterPass(p->getAttr("interpass"));
 }

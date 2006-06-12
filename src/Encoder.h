@@ -33,7 +33,20 @@ public:
 		std::string tmp;
 		return toBase32(src, len, tmp);
 	}
+	/*
+	 * convert a single 5 bit value to base32 character
+	 */
+	static char toBase32(uint8_t src)
+	{
+		assert(src < 32);
+		return base32Alphabet[src];
+	}
+
 	static void fromBase32(const char* src, u_int8_t* dst, size_t len);
+	static uint8_t fromBase32(char ch)
+	{
+		return base32Table[uint8_t(ch)];
+	}
 private:
 	static const int8_t base32Table[];
 	static const char base32Alphabet[];

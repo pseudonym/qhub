@@ -42,7 +42,7 @@ public:
 	/*
 	 * Do protocol stuff / Handle events
 	 */
-	virtual void doError(string const& msg) throw() = 0; // send FatalError message
+	virtual void doError(string const& msg, int code, const std::string& flag) throw() = 0;
 	virtual void doWarning(string const& msg) throw() = 0;
 
 	virtual void onLine(Command& cmd) throw(command_error) = 0;

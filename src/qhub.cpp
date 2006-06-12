@@ -91,9 +91,7 @@ void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 			us.find(cmd.getDest())->second->getSocket()->writeb(tmp);
 		} else if(others.count(cmd.getDest())) {
 			sid_type s = cmd.getDest();
-			// set last two bytes to "AA"
-			s &= HUB_SID_MASK;
-			s |= 0x4141;
+			s &= ServerManager::instance()->getHubSidMask();
 			if(us.count(cmd.getSource()))
 				us.find(cmd.getSource())->second->getSocket()->writeb(tmp);
 			ServerManager::instance()->remoteHubs[s]->getInterHub()->getSocket()->writeb(tmp);

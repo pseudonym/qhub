@@ -44,7 +44,7 @@ public:
 	void doAskPassword(string const& pwd) throw(); // send at LOGIN only!
 	// Error types
 	virtual void doWarning(string const& msg) throw();
-	virtual void doError(string const& msg) throw();
+	virtual void doError(string const& msg, int code, const std::string& flag) throw();
 	virtual void doDisconnect(string const& msg = Util::emptyString) throw();
 	// Message types
 	void doHubMessage(string const& msg) throw();
@@ -64,7 +64,7 @@ private:
 	 * Data handlers	
 	 */
 	void handle(Command&) throw(command_error);
-	void handleSupports(Command&) throw();
+	void handleSupports(Command&) throw(command_error);
 	void handleLogin(Command&) throw(command_error);
 	void handlePassword(Command&) throw();
 	void handleDisconnect(Command&) throw();

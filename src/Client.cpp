@@ -9,6 +9,7 @@
 #include "ADC.h"
 #include "Logs.h"
 #include "ClientManager.h"
+#include "ServerManager.h"
 
 using namespace std;
 using namespace qhub;
@@ -94,9 +95,13 @@ void Client::doWarning(string const& msg) throw()
 	send(Command('I', Command::STA) << "100" << msg);
 }
 
-void Client::doError(string const& msg) throw()
+void Client::doError(string const& msg, int code, string const& flag) throw()
 {
-	send(Command('I', Command::STA) << "200" << msg);
+	Command cmd('I', Command::STA);
+	cmd << (format("2%02d") % code).str() << msg;
+	if(!flag.empty())
+		cmd << flag;
+	send(cmd);
 }
 
 void Client::doDisconnect(string const& msg) throw()
@@ -210,10 +215,6 @@ void Client::onConnected() throw()
 
 void Client::onDisconnected(string const& clue) throw()
 {
-	timeval tv;
-	tv.tv_sec = 15;
-	tv.tv_usec = 0;
-	getSocket()->enableMe(EventHandler::ev_none, &tv);
 	if(added) {
 		// this is here so ADCSocket can safely destroy us.
 		// if we don't want a second message and our victim to get the message as well
@@ -427,14 +428,18 @@ void Client::handlePassword(Command& cmd) throw()
 	login();
 }
 
-void Client::handleSupports(Command& cmd) throw()
+void Client::handleSupports(Command& cmd) throw(command_error)
 {
 	//uncomment this once DC++ follows the spec and doesn't send +BAS0
 	/*if(find(sl.begin("AD"), sl.end("AD"), "BASE") == sl.end()) {
 		PROTOCOL_ERROR("Invalid supports");
 	}*/
 	send(Command('I', Command::SUP) << CmdParam("AD", "BASE"));
-	send(Command('I', Command::SID) << ADC::fromSid(this->sid = ClientManager::instance()->nextSid()));
+	// use file descriptor for ID... just make sure we haven't overflowed
+	if(getSocket()->getFd() != (ServerManager::instance()->getClientSidMask() & getSocket()->getFd()))
+		throw command_error("hub is full", 11);
+	this->sid = (Hub::instance()->getSid() & ServerManager::instance()->getHubSidMask()) | getSocket()->getFd();
+	send(Command('I', Command::SID) << ADC::fromSid(this->sid));
 	send(Hub::instance()->getAdcInf());
 	state = IDENTIFY;
 }

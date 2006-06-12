@@ -9,22 +9,6 @@
 using namespace std;
 using namespace qhub;
 
-sid_type ClientManager::nextSid() throw()
-{
-	sid_type sid;
-	sid_type pre = Hub::instance()->getSid() & HUB_SID_MASK;
-	string post;
-	// horrible for production, but ok for small load averages
-	while(true) {
-		const vector<uint8_t>& r = Util::genRand(4);
-		Encoder::toBase32(&r[0], r.size(), post).erase(2);
-		sid = pre | (sid_type(post[1]) << 8) | sid_type(post[0]);
-		if(hasClient(sid) || post == "AA")
-			continue;
-		return sid;
-	}
-}
-
 void ClientManager::getUserList(ConnectionBase* c) throw()
 {
 	Buffer::Ptr t(new Buffer());

@@ -65,10 +65,9 @@ void ADCSocket::onTimeout() throw()
 		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
 		//(we could try sending an NMDC-style message here)
 		disconnect("send timeout");
-	} else {
-		//last thing before we return control to event-system: the right thing to do! :)
-		realDisconnect();
 	}
+	//last thing before we return control to event-system: the right thing to do! :)
+	realDisconnect();
 }
 
 bool ADCSocket::onRead() throw()
@@ -76,10 +75,12 @@ bool ADCSocket::onRead() throw()
 	try {
 		handleOnRead();
 	} catch(const command_error& e) {
-		conn->doError(e.what());
+		conn->doError(e.what(), e.code(), e.param());
 		disconnect(e.what());
 	} catch(const parse_error& e) {
 		// stuff that's not even valid ADC -> silent disconnect
+		while(!queue.empty())
+			queue.pop();
 		disconnect(e.what());
 	} catch(const socket_error& e) {
 		while(!queue.empty())

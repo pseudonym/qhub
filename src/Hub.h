@@ -9,8 +9,6 @@
 
 namespace qhub {
 
-class Client;
-
 class Hub : public Singleton<Hub> {
 public:
 	sid_type getSid() const { return sid; }

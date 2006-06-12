@@ -6,7 +6,6 @@
 #include <vector>
 #include "compat_hash_map.h"
 #include <boost/lexical_cast.hpp>
-#include "error.h"
 #include <cerrno>
 
 namespace qhub {

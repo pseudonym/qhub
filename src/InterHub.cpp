@@ -69,12 +69,13 @@ void InterHub::onDisconnected(const string& clue) throw()
 	delete this;	// hope this doesn't cause segfaults :)
 }
 
-void InterHub::doError(const string& msg) throw()
+void InterHub::doError(string const& msg, int code, string const& flag) throw()
 {
-	if(state == PROTOCOL)
-		// silent disconnect... we don't want probes
-		return;
-	send(Command('L', Command::STA) << "200" << msg);
+	Command cmd('L', Command::STA);
+	cmd << (format("2%02d") % code).str() << msg;
+	if(!flag.empty())
+		cmd << flag;
+	send(cmd);
 }
 
 void InterHub::doWarning(const string& msg) throw()

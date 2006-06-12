@@ -10,8 +10,6 @@
 #include "XmlTok.h"
 #include "Util.h"
 #include "Logs.h"
-#include "TigerHash.h"
-#include "Encoder.h"
 
 using namespace qhub;
 using namespace std;
@@ -72,28 +70,25 @@ void Settings::loadInteractive() throw()
 		cout << "Interconnect password: ";
 		cin >> interpass;
 	}
-	cout << "Generating SID..." << endl;
-	// throw a bunch of data at Tiger, then take first 64 bits
-	// not to spec, but should be effective
-	TigerHash th;
-	th.update(name.data(), name.size());
-	time_t t = time(NULL);
-	th.update(&t, sizeof(time_t));
-	if(!cports.empty())
-		th.update(&cports.front(), cports.size()*sizeof(u_int16_t));
-	if(!iports.empty())
-		th.update(&iports.front(), iports.size()*sizeof(u_int16_t));
-	th.update(interpass.data(), interpass.size());
-	th.update(&Util::genRand(24).front(), 24);
-	th.finalize();
-	Encoder::toBase32(th.getResult(), 64/8, prefix);
-	prefix.erase(2);
+	cout << "number of bits to be used for hub identification on this network "
+			<< "(0 if this hub will not be part of a network): ";
+	int bits;
+	cin >> bits;
+	int id = 0;
+	while(bits != 0) {
+		cout << "hub id number for the network (0 for no network): ";
+		cin >> id;
+		if(id < (1 << bits))
+			break;
+		cerr << "hub id is too large for number of bits!" << endl;
+	}
 
 	root.clear();
 	XmlTok* p = root.addChild("qhub");
 	p = p->addChild("__hub");
 	p->setAttr("name", name);
-	p->setAttr("prefix", prefix);
+	p->setAttr("hubsidbits", Util::toString(bits));
+	p->setAttr("sid", Util::toString(id << (20 - bits)));
 	if(!interpass.empty())
 		p->setAttr("interpass", interpass);
 	p = p->getParent();
