@@ -25,16 +25,9 @@ number of physical hubs and users.
 
 Dependencies
 
-Required
-
-Liboop - http://liboop.org/
-ADNS - http://www.chiark.greenend.org.uk/~ian/adns/
+Libevent - http://monkey.org/~provos/libevent/
+Libcares - http://daniel.haxx.se/projects/c-ares/
 Boost library - http://boost.org/
 Libexpat - http://expat.sourceforge.net/
   or Libxmltok
 Libtool (for building)
-
-Recommended
-
-Libevent (better performance) - http://monkey.org/~provos/libevent/
-(For libevent to be used you will need a not-yet released Liboop though.)

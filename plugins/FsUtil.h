@@ -2,29 +2,32 @@
 #ifndef _INCLUDED_PLUGIN_FSUTIL_H_
 #define _INCLUDED_PLUGIN_FSUTIL_H_
 
-#include "../Plugin.h"
-#include "../UserData.h"
+#include "Plugin.h"
+#include "UserData.h"
+#include "Client.h"
+
+#include "VirtualFs.h"
 
 using namespace std;
 
 namespace qhub {
 
-class ADCClient;
-class VirtualFs;
-
-class FsUtil : public Plugin {
+class FsUtil : public Plugin, public VirtualFsListener {
 public:
-	static UserData::Key idVirtualFs;	// void* (Plugin*)
+	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 
 	FsUtil() throw() : virtualfs(NULL) {};
 	virtual ~FsUtil() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-	virtual void on(PluginMessage&, Plugin*, void*) throw();
-	virtual void on(UserCommand&, ADCClient*, string&) throw();
-	virtual void on(UserMessage&, ADCClient*, u_int32_t const, string&) throw();
-	virtual void on(UserPrivateMessage&, ADCClient*, u_int32_t const, string&, string&) throw();
+	virtual void on(UserCommand&, Client*, string&) throw();
+	virtual void on(UserMessage&, Client*, Command&, string&) throw();
+	virtual void on(UserPrivateMessage&, Client*, Command&, string&, sid_type) throw();
+
+	virtual void on(ChDir, const string&, Client*) throw();
+	virtual void on(Help, const string&, Client*) throw();
+	virtual void on(Exec, const string&, Client*, const StringList&) throw();
 
 private:
 	bool load() throw();

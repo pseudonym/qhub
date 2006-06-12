@@ -1,11 +1,3 @@
 
 
-Upon checking out the svn, you will probably need to one or more of these
-If nothing helps, try fetching a release from the berlios release-page
-and extract missing files.
-
-automake --add-missing --gnu --copy
-libtoolize
-autoreconf
-aclocal 
-autoconf
+autoreconf --force --install will be needed when fetching sources from svn

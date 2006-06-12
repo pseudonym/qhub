@@ -1,10 +1,5 @@
 Start doing things on the TODO
 
-remove Liboop+ADNS, replace with selectable DNS thread(s)+poll/libevent(win32?) mechanism. 
-(I see no reason for Liboop since libevent does all and is more portable?)
-Maybe also a pure win32-solution that is not libevent.
-	Start this by removing all ADNS/Liboop traces from interfaces.
-
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
 
 Low-level network handling
@@ -20,10 +15,6 @@ More work on multihub support (much has been accomplished however)
 	automatically try reconnecting every few minutes if an interhub connection fails
 
 re-work UserData class, possibly using just a hash_map<string,boost::any>
-
-use fork() when there are multiple hubs to be run -- gives benefits of multithreading
-	without having to deal with locks, etc, and plugins don't need to keep track of
-	several different hubs
 
 Polish plugins
 	add operator functions plugin for bans, etc

@@ -2,31 +2,33 @@
 #ifndef _INCLUDED_PLUGIN_ACCOUNTS_H_
 #define _INCLUDED_PLUGIN_ACCOUNTS_H_
 
-#include "../Plugin.h"
-#include "../compat_hash_map.h"
-#include "../UserData.h"
+#include "Plugin.h"
+#include "compat_hash_map.h"
+#include "UserData.h"
+
+#include "VirtualFs.h"
 
 using namespace std;
 
 namespace qhub {
 
-class ADCClient;
-class VirtualFs;
-
-class Accounts : public Plugin {
+class Accounts : public Plugin, public VirtualFsListener {
 public:
-	static UserData::Key idUserLevel;	// int
-	static UserData::Key idVirtualFs;	// void* (Plugin*)
+	static UserData::key_type idUserLevel;	// int
+	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 	
 	Accounts() throw() : virtualfs(NULL) {};
 	virtual ~Accounts() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-	virtual void on(PluginMessage&, Plugin*, void*) throw();
-	virtual void on(ClientLogin&, ADCClient*) throw();
-	virtual void on(ClientInfo&, ADCClient*, UserInfo&) throw();
-	virtual void on(UserConnected&, ADCClient*) throw();
+	virtual void on(ClientLogin&, Client*) throw();
+	virtual void on(ClientInfo&, Client*, UserInfo&) throw();
+	virtual void on(UserConnected&, Client*) throw();
+
+	virtual void on(ChDir, const string&, Client*) throw();
+	virtual void on(Help, const string&, Client*) throw();
+	virtual void on(Exec, const string&, Client*, const StringList&) throw();
 
 private:
 	bool load() throw();

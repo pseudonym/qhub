@@ -1,10 +1,10 @@
 // vim:ts=4:sw=4:noet
 #include "Loader.h"
-#include "VirtualFs.h"
-#include "../XmlTok.h"
-#include "../Util.h"
-#include "../Logs.h"
-#include "../Settings.h"
+
+#include "XmlTok.h"
+#include "Util.h"
+#include "Logs.h"
+#include "Settings.h"
 
 using namespace qhub;
 
@@ -22,32 +22,28 @@ extern "C" {
  * Plugin details
  */
 
-UserData::Key Loader::idVirtualFs = UserData::toKey("virtualfs");
+UserData::key_type Loader::idVirtualFs = "virtualfs";
 
 int Loader::load() throw()
 {
 	int success = 0;
 	int failure = 0;
-	XmlTok root;
-	if(root.load(Settings::getFilename("plugins"))) {
-		XmlTok* p = &root;
-		if(p->findChild("plugins") && (p = p->getNextChild()) && p->findChild("plugin")) {
-			XmlTok* tmp;
-			while((tmp = p->getNextChild())) {
-				string const& name = tmp->getData();
-				if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
-					Logs::stat << "\nloading plugin \"" << name << "\"\n";
-					if(Plugin::openModule(name)) {
-						success++;
-					} else {
-						failure++;
-					}
+	XmlTok* p = Settings::instance()->getConfig("plugins");
+	if(p->findChild("plugin")) {
+		XmlTok* tmp;
+		while((tmp = p->getNextChild())) {
+			string const& name = tmp->getData();
+			if(!Plugin::hasModule(name) && name != "loader") { // we're not added yet! don't want inf-recurse
+				Logs::stat << "\nloading plugin \"" << name << "\"\n";
+				if(Plugin::openModule(name)) {
+					success++;
+				} else {
+					failure++;
 				}
 			}
-			p = p->getParent();
-		} else {
-			return 0;
 		}
+	} else {
+		return 0;
 	}
 	return failure == 0 ? success : -failure;
 }
@@ -55,14 +51,13 @@ int Loader::load() throw()
 bool Loader::save() const throw()
 {
 	XmlTok root;
-	XmlTok* p = &root;
-	p = p->addChild("plugins");
+	XmlTok* p = Settings::instance()->getConfig("plugins");
+	p->clear();
 	for(Plugin::iterator i = Plugin::begin(); i != Plugin::end(); ++i) {
 		XmlTok* tmp = p->addChild("plugin");
 		tmp->setData((*i)->getId());
 	}
-	p = p->getParent();
-	return root.save(Settings::getFilename("plugins"));
+	return true;
 }
 
 void Loader::initVFS() throw()
@@ -86,7 +81,7 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 {
 	if(p == this) {
 		load();
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
@@ -95,7 +90,7 @@ void Loader::on(PluginStarted&, Plugin* p) throw()
 		}
 		Logs::stat << "success: Plugin Loader: Started.\n";
 	} else if(!virtualfs) {
-		virtualfs = (VirtualFs*)Plugin::data.getVoidPtr(idVirtualFs);
+		virtualfs = (VirtualFs*)Util::data.getVoidPtr(idVirtualFs);
 		if(virtualfs) {
 			Logs::stat << "success: Plugin Loader: VirtualFs interface found.\n";
 			initVFS();
@@ -115,6 +110,116 @@ void Loader::on(PluginStopped&, Plugin* p) throw()
 	}
 }
 
+void Loader::on(ChDir, const string&, Client* c) throw()
+{
+	c->doPrivateMessage("This is the plugins section. Load and unload plugins here.");
+}
+
+void Loader::on(Help, const string& cwd, Client* c) throw()
+{
+	assert(cwd == "/plugins/");
+	c->doPrivateMessage(
+			"The following commands are available to you:\r\n"
+			"load\t\t\tloads the plugins in the settings file (done automatically at startup)\r\n"
+			"save\t\t\tsaves the plugin load order to disk (must be done manually)\r\n"
+			"list\t\t\tshows the list of loaded plugins\r\n"
+			"insert <plugin> [insertbefore]\tloads the plugin in the specified position\r\n"
+			"remove <plugin>\t\tunloads the plugin\r\n"
+			"removeall\t\t\tunloads every plugin except this one and virtualfs\r\n"
+			"restart <plugin>\t\tunloads and loads the plugin (e.g. to reload settings)\r\n"
+	);
+}
+
+void Loader::on(Exec, const string& cwd, Client* c, const StringList& arg) throw()
+{
+	assert(arg.size() >= 1);
+	if(arg[0] == "load") {
+		int n = 0;
+		if((n = load()) >= 0) {
+			c->doPrivateMessage("Success: " + Util::toString(n) + " plugin(s) loaded from disk.");
+		} else {
+			c->doPrivateMessage("Failure: " + Util::toString(-n) + " plugin(s) failed to load.");
+		}
+	} else if(arg[0] == "save") {
+		if(save()) {
+			c->doPrivateMessage("Success: Plugin load order saved to disk.");
+		} else {
+			c->doPrivateMessage("Failure: Saving plugin load order to disk failed.");
+		}
+	} else if(arg[0] == "list") {
+		string ret = "Success: Plugins loader:\r\n";
+		for(Plugin::iterator i = Plugin::begin(); i != Plugin::end(); ++i) {
+			ret += (*i)->getId() + ((*i)->getId() == "virtualfs" ? " (cannot be unloaded)\r\n" : "\r\n");
+		}
+		c->doPrivateMessage(ret);
+	} else if(arg[0] == "insert") {
+		if(arg.size() == 3 && !hasModule(arg[1]) && Plugin::openModule(arg[1], arg[2])) {
+			c->doPrivateMessage("Success: Plugin loaded.");
+		} else if(arg.size() == 2 && !hasModule(arg[1]) && Plugin::openModule(arg[1])) {
+			c->doPrivateMessage("Success: Plugin loaded.");
+		} else if(arg.size() == 2 || arg.size() == 3) {
+			c->doPrivateMessage("Failure: Plugin failed to load.");
+		} else {
+			c->doPrivateMessage("Syntax: insert <plugin> [insertbefore]");
+		}
+	} else if(arg[0] == "restart") {
+		if(arg.size() == 2) {
+			Plugin::iterator j = Plugin::end();
+			string next;
+			for(Plugin::iterator i = Plugin::begin(); i != Plugin::end(); ++i) {
+				if((*i)->getId() == arg[1]) {
+					j = i++;
+					if(i != Plugin::end())
+						next = (*i)->getId();
+					break;
+				}
+			}
+			if(j != Plugin::end()) {
+				Plugin::removeModule(arg[1]);
+				if(Plugin::openModule(arg[1], next)) {
+					c->doPrivateMessage("Success: Plugin restarted.");
+				} else {
+					c->doPrivateMessage("Failure: Plugin failed to restart properly.");
+				}
+			} else {
+				c->doPrivateMessage("Failure: Plugin not loaded.");
+			}
+		} else {
+			c->doPrivateMessage("Syntax: restart <plugin>");
+		}
+	} else if(arg[0] == "removeall") {
+		string ret = "Success: Unloaded the following plugins:\r\n";
+		while(true) {
+			Plugin::iterator i; // Iterator is invalidated on removeModule
+			for(i = Plugin::begin(); i != Plugin::end(); ++i) {
+				// Don't unload ourself and dependencies
+				if(*i == this || (virtualfs && *i == virtualfs))
+					continue;
+				ret += (*i)->getId() + "\r\n";
+				Plugin::removeModule((*i)->getId());
+				break;
+			}
+			if(i == Plugin::end())
+				break;
+		}
+		c->doPrivateMessage(ret);
+	} else if(arg[0] == "remove") {
+		string ret = "Success: Unloaded the following plugins:\r\n";
+		if(arg.size() != 1) {
+			for(unsigned i = 1; i < arg.size(); ++i) {
+				// can't remove virtualfs, we're being called by it
+				if(arg[i] != "virtualfs" && Plugin::removeModule(arg[i])) {
+					ret += arg[i] + "\r\n";
+				}
+			}
+			c->doPrivateMessage(ret);
+		} else {
+			c->doPrivateMessage("Syntax: remove <plugin1> ... <pluginN>");
+		}
+	}
+}
+
+/*
 void Loader::on(PluginMessage&, Plugin* p, void* d) throw()
 {
 	if(virtualfs && p == virtualfs) {
@@ -223,5 +328,5 @@ void Loader::on(PluginMessage&, Plugin* p, void* d) throw()
 			}
 		}
 	}
-}
+}*/
 

@@ -1,0 +1,11 @@
+.TH QHUB 1 2006-06-11 DDC Qhub Distributed ADC Hub Documentation
+.SH NAME
+qhub \- distributed ADC hub that aims to scale well above all
+.SH SYNOPSIS
+qhub [options]
+.SH DESCRIPTION
+Qhub is hub software for the up-and-coming ADC protocol with the unique characteristic that it is decentralized.  Much of the default output is solely for debugging purposes.  The network layout used is the same as that of irc: a branching tree with no cycles.
+.SH OPTIONS
+The best way to know the current options is to run `qhub --help' -- this manpage will probably become outdated very quickly.
+.SH SETTINGS
+Qhub stores all of its settings in qhub.xml, located in whatever configuration dir was set at compile time (/usr/local/etc by default).  All settings are encased within the <qhub> tag, and each component has its own subsection.  All elements needed for basic connectivity are in sections <__hub> and <__connections>; as with C identifiers, tags beginning with two underscores are reserved.  Plugins may also store their settings in this file, or use something totally different such as an SQL database.
