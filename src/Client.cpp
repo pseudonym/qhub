@@ -10,6 +10,7 @@
 #include "Logs.h"
 #include "ClientManager.h"
 #include "ServerManager.h"
+#include "PluginManager.h"
 
 using namespace std;
 using namespace qhub;
@@ -42,7 +43,7 @@ void Client::login() throw()
 
 	state = NORMAL;
 	Plugin::UserConnected action;
-	Plugin::fire(action, this);
+	PluginManager::instance()->fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
 
@@ -68,7 +69,7 @@ void Client::logout() throw()
 	ClientManager::instance()->removeClient(getSid());
 	added = false;
 	Plugin::UserDisconnected action;
-	Plugin::fire(action, this);
+	PluginManager::instance()->fire(action, this);
 }
 
 Command const& Client::getAdcInf() throw()
@@ -146,7 +147,7 @@ void Client::onLine(Command& cmd) throw(command_error)
 	// Plugin fire ClientLine
 	{
 		Plugin::ClientLine action;
-		Plugin::fire(action, this, cmd);
+		PluginManager::instance()->fire(action, this, cmd);
 		if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 			return;
 	}
@@ -210,7 +211,7 @@ void Client::onConnected() throw()
 	tv.tv_usec = 0;
 	getSocket()->enableMe(EventHandler::ev_none, &tv);
 	Plugin::ClientConnected action;
-	Plugin::fire(action, this);
+	PluginManager::instance()->fire(action, this);
 }
 
 void Client::onDisconnected(string const& clue) throw()
@@ -230,7 +231,7 @@ void Client::onDisconnected(string const& clue) throw()
 					<< ADC::fromSid(getSid()) << CmdParam("MS", clue));
 	}
 	Plugin::ClientDisconnected action;
-	Plugin::fire(action, this);
+	PluginManager::instance()->fire(action, this);
 	delete this;	// hope this doesn't cause segfaults :)
 }
 
@@ -323,7 +324,7 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 
 	// Broadcast
 	Plugin::ClientLogin action;
-	Plugin::fire(action, this);
+	PluginManager::instance()->fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED))
 		return;
 
@@ -338,7 +339,7 @@ void Client::handleInfo(Command& cmd) throw()
 	UserInfo newUserInfo(cmd);
 
 	Plugin::ClientInfo action;
-	Plugin::fire(action, this, newUserInfo);
+	PluginManager::instance()->fire(action, this, newUserInfo);
 	if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 		return;
 
@@ -365,7 +366,7 @@ void Client::handleMessage(Command& cmd) throw()
 {
 	if(cmd.getAction() == 'D' && cmd.getDest() == Hub::instance()->getSid()) {
 		Plugin::UserCommand action;
-		Plugin::fire(action, this, cmd[0]);
+		PluginManager::instance()->fire(action, this, cmd[0]);
 		if(action.isSet(Plugin::DISCONNECTED))
 			return;
 		if(!action.isSet(Plugin::STOPPED))
@@ -373,7 +374,7 @@ void Client::handleMessage(Command& cmd) throw()
 	} else {
 		if(cmd.find("PM") == cmd.end()) {
 			Plugin::UserMessage action;
-			Plugin::fire(action, this, cmd, cmd[0]);
+			PluginManager::instance()->fire(action, this, cmd, cmd[0]);
 			if(action.isSet(Plugin::DISCONNECTED))
 				return;
 			if(!action.isSet(Plugin::STOPPED))
@@ -381,7 +382,7 @@ void Client::handleMessage(Command& cmd) throw()
 		} else {
 			Plugin::UserPrivateMessage action;
 			sid_type sid = ADC::toSid(cmd.find("PM")->substr(2));
-			Plugin::fire(action, this, cmd, cmd[0], sid);
+			PluginManager::instance()->fire(action, this, cmd, cmd[0], sid);
 			if(action.isSet(Plugin::DISCONNECTED))
 				return;
 			if(!action.isSet(Plugin::STOPPED))
@@ -436,7 +437,7 @@ void Client::handleSupports(Command& cmd) throw(command_error)
 	}*/
 	send(Command('I', Command::SUP) << CmdParam("AD", "BASE"));
 	// use file descriptor for ID... just make sure we haven't overflowed
-	if(getSocket()->getFd() != (ServerManager::instance()->getClientSidMask() & getSocket()->getFd()))
+	if((unsigned)getSocket()->getFd() != (ServerManager::instance()->getClientSidMask() & getSocket()->getFd()))
 		throw command_error("hub is full", 11);
 	this->sid = (Hub::instance()->getSid() & ServerManager::instance()->getHubSidMask()) | getSocket()->getFd();
 	send(Command('I', Command::SID) << ADC::fromSid(this->sid));

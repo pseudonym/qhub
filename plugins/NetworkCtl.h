@@ -16,7 +16,7 @@ class NetworkCtl : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 	
-	NetworkCtl() throw() : virtualfs(NULL) {};
+	NetworkCtl() throw() : Plugin("networkctl"), virtualfs(NULL) {};
 	virtual ~NetworkCtl() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();

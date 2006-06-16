@@ -6,6 +6,7 @@
 #include "XmlTok.h"
 #include "Logs.h"
 #include "Settings.h"
+#include "PluginManager.h"
 
 using namespace qhub;
 
@@ -170,74 +171,6 @@ void FsUtil::on(Exec, const string& cwd, Client* c, const StringList& arg) throw
 	}
 }
 
-/*
-void FsUtil::on(PluginMessage&, Plugin* p, void* d) throw()
-{
-	if(virtualfs && p == virtualfs) {
-		VirtualFs::Message* m = (VirtualFs::Message*)d;
-		assert(m);
-		if(m->type == VirtualFs::Message::CHDIR) {
-			m->reply("This is the file system utilities section.");
-		} else if(m->type == VirtualFs::Message::HELP) {
-			if(m->cwd == "/fsutil/") {
-				m->reply(
-				    "The following commands are available to you:\n"
-				    "load\t\t\tloads settings\n"
-				    "save\t\t\tsaves settings\n"
-				    "alias [alias] [command]\tlist/add aliases\n"
-				    "unalias <alias>\t\tremoves an alias"
-				);
-			}
-		} else if(m->type == VirtualFs::Message::EXEC) {
-			assert(m->arg.size() >= 1);
-			if(m->arg[0] == "load") {
-				if(load()) {
-					m->reply("Success: FsUtil settings reloaded.");
-				} else {
-					m->reply("Failure: Failed to reload FsUtil settings file.");
-				}
-			} else if(m->arg[0] == "save") {
-				if(save()) {
-					m->reply("Success: FsUtil settings file saved.");
-				} else {
-					m->reply("Failure: Failed to save FsUtil settings file.");
-				}
-			} else if(m->arg[0] == "alias") {
-				if(m->arg.size() == 1) {
-					string tmp = "Success: aliases, prefix = \"" + aliasPrefix + "\":\r\n";
-					for(Aliases::const_iterator i = aliases.begin(); i != aliases.end(); ++i) {
-						tmp += i->first + " = " + i->second + "\r\n";
-					}
-					m->reply(tmp);
-				} else if(m->arg.size() == 2) {
-					Aliases::const_iterator i = aliases.find(m->arg[1]);
-					if(i != aliases.end())
-						m->reply("Success: " + i->first + " = " + i->second);
-					else
-						m->reply("Failed: " + m->arg[1] + " undefined");
-				} else if(m->arg.size() == 3) {
-					aliases[m->arg[1]] = m->arg[2];
-					m->reply("Success: alias added/modified");
-				} else {
-					m->reply("Syntax: alias [alias] [command]");
-				}
-			} else if(m->arg[0] == "unalias") {
-				if(m->arg.size() == 2) {
-					Aliases::iterator i = aliases.find(m->arg[1]);
-					if(i != aliases.end()) {
-						aliases.erase(i);
-						m->reply("Success: alias removed");
-					} else {
-						m->reply("Failed: no such alias defined");
-					}
-				} else {
-					m->reply("Syntax: del <nick>");
-				}
-			}
-		}
-	}
-}*/
-
 void FsUtil::on(UserCommand& a, Client* client, string& msg) throw()
 {
 	if(msg.compare(0, aliasPrefix.length(), aliasPrefix) == 0) {
@@ -262,7 +195,7 @@ void FsUtil::on(UserMessage& a, Client* c, Command&, string& msg) throw()
 		if(j != aliases.end()) {
 			msg.replace(0, i, j->second);
 			Plugin::UserCommand action;
-			Plugin::fire(action, c, msg);
+			PluginManager::instance()->fire(action, c, msg);
 			a.setState(Plugin::STOP);
 		}
 	}
@@ -278,7 +211,7 @@ void FsUtil::on(UserPrivateMessage& a, Client* c, Command&, string& msg, sid_typ
 		if(j != aliases.end()) {
 			msg.replace(0, i, j->second);
 			Plugin::UserCommand action;
-			Plugin::fire(action, c, msg);
+			PluginManager::instance()->fire(action, c, msg);
 			a.setState(Plugin::STOP);
 		}
 	}

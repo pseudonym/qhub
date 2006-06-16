@@ -22,6 +22,7 @@
 #define QHUB_ENCODER_H
 
 #include <string>
+#include <cassert>
 
 namespace qhub {
 

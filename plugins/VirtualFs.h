@@ -30,7 +30,7 @@ public:
 	static UserData::key_type idVirtualFs;	// voidPtr
 	static UserData::key_type idVirtualPath;	// string
 
-	VirtualFs() throw() {};
+	VirtualFs() throw() : Plugin("virtualfs") {};
 	virtual ~VirtualFs() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();

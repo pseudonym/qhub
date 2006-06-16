@@ -16,7 +16,7 @@ class Loader : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// voidPtr (Plugin*)
 	
-	Loader() throw() {};
+	Loader() throw() : Plugin("loader") {}
 	virtual ~Loader() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();

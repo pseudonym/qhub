@@ -1,26 +1,14 @@
-// vim:ts=4:sw=4:noet
-#include "Plugin.h"
-#include "Util.h"
-#include "Logs.h"
 #include <dlfcn.h>
-#include "error.h"
 
-using namespace qhub;
+#include "PluginManager.h"
+#include "Logs.h"
+
 using namespace std;
+using namespace qhub;
 
-Plugin::Plugins Plugin::plugins;
-const string Plugin::PLUGIN_EXTENSION = ".so";
+const string PluginManager::PLUGIN_EXTENSION = ".so";
 
-void Plugin::init() throw()
-{
-}
-
-void Plugin::deinit() throw()
-{
-	removeAllModules();
-}
-
-bool Plugin::openModule(string const& name, string const& insertBefore) throw()
+bool PluginManager::open(string const& name, string const& insertBefore) throw()
 {
 	string filename = "qhub-" + name + PLUGIN_EXTENSION;
 	void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
@@ -32,9 +20,8 @@ bool Plugin::openModule(string const& name, string const& insertBefore) throw()
 			get_plugin_t getPlugin = (get_plugin_t)ptr;
 			Plugin* p = (Plugin*)getPlugin();
 			if(p) {
-				p->name = name;
 				p->handle = h;
-				PluginStarted action;
+				Plugin::PluginStarted action;
 				p->on(action, p); // init self before others
 				fire(action, p);
 				if(insertBefore.empty()) {
@@ -59,12 +46,12 @@ bool Plugin::openModule(string const& name, string const& insertBefore) throw()
 	return false;
 }
 
-bool Plugin::removeModule(string const& name) throw()
+bool PluginManager::remove(string const& name) throw()
 {
 	for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i){
-		if((*i)->name == name) {
+		if((*i)->getId() == name) {
 			// deinit self before others
-			PluginStopped action;
+			Plugin::PluginStopped action;
 			(*i)->on(action, *i);
 			void* h = (*i)->handle;
 			delete *i;
@@ -79,7 +66,7 @@ bool Plugin::removeModule(string const& name) throw()
 	return false;
 }
 
-void Plugin::removeAllModules() throw()
+void PluginManager::removeAll() throw()
 {
 	while(!plugins.empty()) {
 		// Call in reverse order (ugly hack to get iterator to work with erase)
@@ -87,7 +74,7 @@ void Plugin::removeAllModules() throw()
 		for(unsigned j = 1; j < plugins.size(); ++j)
 			++i;
 		// Fire in reverse order
-		PluginStopped action;
+		Plugin::PluginStopped action;
 		for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
 			(*j)->on(action, *i);
 		void* h = (*i)->handle;
@@ -97,7 +84,7 @@ void Plugin::removeAllModules() throw()
 	}
 }
 
-bool Plugin::hasModule(string const& name) throw()
+bool PluginManager::has(string const& name) throw()
 {
 	for(iterator i = begin(); i != end(); ++i) {
 		if((*i)->getId() == name)

@@ -16,7 +16,7 @@ class Bans : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 	
-	Bans() throw() : virtualfs(NULL) {};
+	Bans() throw() : Plugin("bans"), virtualfs(NULL) {};
 	virtual ~Bans() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();

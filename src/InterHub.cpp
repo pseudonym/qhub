@@ -3,6 +3,7 @@
 #include "Hub.h"
 #include "ClientManager.h"
 #include "ServerManager.h"
+#include "PluginManager.h"
 #include "Encoder.h"
 #include "TigerHash.h"
 #include "UserInfo.h"
@@ -58,14 +59,14 @@ void InterHub::onConnected() throw()
 	tv.tv_usec = 0;
 	getSocket()->enableMe(EventHandler::ev_none, &tv);
 	Plugin::InterConnected action;
-	Plugin::fire(action, this);
+	PluginManager::instance()->fire(action, this);
 }
 
 void InterHub::onDisconnected(const string& clue) throw()
 {
 	ServerManager::instance()->deactivate(this);
 	Plugin::InterDisconnected action;
-	Plugin::fire(action, this);
+	PluginManager::instance()->fire(action, this);
 	delete this;	// hope this doesn't cause segfaults :)
 }
 
@@ -92,7 +93,7 @@ void InterHub::onLine(Command& cmd) throw(command_error)
 
 	{
 		Plugin::InterLine action;
-		Plugin::fire(action, this, cmd);
+		PluginManager::instance()->fire(action, this, cmd);
 		if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 			return;
 	}

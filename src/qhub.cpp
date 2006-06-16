@@ -8,6 +8,7 @@
 #include "ClientManager.h"
 #include "ServerManager.h"
 #include "ConnectionManager.h"
+#include "PluginManager.h"
 #include "Settings.h"
 #include "Logs.h"
 #include "Command.h"
@@ -18,8 +19,6 @@ using namespace qhub;
 
 void end(int)
 {
-	Plugin::deinit();
-	//Hub::killAll();
 	Settings::instance()->save();
 	exit(EXIT_SUCCESS);
 }
@@ -51,8 +50,7 @@ int main(int argc, char **argv)
 	ServerManager::instance();
 
 	//try loading
-	Plugin::init();
-	Plugin::openModule("loader");
+	PluginManager::instance()->open("loader");
 
 	//Init random number generator
 	srand(time(NULL));

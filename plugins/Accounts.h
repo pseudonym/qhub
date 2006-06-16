@@ -17,7 +17,7 @@ public:
 	static UserData::key_type idUserLevel;	// int
 	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 	
-	Accounts() throw() : virtualfs(NULL) {};
+	Accounts() throw() : Plugin("accounts"), virtualfs(NULL) {};
 	virtual ~Accounts() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();

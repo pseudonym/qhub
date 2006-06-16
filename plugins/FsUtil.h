@@ -16,7 +16,7 @@ class FsUtil : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// void* (Plugin*)
 
-	FsUtil() throw() : virtualfs(NULL) {};
+	FsUtil() throw() : Plugin("fsutil"), virtualfs(NULL) {};
 	virtual ~FsUtil() throw() {};
 
 	virtual void on(PluginStarted&, Plugin*) throw();

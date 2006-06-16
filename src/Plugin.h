@@ -4,8 +4,8 @@
 
 #include <string>
 #include <vector>
+#include <cassert>
 
-#include "Util.h"
 #include "id.h"
 
 namespace qhub {
@@ -16,15 +16,14 @@ class InterHub;
 class Command;
 
 class Plugin {
-public:
-	static const std::string PLUGIN_EXTENSION;
-	
 	/*
 	 * Some stuff
 	 */
-	Plugin() throw() {};
-	virtual ~Plugin() throw() {};
-	std::string const& getId() const throw() { return name; };
+protected:
+	explicit Plugin(const char* n) throw() : name(n) {}
+public:
+	virtual ~Plugin() throw() {}
+	std::string const& getId() const throw() { return name; }
 
 	/*
 	 * Plugin calls
@@ -117,44 +116,6 @@ public:
 	typedef ActionType<INTER_LINE, HANDLE | DISCONNECT | MODIFY | STOP>
 			InterLine;
 
-	
-	template<typename T0>
-	static void fire(T0& type) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
-			(*i)->on(type);
-		}
-	}
-	template<typename T0, class T1>
-	static void fire(T0& type, T1& c1) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
-			(*i)->on(type, c1);
-		}
-	}
-	template<typename T0, class T1, class T2>
-	static void fire(T0& type, T1& c1, T2& c2) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
-			(*i)->on(type, c1, c2);
-		}
-	}
-	template<typename T0, class T1, class T2, class T3>
-	static void fire(T0& type, T1& c1, T2& c2, T3& c3) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
-			(*i)->on(type, c1, c2, c3);
-		}
-	}
-	template<typename T0, class T1, class T2, class T3, class T4>
-	static void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
-			(*i)->on(type, c1, c2, c3, c4);
-		}
-	}
-	template<typename T0, class T1, class T2, class T3, class T4, class T5>
-	static void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4, T5& c5) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
-			(*i)->on(type, c1, c2, c3, c4, c5);
-		}
-	}
-
 	// Called after construction
 	// parm: Plugin* = the plugin
 	virtual void on(PluginStarted&, Plugin*) throw() {};
@@ -210,28 +171,9 @@ public:
 	// parm: Command& = command that was sent
 	virtual void on(InterLine&, InterHub*, Command&) throw() {};
 
-	/*
-	 * Static methods
-	 */
-	static void init() throw();
-	static void deinit() throw();
-	static bool openModule(std::string const& name, std::string const& insertBefore = Util::emptyString) throw();
-	static bool removeModule(std::string const& name) throw();
-	static void removeAllModules() throw();
-	static bool hasModule(std::string const& name) throw();
-
-	/*
-	 * Iterators
-	 */
-	typedef std::vector<Plugin*>::iterator iterator;
-	static iterator begin() throw() { return plugins.begin(); };
-	static iterator end() throw() { return plugins.end(); };
-
 private:
-	typedef std::vector<Plugin*> Plugins;
-	static Plugins plugins;
-	typedef void* (*get_plugin_t)();
-	std::string name;
+	friend class PluginManager;
+	const std::string name;
 	void* handle;
 };
 
