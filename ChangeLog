@@ -28,6 +28,8 @@ generally pointless
 * command line parsing uses Boost.Program Options
 * added initial setup on first start, to get hub name, port, etc.
 * upgraded to ADC 0.10
+* upgraded to ADC 0.11 (I think, it was just the PAS change, right?)
+* VirtualFs works again, oops!
 
 - 0.9 -
 * Pseudo is now in charge :)

@@ -15,11 +15,11 @@ public:
 	/*
 	 * Getters
 	 */
-	XmlTok(std::string const& name = "", XmlTok* parent = NULL) throw();
+	XmlTok(std::string const& name = Util::emptyString, XmlTok* parent = NULL) throw();
 	virtual ~XmlTok() throw();
-	bool findChild(std::string const& name) throw();
-	XmlTok* getNextChild() throw();
-	XmlTok* getParent() throw();
+	bool findChild(std::string const& name) const throw();
+	XmlTok* getNextChild() const throw();
+	XmlTok* getParent() const throw();
 	std::string const& getAttr(std::string const& name) const throw();
 	// NOTE: see setData
 	std::string toString(int indent = 0) const throw();
@@ -51,7 +51,7 @@ private:
 	std::string name;
 	typedef std::vector<XmlTok*> Children;
 	Children children;
-	Children::iterator found;
+	mutable Children::const_iterator found;
 	StringMap attributes;
 };
 

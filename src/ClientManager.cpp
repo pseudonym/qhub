@@ -55,8 +55,9 @@ void ClientManager::getAllInHub(sid_type hsid, std::vector<sid_type>& ret) const
 {
 	// should not be looking for local users
 	ret.clear();
+	sid_type mask = ServerManager::instance()->getHubSidMask();
 	for(RemoteUsers::const_iterator i = remoteUsers.begin(); i != remoteUsers.end(); ++i)
-		if((i->first & HUB_SID_MASK) == (hsid & HUB_SID_MASK))
+		if((i->first & mask) == (hsid & mask))
 			ret.push_back(i->first);
 }
 

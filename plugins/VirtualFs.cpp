@@ -104,7 +104,7 @@ bool VirtualFs::rmnod(string const& path) throw()
 	return root->rmNode(path);
 }
 
-void VirtualFs::on(UserCommand& a, Client* client, string& msg) throw()
+void VirtualFs::on(UserCommand& a, Client* client, const string& msg) throw()
 {
 	UserData* data = client->getUserData();
 	StringList sl = Util::lazyQuotedStringTokenize(msg);

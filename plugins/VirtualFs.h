@@ -35,7 +35,7 @@ public:
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-	virtual void on(UserCommand&, Client*, std::string&) throw();
+	virtual void on(UserCommand&, Client*, const std::string&) throw();
 
 	virtual void on(Help, const std::string&, Client*) throw();
 

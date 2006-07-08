@@ -107,7 +107,8 @@ void EventHandler::init() throw()
 {
 	event_init();	
 	
-	Logs::stat << "Started Libevent using method " << event_get_method() << endl;
+	Logs::stat << "Started Libevent/" << event_get_version() << " using method "
+			<< event_get_method() << endl;
 }
 
 void EventHandler::mainLoop() throw()

@@ -9,9 +9,7 @@ typedef uint32_t sid_type;
 typedef std::string cid_type;
 typedef std::string pid_type;
 
-#define INVALID_SID  (sid_type(0))
-#define HUB_SID_END  (sid_type(0x4141))
-#define HUB_SID_MASK (sid_type(0xFFFF0000))
+#define INVALID_SID  (sid_type(-1))
 
 } // namespace qhub
 

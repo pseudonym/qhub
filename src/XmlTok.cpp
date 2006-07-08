@@ -64,7 +64,7 @@ XmlTok::~XmlTok() throw()
 		delete *i;
 }
 
-bool XmlTok::findChild(string const& n) throw()
+bool XmlTok::findChild(string const& n) const throw()
 {
 	for(found = children.begin(); found != children.end(); ++found) {
 		if((*found)->name == n)
@@ -73,7 +73,7 @@ bool XmlTok::findChild(string const& n) throw()
 	return false;
 }
 
-XmlTok* XmlTok::getNextChild() throw()
+XmlTok* XmlTok::getNextChild() const throw()
 {
 	if(found == children.end())
 		return NULL;
@@ -86,7 +86,7 @@ XmlTok* XmlTok::getNextChild() throw()
 	return p;
 }
 
-XmlTok* XmlTok::getParent() throw()
+XmlTok* XmlTok::getParent() const throw()
 {
 	return parent;
 }

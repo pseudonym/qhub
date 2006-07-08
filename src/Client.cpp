@@ -44,12 +44,15 @@ void Client::login() throw()
 	state = NORMAL;
 	Plugin::UserConnected action;
 	PluginManager::instance()->fire(action, this);
-	if(action.isSet(Plugin::DISCONNECTED))
+	if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::HANDLED))
 		return;
 
 	// send INF of hub bot to ops
 	if(userInfo->getOp())
-		send(Command('B', Command::INF, Hub::instance()->getSid())
+		// we need to make sure we don't send the reserved AAAA sid,
+		// so we add 1.  This won't conflict, as the client file
+		// descriptors start at 4 at the lowest. (0-2 are std, 3=listen)
+		send(Command('B', Command::INF, Hub::instance()->getBotSid())
 				<< "NIqhub" << "BO1" << "DEBOT -- pm to control hub"
 				<< "VE" PACKAGE_NAME "/" PACKAGE_VERSION
 				<< "HO1" << "OP1"
@@ -126,8 +129,8 @@ void Client::doHubMessage(string const& msg) throw()
 
 void Client::doPrivateMessage(string const& msg) throw()
 {
-	send(Command('I', Command::MSG) << msg
-			<< CmdParam("PM", ADC::fromSid(Hub::instance()->getSid())));
+	send(Command(Command::MSG, Hub::instance()->getBotSid(), getSid()) << msg
+			<< CmdParam("PM", ADC::fromSid(Hub::instance()->getBotSid())));
 }
 
 void Client::doDisconnectBy(sid_type kicker, string const& msg) throw()
@@ -364,30 +367,28 @@ void Client::handleInfo(Command& cmd) throw()
 
 void Client::handleMessage(Command& cmd) throw()
 {
-	if(cmd.getAction() == 'D' && cmd.getDest() == Hub::instance()->getSid()) {
+	if(cmd.getAction() == 'D' && cmd.getDest() == Hub::instance()->getBotSid()) {
 		Plugin::UserCommand action;
 		PluginManager::instance()->fire(action, this, cmd[0]);
 		if(action.isSet(Plugin::DISCONNECTED))
 			return;
 		if(!action.isSet(Plugin::STOPPED))
 			send(cmd);
+	} else if(cmd.find("PM") == cmd.end()) {
+		Plugin::UserMessage action;
+		PluginManager::instance()->fire(action, this, cmd, cmd[0]);
+		if(action.isSet(Plugin::DISCONNECTED))
+			return;
+		if(!action.isSet(Plugin::STOPPED))
+			dispatch(cmd);
 	} else {
-		if(cmd.find("PM") == cmd.end()) {
-			Plugin::UserMessage action;
-			PluginManager::instance()->fire(action, this, cmd, cmd[0]);
-			if(action.isSet(Plugin::DISCONNECTED))
-				return;
-			if(!action.isSet(Plugin::STOPPED))
-				dispatch(cmd);
-		} else {
-			Plugin::UserPrivateMessage action;
-			sid_type sid = ADC::toSid(cmd.find("PM")->substr(2));
-			PluginManager::instance()->fire(action, this, cmd, cmd[0], sid);
-			if(action.isSet(Plugin::DISCONNECTED))
-				return;
-			if(!action.isSet(Plugin::STOPPED))
-				dispatch(cmd);
-		}
+		Plugin::UserPrivateMessage action;
+		sid_type sid = ADC::toSid(cmd.find("PM")->substr(2));
+		PluginManager::instance()->fire(action, this, cmd, cmd[0], sid);
+		if(action.isSet(Plugin::DISCONNECTED))
+			return;
+		if(!action.isSet(Plugin::STOPPED))
+			dispatch(cmd);
 	}
 }
 
@@ -405,7 +406,9 @@ void Client::handlePassword(Command& cmd) throw()
 {
 	// Make hash
 	TigerHash h;
-	h.update(userInfo->get("ID").data(), userInfo->get("ID").length());
+	uint8_t buf[TigerHash::HASH_SIZE];
+	Encoder::fromBase32(userInfo->get("ID").data(), buf, TigerHash::HASH_SIZE);
+	h.update(buf, TigerHash::HASH_SIZE);
 	h.update(password.data(), password.length());
 	h.update(&salt.front(), salt.size());
 	h.finalize();

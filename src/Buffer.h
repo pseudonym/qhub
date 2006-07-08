@@ -18,19 +18,20 @@ public:
 	explicit Buffer(std::string const& b, int p=0) : buf(b.begin(), b.end()), prio(p) {}
 	explicit Buffer(Command const& c, int p=0) : buf(c.toString().begin(), c.toString().end()), prio(p) {}
 	explicit Buffer(int p) : prio(p) {}
+	virtual ~Buffer() {}
 
 	bool operator<(const Buffer& b) const { return prio < b.prio; }
 
-	void append(const Command& cmd)
+	virtual void append(const Command& cmd)
 	{
 		buf.insert(buf.end(), cmd.toString().begin(), cmd.toString().end());
 	}
 
-	const uint8_t* data() const { return &buf[0]; }
-	std::vector<uint8_t>::size_type size() const { return buf.size(); }
+	virtual const uint8_t* data() const { return &buf[0]; }
+	virtual std::vector<uint8_t>::size_type size() const { return buf.size(); }
 
 	typedef boost::shared_ptr<Buffer> Ptr;
-private:
+protected:
 	std::vector<uint8_t> buf;
 	int prio;
 };

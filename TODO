@@ -7,6 +7,9 @@ Low-level network handling
 	Rate-limiting (allow bursting or not? its DDOSable.)
 	Add customizable flood protection in ADCSocket
 
+add signal handlers for libevent so we can be usable by start-stop-daemon and other things
+		(like SIGHUP to reload config)
+
 Protocol stuff
 	Dont allow nick-collisions (made much more difficult by utf-8)
 	Send delta-INFs
@@ -15,6 +18,8 @@ More work on multihub support (much has been accomplished however)
 	automatically try reconnecting every few minutes if an interhub connection fails
 
 re-work UserData class, possibly using just a hash_map<string,boost::any>
+	boost::any_cast causes problems with plugins; the underlying dynamic_cast requires RTTI,
+		not present if plugin not yet loaded
 
 Polish plugins
 	add operator functions plugin for bans, etc

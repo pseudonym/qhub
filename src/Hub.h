@@ -12,6 +12,8 @@ namespace qhub {
 class Hub : public Singleton<Hub> {
 public:
 	sid_type getSid() const { return sid; }
+	// safe to add one, because file descriptors below ~3 will always be used
+	sid_type getBotSid() const { return getSid() | 1; }
 
 	void setName(const std::string& n) { name = n; }
 	const std::string& getName() const { return name; }
