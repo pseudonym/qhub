@@ -28,37 +28,43 @@ public:
 
 	template<typename T0>
 	void fire(T0& type) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+		Plugins tmp = plugins;
+		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
 			(*i)->on(type);
 		}
 	}
 	template<typename T0, class T1>
 	void fire(T0& type, T1& c1) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+		Plugins tmp = plugins;
+		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
 			(*i)->on(type, c1);
 		}
 	}
 	template<typename T0, class T1, class T2>
 	void fire(T0& type, T1& c1, T2& c2) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+		Plugins tmp = plugins;
+		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
 			(*i)->on(type, c1, c2);
 		}
 	}
 	template<typename T0, class T1, class T2, class T3>
 	void fire(T0& type, T1& c1, T2& c2, T3& c3) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+		Plugins tmp = plugins;
+		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
 			(*i)->on(type, c1, c2, c3);
 		}
 	}
 	template<typename T0, class T1, class T2, class T3, class T4>
 	void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+		Plugins tmp = plugins;
+		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
 			(*i)->on(type, c1, c2, c3, c4);
 		}
 	}
 	template<typename T0, class T1, class T2, class T3, class T4, class T5>
 	void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4, T5& c5) throw() {
-		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
+		Plugins tmp = plugins;
+		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
 			(*i)->on(type, c1, c2, c3, c4, c5);
 		}
 	}
