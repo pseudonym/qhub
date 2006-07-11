@@ -5,7 +5,7 @@
 #include "Plugin.h"
 #include "Util.h"
 
-#include <vector>
+#include <list>
 #include <string>
 
 namespace qhub {
@@ -22,55 +22,49 @@ public:
 	/*
 	 * Iterators
 	 */
-	typedef std::vector<Plugin*>::iterator iterator;
+	typedef std::list<Plugin*> Plugins;
+	typedef Plugins::iterator iterator;
 	iterator begin() throw() { return plugins.begin(); };
 	iterator end() throw() { return plugins.end(); };
 
 	template<typename T0>
 	void fire(T0& type) throw() {
-		Plugins tmp = plugins;
-		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type);
 		}
 	}
 	template<typename T0, class T1>
 	void fire(T0& type, T1& c1) throw() {
-		Plugins tmp = plugins;
-		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1);
 		}
 	}
 	template<typename T0, class T1, class T2>
 	void fire(T0& type, T1& c1, T2& c2) throw() {
-		Plugins tmp = plugins;
-		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1, c2);
 		}
 	}
 	template<typename T0, class T1, class T2, class T3>
 	void fire(T0& type, T1& c1, T2& c2, T3& c3) throw() {
-		Plugins tmp = plugins;
-		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1, c2, c3);
 		}
 	}
 	template<typename T0, class T1, class T2, class T3, class T4>
 	void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4) throw() {
-		Plugins tmp = plugins;
-		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1, c2, c3, c4);
 		}
 	}
 	template<typename T0, class T1, class T2, class T3, class T4, class T5>
 	void fire(T0& type, T1& c1, T2& c2, T3& c3, T4& c4, T5& c5) throw() {
-		Plugins tmp = plugins;
-		for(Plugins::iterator i = tmp.begin(); i != tmp.end(); ++i) {
+		for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i) {
 			(*i)->on(type, c1, c2, c3, c4, c5);
 		}
 	}
 
 private:
-	typedef std::vector<Plugin*> Plugins;
 	Plugins plugins;
 	typedef void* (*get_plugin_t)();
 };

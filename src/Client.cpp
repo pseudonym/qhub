@@ -372,8 +372,7 @@ void Client::handleMessage(Command& cmd) throw()
 		PluginManager::instance()->fire(action, this, cmd[0]);
 		if(action.isSet(Plugin::DISCONNECTED))
 			return;
-		if(!action.isSet(Plugin::STOPPED))
-			send(cmd);
+		send(cmd);
 	} else if(cmd.find("PM") == cmd.end()) {
 		Plugin::UserMessage action;
 		PluginManager::instance()->fire(action, this, cmd, cmd[0]);

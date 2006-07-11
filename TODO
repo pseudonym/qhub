@@ -10,6 +10,11 @@ Low-level network handling
 add signal handlers for libevent so we can be usable by start-stop-daemon and other things
 		(like SIGHUP to reload config)
 
+DNS
+	remove ugly hacks, using a better ares interface
+	fix lookups so that ares_gethostbyname() isn't called in constructor: causes call of pure virtual
+			because vtbl isn't updated until constructor exits
+
 Protocol stuff
 	Dont allow nick-collisions (made much more difficult by utf-8)
 	Send delta-INFs

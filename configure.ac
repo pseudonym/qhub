@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([qhub], [0.10])
+AC_INIT([qhub], [0.10.1])
 AC_CONFIG_SRCDIR([src/qhub.cpp])
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
