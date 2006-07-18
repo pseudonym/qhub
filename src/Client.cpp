@@ -39,7 +39,11 @@ UserData* Client::getUserData() throw()
 void Client::login() throw()
 {
 	// Stop alarm. Else we'd get booted.
-	getSocket()->enableMe(EventHandler::ev_none, NULL);
+	// FIXME: see InterHub
+	int t = getSocket()->getEnabledFlags();
+	getSocket()->disableMe(EventHandler::READ);
+	getSocket()->disableMe(EventHandler::WRITE);
+	getSocket()->enableMe((EventHandler::type)t);
 
 	state = NORMAL;
 	Plugin::UserConnected action;
@@ -209,10 +213,11 @@ void Client::onLine(Command& cmd) throw(command_error)
 
 void Client::onConnected() throw()
 {
-	timeval tv;
-	tv.tv_sec = 15;
-	tv.tv_usec = 0;
-	getSocket()->enableMe(EventHandler::ev_none, &tv);
+	int t = getSocket()->getEnabledFlags();
+	getSocket()->disableMe(EventHandler::READ);
+	getSocket()->disableMe(EventHandler::WRITE);
+	getSocket()->enableMe((EventHandler::type)t, 15);
+
 	Plugin::ClientConnected action;
 	PluginManager::instance()->fire(action, this);
 }
@@ -372,7 +377,8 @@ void Client::handleMessage(Command& cmd) throw()
 		PluginManager::instance()->fire(action, this, cmd[0]);
 		if(action.isSet(Plugin::DISCONNECTED))
 			return;
-		send(cmd);
+		if(!action.isSet(Plugin::STOPPED))
+			send(cmd);
 	} else if(cmd.find("PM") == cmd.end()) {
 		Plugin::UserMessage action;
 		PluginManager::instance()->fire(action, this, cmd, cmd[0]);

@@ -1,3 +1,8 @@
+- 0.11 -
+* Fixed nasty add/remove plugin bug
+* rewrote EventHandler to use separate event structs for read/write
+* removed struct timeval from EventHandler::enableMe() interface
+
 - 0.10 -
 * various autoconf/automake fixes
 * moved a few files around
@@ -19,7 +24,7 @@ how well this works, though....
 anything...
 * a whole bunch of general code shuffling
 * added support for T and F types... by doing the same as P and B
-* removed string8 class, as it was causing compilter errors on gcc 4.0 and is
+* removed string8 class, as it was causing compiler errors on gcc 4.0 and is
 generally pointless
 * Buffer::writeBuffer renamed to Buffer::Ptr
 * UserData now just using std::string for keys

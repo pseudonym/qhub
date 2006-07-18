@@ -54,10 +54,12 @@ void InterHub::onLookup(const string& ip)
 
 void InterHub::onConnected() throw()
 {
-	timeval tv;
-	tv.tv_sec = 15;
-	tv.tv_usec = 0;
-	getSocket()->enableMe(EventHandler::ev_none, &tv);
+	// FIXME: ugly, should have general timer interface here
+	int t = getSocket()->getEnabledFlags();
+	getSocket()->disableMe(EventHandler::READ);
+	getSocket()->disableMe(EventHandler::WRITE);
+	getSocket()->enableMe((EventHandler::type)t, 15);
+
 	Plugin::InterConnected action;
 	PluginManager::instance()->fire(action, this);
 }
@@ -88,8 +90,11 @@ void InterHub::doWarning(const string& msg) throw()
 
 void InterHub::onLine(Command& cmd) throw(command_error)
 {
-	// get rid of timeout
-	getSocket()->enableMe(EventHandler::ev_none, NULL);
+	// get rid of timeout FIXME: see above
+	int t = getSocket()->getEnabledFlags();
+	getSocket()->disableMe(EventHandler::READ);
+	getSocket()->disableMe(EventHandler::WRITE);
+	getSocket()->enableMe((EventHandler::type)t);
 
 	{
 		Plugin::InterLine action;

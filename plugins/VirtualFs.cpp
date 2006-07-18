@@ -4,6 +4,8 @@
 #include "Client.h"
 #include "UserData.h"
 #include "Logs.h"
+#include "Hub.h"
+#include "ADC.h"
 
 #include "VirtualFsDir.h"
 
@@ -61,17 +63,6 @@ void VirtualFs::on(PluginStopped&, Plugin* p) throw()
 	}
 }
 
-/*void VirtualFs::on(PluginMessage&, Plugin* p, void* d) throw()
-{
-	if(p == this) {
-		Message* m = static_cast<Message*>(d);
-		assert(m);
-		if(m->cwd == "" && m->type == Message::HELP) {
-			m->reply("You are at the root of qhub::VirtualFs. Available commands: cd, help, ls, pwd");
-		}
-	}
-}*/
-
 void VirtualFs::on(Help, const string& cwd, Client* c) throw()
 {
 	assert(cwd.empty());
@@ -112,6 +103,9 @@ void VirtualFs::on(UserCommand& a, Client* client, const string& msg) throw()
 		return;
 
 	a.setState(Plugin::STOP);
+	//show what the user typed
+	client->send(Command(Command::MSG, client->getSid(), Hub::instance()->getBotSid())
+			<< msg << ("PM"+ADC::fromSid(client->getSid())));
 
 	string const& pwd = data->getString(idVirtualPath);
 	size_t siz = sl.size();

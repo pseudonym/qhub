@@ -69,10 +69,7 @@ bool DNSAdapter::doHack()
 		if(FD_ISSET(fd, &write_fds)){
 			flag |= ev_write;
 		}
-		timeval tmp;
-		tmp.tv_sec = 5;
-		tmp.tv_usec = 0;
-		enableMe((type)flag, &tmp);
+		enableMe((type)flag, 5);
 	}
 
 	return true;

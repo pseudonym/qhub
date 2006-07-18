@@ -18,9 +18,9 @@ public:
 	virtual bool onRead() throw() = 0;
 	virtual void onWrite() throw() = 0;
 
-	enum type { ev_none=0, ev_read=1, ev_write=2 };
+	enum type { ev_none=0, ev_read=1, ev_write=2, READ=ev_read, WRITE=ev_write };
 
-	void enableMe(type e, timeval* const timeval=0) throw();
+	void enableMe(type e, int secs = -1, int micros = 0) throw();
 	void disableMe(type e) throw();
 
 	int getFd() throw() { return fd; };
@@ -29,12 +29,14 @@ public:
 
 	static void mainLoop() throw();
 
-	struct ::event* getEventStruct() throw() { return ev; };
 	int getEnabledFlags() { return enabledFlags; };
 protected:
 	int fd;
 private:
-	struct ::event *ev;
+	void initEvents() throw();
+	bool inited;
+	struct event read_ev;
+	struct event write_ev;
 	int enabledFlags;
 };
 

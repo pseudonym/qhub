@@ -9,39 +9,54 @@
 using namespace std;
 using namespace qhub;
 
-EventHandler::EventHandler() : fd(-1), ev(NULL), enabledFlags(0)
+EventHandler::EventHandler() : fd(-1), inited(false), enabledFlags(0)
 {
 	
 }
 
 EventHandler::~EventHandler() throw()
 {
-	if(ev != NULL){
-		if(event_del(ev) == -1){
-			exit(2);	
-		}
-	}
-	delete ev;
+	disableMe(READ);
+	disableMe(WRITE);
 }
 
-void demux(int fd, short e, void* event)
+namespace { // don't want these polluting the global namespace
+
+void readCallback(int fd, short e, void* arg)
 {
-	EventHandler* eh = (EventHandler*) event;
+	EventHandler* eh = static_cast<EventHandler*>(arg);
 
-	assert(eh->getEnabledFlags() != 0 && "We are not supposed to be receiving events!");
+	assert((eh->getEnabledFlags() & EventHandler::READ) && "received read event when disabled");
 
-	bool result = true;
-	if(e & EV_TIMEOUT){
+	// if we timeout, we probably don't care about the read,
+	// so let it fire next time if we still want it...
+	if(e & EV_TIMEOUT)
 		eh->onTimeout();
-	}
-	if(e & EV_READ){
-		result = eh->onRead();
-	}
-	//we do not want to call this one if we are already deleted (delete this)
-	if(e & EV_WRITE && result){
-		eh->onWrite();
-	}
+	else
+		eh->onRead();
 }
+
+void writeCallback(int fd, short e, void* arg)
+{
+	EventHandler* eh = static_cast<EventHandler*>(arg);
+
+	assert((eh->getEnabledFlags() & EventHandler::WRITE) && "received write event when disabled");
+
+	// see above
+	if(e & EV_TIMEOUT)
+		eh->onTimeout();
+	else
+		eh->onWrite();
+}
+
+void genericCallback(int fd, short e, void* arg)
+{
+	assert(fd == -1 && e == EV_TIMEOUT);
+
+	
+}
+
+} //namespace
 
 void EventHandler::disableMe(type e) throw()
 {
@@ -52,56 +67,63 @@ void EventHandler::disableMe(type e) throw()
 	//We must delete the entire event, even if it still
 	//has flags we want to monitor, and the re-add it, 
 	//instead of just signalling the changes...
-	if(event_del(ev) == -1){
+	if((e & READ) && event_del(&read_ev) == -1) {
+		Logs::err << "EventHandler::disableMe: deleting fd " << getFd() << " for read failed\n";
 		exit(3);
 	}
-	if(enabledFlags == 0){
-		delete ev;
-		ev = NULL;
-	} else {
-		// we still want other events
-		int use_flags = EV_PERSIST;
-		if(enabledFlags & ev_read){
-			use_flags |= EV_READ;
-		}
-		if(enabledFlags & ev_write){
-			use_flags |= EV_WRITE;
-		}
-		event_set(ev, fd, use_flags, demux, this);
-		if(event_add(ev, NULL) == -1){
-			exit(4);
-		}
+	if((e & WRITE) && event_del(&write_ev) == -1) {
+		Logs::err << "EventHandler::disableMe: deleting fd " << getFd() << " for write failed\n";
+		exit(4);
 	}
 }
 
-void EventHandler::enableMe(type e, timeval* const timeout) throw()
+void EventHandler::enableMe(type e, int secs, int micros) throw()
 {
-	if(enabledFlags != 0){
-		if(event_del(ev) == -1){
-			exit(5);
-		}
-		assert(ev != NULL && "We are enabled yet have no event-struct!");
+	initEvents();
+
+	struct timeval* t;
+	if(secs == -1) {
+		t = NULL;
+	} else {
+		t = new struct timeval;
+		t->tv_sec = secs;
+		t->tv_usec = micros;
 	}
 
-	if(ev == NULL){
-		ev = new struct ::event;
+	if((e & READ) && event_add(&read_ev, t) == -1) {
+		Logs::err << "EventHandler::enableMe: adding fd " << getFd() << " for read failed\n";
+		exit(5);
 	}
-	memset(ev, sizeof(struct ::event), 0);
+	if((e & WRITE) && event_add(&write_ev, t) == -1) {
+		Logs::err << "EventHandler::enableMe: adding fd " << getFd() << " for write failed\n";
+		exit(6);
+	}
 
 	enabledFlags |= e;
-
-	short use_event = EV_PERSIST;
-	if(enabledFlags & ev_read){
-		use_event |= EV_READ;
-	}
-	if(enabledFlags & ev_write){
-		use_event |= EV_WRITE;
-	}
-	event_set(ev, fd, use_event, demux, this);
-	if(event_add(ev, timeout) == -1){
-		exit(1);
-	}
+	delete t; // if NULL, no-op
 }
+
+void EventHandler::initEvents() throw()
+{
+	if(inited)
+		return;
+
+	event_set(&read_ev, fd, EV_READ | EV_PERSIST, readCallback, this);
+	event_set(&write_ev, fd, EV_WRITE | EV_PERSIST, writeCallback, this);
+	inited = true;
+}
+
+/*
+void EventHandler::addTimer(void (*func)(), int secs, int micros) throw()
+{
+	struct timeval t;
+	t.tv_sec = secs;
+	t.tv_usec = micros;
+
+	event_once(-1, EV_TIMEOUT, &t);
+
+	delete t;
+}*/
 
 void EventHandler::init() throw()
 {
