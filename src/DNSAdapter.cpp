@@ -23,7 +23,7 @@ using namespace qhub;
 
 static void callback(void *arg, int status, struct hostent *host);
 
-DNSAdapter::DNSAdapter(const string& hostname) : query(hostname)
+DNSAdapter::DNSAdapter(const string& hostname) : query(hostname), fd(-1)
 {
 	int status = ares_init(&channel);
 	
@@ -49,8 +49,13 @@ DNSAdapter::~DNSAdapter() throw()
 {
 	Logs::stat << "TIMEOUT!" << endl;
 	ares_destroy(channel);
+	EventManager::instance()->disableRead(fd);
+	EventManager::instance()->disableWrite(fd);
 }
 
+// not only hackish, will probably cause nasty segfaults as we can't remove
+// fd from event listeners
+// FIXME XXX TODO   -- yes, it's that bad
 bool DNSAdapter::doHack()
 {
 	fd_set read_fds, write_fds;
@@ -62,25 +67,21 @@ bool DNSAdapter::doHack()
 	
 	if(nfds != 0){
 		fd = nfds-1;
-		int flag = 0;
-		if(FD_ISSET(fd, &read_fds)){
-			flag |= ev_read;
-		}
-		if(FD_ISSET(fd, &write_fds)){
-			flag |= ev_write;
-		}
-		enableMe((type)flag, 5);
+		if(FD_ISSET(fd, &read_fds))
+			EventManager::instance()->enableRead(fd, this);
+		if(FD_ISSET(fd, &write_fds))
+			EventManager::instance()->enableWrite(fd, this);
 	}
 
 	return true;
 }
 
-void DNSAdapter::onTimeout() throw()
+void DNSAdapter::onTimer(int) throw()
 {
 	delete this;
 }
 
-bool DNSAdapter::onRead() throw()
+void DNSAdapter::onRead(int) throw()
 {
 	fd_set read_fds, write_fds;
 	FD_ZERO(&read_fds);
@@ -89,10 +90,10 @@ bool DNSAdapter::onRead() throw()
 
 	ares_process(channel, &read_fds, &write_fds);
 	
-	return doHack();
+	doHack();
 }
 
-void DNSAdapter::onWrite() throw()
+void DNSAdapter::onWrite(int) throw()
 {
 	fd_set read_fds, write_fds;
 	FD_ZERO(&read_fds);

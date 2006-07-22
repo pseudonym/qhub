@@ -5,6 +5,10 @@
 #include "EventHandler.h"
 #include "Speaker.h"
 
+/**
+ * @deprecated
+ */
+
 using namespace std;
 
 namespace qhub {

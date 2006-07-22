@@ -75,7 +75,6 @@ void ConnectionManager::openInterPort(int port)
 #ifdef ENABLE_IPV6
 	try {
 		tmp = new ServerSocket(Socket::IP6, port, ServerSocket::INTER_HUB);
-		tmp->enableMe(EventHandler::ev_read);
 		return;
 	} catch(const socket_error&) {
 		delete tmp;
@@ -84,7 +83,6 @@ void ConnectionManager::openInterPort(int port)
 
 	try {
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::INTER_HUB);
-		tmp->enableMe(EventHandler::ev_read);
 		return;
 	} catch(const socket_error& e) {
 		delete tmp;

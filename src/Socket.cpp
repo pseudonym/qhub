@@ -9,7 +9,7 @@ using namespace std;
 using namespace qhub;
 
 Socket::Socket(Domain d, int t, int p) throw(socket_error)
-		: domain(d), ip4OverIp6(false),
+		: fd(-1), domain(d), ip4OverIp6(false),
 		writeEnabled(false), written(0), disconnected(false)
 {
 	create();
@@ -87,7 +87,7 @@ void Socket::connect(const string& ip, short port) throw(socket_error)
 	if(!::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr)))
 		throw socket_error("can't connect to " + ip + ": " + Util::errnoToString(errno));
 
-	enableMe(ev_read);
+	EventManager::instance()->enableRead(getFd(), this);
 }
 
 void Socket::listen(int backlog) throw()
@@ -158,7 +158,7 @@ void Socket::accept(int& f, Domain& d) throw()
 void Socket::disconnect(const string& msg)
 {
 	Logs::err << getFd() << " disconnected: " << msg << endl;
-	disableMe(ev_read);
+	EventManager::instance()->disableRead(getFd());
 	disconnected = true;
 }
 
@@ -197,7 +197,7 @@ void Socket::writeb(Buffer::Ptr b) throw()
 #endif
 	queue.push(b);
 	if(!writeEnabled){
-		enableMe(ev_write);
+		EventManager::instance()->enableWrite(getFd(), this);
 		writeEnabled = true;
 	}
 }

@@ -54,11 +54,8 @@ void InterHub::onLookup(const string& ip)
 
 void InterHub::onConnected() throw()
 {
-	// FIXME: ugly, should have general timer interface here
-	int t = getSocket()->getEnabledFlags();
-	getSocket()->disableMe(EventHandler::READ);
-	getSocket()->disableMe(EventHandler::WRITE);
-	getSocket()->enableMe((EventHandler::type)t, 15);
+	// disconnect if we don't reach NORMAL after 15 secs
+	EventManager::instance()->addTimer(getSocket(), 0, 15);
 
 	Plugin::InterConnected action;
 	PluginManager::instance()->fire(action, this);
@@ -90,11 +87,8 @@ void InterHub::doWarning(const string& msg) throw()
 
 void InterHub::onLine(Command& cmd) throw(command_error)
 {
-	// get rid of timeout FIXME: see above
-	int t = getSocket()->getEnabledFlags();
-	getSocket()->disableMe(EventHandler::READ);
-	getSocket()->disableMe(EventHandler::WRITE);
-	getSocket()->enableMe((EventHandler::type)t);
+	// get rid of timeout
+	EventManager::instance()->removeTimer(getSocket());
 
 	{
 		Plugin::InterLine action;

@@ -23,11 +23,11 @@ public:
 	void setConnection(ConnectionBase* c) throw() { conn = c; };
 
 	/*
-	 * fd_demux calls
+	 * EventManager calls
 	 */
-	virtual bool onRead() throw();
-	virtual void onWrite() throw();
-	virtual void onTimeout() throw();
+	virtual void onRead(int) throw();
+	virtual void onWrite(int) throw();
+	virtual void onTimer(int) throw();
 
 	virtual void disconnect(std::string const& msg = Util::emptyString);
 

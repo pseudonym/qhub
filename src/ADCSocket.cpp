@@ -15,7 +15,7 @@ ADCSocket::ADCSocket(int fd, Domain domain) throw()
 		: Socket(fd, domain),
 		readBuffer(new char[BUF_SIZE]), readPos(0), conn(NULL)
 {
-	enableMe(ev_read);
+	EventManager::instance()->enableRead(getFd(), this);
 	setNoLinger();
 }
 
@@ -59,7 +59,7 @@ void ADCSocket::handleOnRead()
 	::memmove(readBuffer, l, readPos);
 }
 
-void ADCSocket::onTimeout() throw()
+void ADCSocket::onTimer(int) throw()
 {
 	if(!disconnected) {
 		// Do a silent disconnect. We don't want to show our protocol to an unknown peer.
@@ -70,7 +70,7 @@ void ADCSocket::onTimeout() throw()
 	realDisconnect();
 }
 
-bool ADCSocket::onRead() throw()
+void ADCSocket::onRead(int) throw()
 {
 	try {
 		handleOnRead();
@@ -90,16 +90,18 @@ bool ADCSocket::onRead() throw()
 	// do this as the last thing before we return, see notes in realDisconnect
 	if(disconnected && queue.empty()){
 		realDisconnect();
-		return false;
 	}
-	return true;
 }
 
-void ADCSocket::onWrite() throw()
+void ADCSocket::onWrite(int) throw()
 {
 	partialWrite();
 	if(queue.empty()) {
-		disableMe(ev_write);
+		// possibly move this part to before partialWrite,
+		// as a read on another socket will most likely
+		// cause us to need to write again
+		// (remove overhead from event_add/del calls)
+		EventManager::instance()->disableWrite(getFd());
 		writeEnabled = false;
 
 		// Nothing left to write.. kill us
@@ -125,7 +127,7 @@ void ADCSocket::realDisconnect()
 
 	Logs::stat << format("Real Disconnect %d %p\n") % fd % this;
 	if(writeEnabled) {
-		disableMe(ev_write);
+		EventManager::instance()->disableWrite(getFd());
 	}
 	close(fd);
 	fd = -1;

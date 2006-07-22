@@ -46,10 +46,10 @@ ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), typ
 	bind(Util::emptyString, port);	// empty = use INADDR_ANY
 	listen();
 
-	enableMe(ev_read);
+	EventManager::instance()->enableRead(getFd(), this);
 }
 
-bool ServerSocket::onRead() throw()
+void ServerSocket::onRead(int) throw()
 {
 	while(true){
 		int fd;
@@ -72,15 +72,9 @@ bool ServerSocket::onRead() throw()
 			break;
 		}
 	}
-
-	return true;
 }
 
-void ServerSocket::onTimeout() throw()
-{
-}
-
-void ServerSocket::onWrite() throw()
+void ServerSocket::onWrite(int) throw()
 {
 	assert(0 && "ServerSocket received a write.");
 }

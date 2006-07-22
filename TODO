@@ -16,6 +16,7 @@ DNS
 			because vtbl isn't updated until constructor exits
 
 Protocol stuff
+	fix hubcount setting on login (need to increment one of them...)
 	Dont allow nick-collisions (made much more difficult by utf-8)
 	Send delta-INFs
 

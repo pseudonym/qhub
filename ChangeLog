@@ -1,7 +1,9 @@
 - 0.11 -
 * Fixed nasty add/remove plugin bug
-* rewrote EventHandler to use separate event structs for read/write
-* removed struct timeval from EventHandler::enableMe() interface
+* totally removed EventHandler interface in favor of an EventManager, which
+  also provides timer and signal registration.
+* handshake timers now work on wall time, instead of socket read timeouts
+* now using libevent signal handling (to eliminate race conditions)
 
 - 0.10 -
 * various autoconf/automake fixes
@@ -20,7 +22,7 @@ rather than each hub having a direct connection to all its peers... not sure
 how well this works, though....
 * began work on a bans plugin, maybe it can actually be used for real hubs now..
 * added plugin hooks for interhub... only primitive ones, though
-* started using diffentiated exception classes (though the catches still catch
+* started using differentiated exception classes (though the catches still catch
 anything...
 * a whole bunch of general code shuffling
 * added support for T and F types... by doing the same as P and B

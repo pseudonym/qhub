@@ -20,7 +20,7 @@
 #include "config.h"
 #include "Buffer.h"
 #include "Util.h"
-#include "EventHandler.h"
+#include "EventManager.h"
 
 using namespace std;
 
@@ -32,7 +32,7 @@ using namespace std;
 
 namespace qhub {
 
-class Socket : public EventHandler {
+class Socket : public EventListener {
 public:
 	enum Domain { IP4 = PF_INET, 
 #ifdef ENABLE_IPV6
@@ -42,9 +42,6 @@ public:
 	Socket(Domain d = IP4, int t = SOCK_STREAM, int p = 0) throw(socket_error); // new sockets
 	Socket(int fd, Domain d) throw(); // existing sockets
 	virtual ~Socket() throw();
-
-	virtual bool onRead() throw() = 0;
-	virtual void onWrite() throw() = 0;
 
 	// socket options
 	bool setNoLinger() throw();
@@ -62,11 +59,13 @@ public:
 	void write(string const& s, int prio = PRIO_NORM) throw();
 	void writeb(Buffer::Ptr b) throw();
 
+	int getFd() const throw() { return fd; }
 	Domain getDomain() const throw() { return ip4OverIp6 ? IP4 : domain; };
 	string const& getSockName() const throw() { return sockName; };
 	string const& getPeerName() const throw() { return peerName; };
 
 protected:
+	int fd;
 	Domain domain;
 	int af;
 	struct sockaddr* saddrp;

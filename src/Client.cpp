@@ -39,11 +39,7 @@ UserData* Client::getUserData() throw()
 void Client::login() throw()
 {
 	// Stop alarm. Else we'd get booted.
-	// FIXME: see InterHub
-	int t = getSocket()->getEnabledFlags();
-	getSocket()->disableMe(EventHandler::READ);
-	getSocket()->disableMe(EventHandler::WRITE);
-	getSocket()->enableMe((EventHandler::type)t);
+	EventManager::instance()->removeTimer(getSocket());
 
 	state = NORMAL;
 	Plugin::UserConnected action;
@@ -213,10 +209,7 @@ void Client::onLine(Command& cmd) throw(command_error)
 
 void Client::onConnected() throw()
 {
-	int t = getSocket()->getEnabledFlags();
-	getSocket()->disableMe(EventHandler::READ);
-	getSocket()->disableMe(EventHandler::WRITE);
-	getSocket()->enableMe((EventHandler::type)t, 15);
+	EventManager::instance()->addTimer(getSocket(), 0, 15);
 
 	Plugin::ClientConnected action;
 	PluginManager::instance()->fire(action, this);

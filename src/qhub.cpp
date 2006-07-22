@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include "EventHandler.h"
+#include "EventManager.h"
 #include "DNSAdapter.h"
 #include "Hub.h"
 
@@ -17,33 +17,48 @@
 using namespace std;
 using namespace qhub;
 
-void end(int)
+class SigHandler : public EventListener {
+public:
+	void onSignal(int) throw();
+};
+
+void SigHandler::onSignal(int sig) throw()
 {
-	Settings::instance()->save();
-	exit(EXIT_SUCCESS);
+	switch(sig) {
+	case SIGINT:
+	case SIGTERM:
+		PluginManager::instance()->removeAll();
+		Settings::instance()->save();
+		exit(EXIT_SUCCESS);
+	case SIGPIPE:
+	case SIGALRM:
+	case SIGCHLD:
+		//do nothing
+		break;
+	default:
+		assert(0 && "unknown signal received");
+	}
 }
 
 int main(int argc, char **argv)
 {
-	signal(SIGINT, &end);
-	signal(SIGPIPE, SIG_IGN);
-	signal(SIGALRM, SIG_IGN);
-#ifdef LINUX
-	signal(SIGCLD, SIG_IGN);
-#else
-	signal(SIGCHLD, SIG_IGN);
-#endif
+	// kind of ugly, should switch to setting these in
+	// Manager classes somewhere
+	SigHandler sh;
+	EventManager::instance()->addSignal(SIGINT, &sh);
+	EventManager::instance()->addSignal(SIGTERM, &sh);
+	EventManager::instance()->addSignal(SIGPIPE, &sh);
+	EventManager::instance()->addSignal(SIGALRM, &sh);
+	EventManager::instance()->addSignal(SIGCHLD, &sh);
 
 	//do this here so we don't wind up doing extra
 	//work if all they want is --version or --help
 	Settings::instance()->parseArgs(argc, argv);
 
-	EventHandler::init();
 	DNSAdapter::init();
 
 	Logs::stat << "Starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
 
-	//Settings::load(); // will already be loaded by constructor
 	Hub::instance();
 	ClientManager::instance();
 	ConnectionManager::instance();
@@ -55,9 +70,7 @@ int main(int argc, char **argv)
 	//Init random number generator
 	srand(time(NULL));
 
-	EventHandler::mainLoop();
-
-	return EXIT_SUCCESS;
+	return EventManager::instance()->run();
 }
 
 namespace qhub {

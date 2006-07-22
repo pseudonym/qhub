@@ -1,16 +1,12 @@
 // vim:ts=4:sw=4:noet
 #include "Hub.h"
 
-#include "error.h"
-#include "ServerSocket.h"
 #include "Client.h"
-#include "ServerManager.h"
-#include "InterHub.h"
-#include "Buffer.h"
-#include "EventHandler.h"
 #include "Logs.h"
 #include "XmlTok.h"
 #include "Settings.h"
+#include "ServerManager.h"
+#include "ADC.h"
 
 using namespace qhub;
 using namespace std;
