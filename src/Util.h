@@ -16,6 +16,12 @@ typedef std::vector<std::string> StringList;
 typedef std::hash_map<std::string,std::string> StringMap;
 typedef void* voidPtr;
 
+template<class T>
+struct PtrHash {
+	size_t operator()(T*const e) const
+	{ return (size_t)e; }
+};
+
 
 class Util {
 public:

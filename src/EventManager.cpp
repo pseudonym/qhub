@@ -9,10 +9,13 @@ using boost::get;
 
 EventManager::EventManager() throw()
 {
-	event_init();
-
-	Logs::stat << "Started Libevent/" << event_get_version() << " using method "
-			<< event_get_method() << endl;
+	if(event_init()) {
+		Logs::stat << "initialized libevent/" << event_get_version() << " using method "
+				<< event_get_method() << endl;
+	} else {
+		Logs::err << "failed to initialize libevent: FATAL" << endl;
+		exit(EXIT_FAILURE);
+	}
 }
 
 int EventManager::run() throw()
@@ -27,8 +30,7 @@ int EventManager::run() throw()
 void EventManager::enableRead(int fd, EventListener* eh) throw()
 {
 	// have to remove before we re-add...
-	if(reads.count(fd))
-		disableRead(fd);
+	disableRead(fd);
 
 	reads[fd] = boost::make_tuple(event(), eh);
 	event& ev = get<0>(reads[fd]);
@@ -47,8 +49,7 @@ void EventManager::disableRead(int fd) throw()
 
 void EventManager::enableWrite(int fd, EventListener* eh) throw()
 {
-	if(writes.count(fd))
-		disableWrite(fd);
+	disableWrite(fd);
 
 	writes[fd] = boost::make_tuple(event(), eh);
 	event& ev = get<0>(writes[fd]);
@@ -67,8 +68,7 @@ void EventManager::disableWrite(int fd) throw()
 
 void EventManager::addSignal(int sig, EventListener* eh) throw()
 {
-	if(signals.count(sig))
-		removeSignal(sig);
+	removeSignal(sig);
 
 	signals[sig] = boost::make_tuple(event(), eh);
 	event& ev = get<0>(signals[sig]);
@@ -87,8 +87,7 @@ void EventManager::removeSignal(int sig) throw()
 
 void EventManager::addTimer(EventListener* eh, int what, int secs, int micros) throw()
 {
-	if(timers.count(eh))
-		removeTimer(eh);
+	removeTimer(eh);
 
 	timers[eh] = boost::make_tuple(event(), what);
 	event& ev = get<0>(timers[eh]);
@@ -101,6 +100,9 @@ void EventManager::addTimer(EventListener* eh, int what, int secs, int micros) t
 
 void EventManager::removeTimer(EventListener* eh) throw()
 {
+	if(!timers.count(eh))
+		return;
+
 	evtimer_del(&get<0>(timers[eh]));
 	timers.erase(eh);
 }
@@ -111,7 +113,7 @@ void EventManager::removeTimer(EventListener* eh) throw()
 
 void EventManager::readCallback(int fd, short ev, void* arg)
 {
-	assert(ev == EV_READ);
+	assert(ev == EV_READ && instance()->reads.count(fd));
 
 	EventListener* eh = static_cast<EventListener*>(arg);
 	eh->onRead(fd);
@@ -119,7 +121,7 @@ void EventManager::readCallback(int fd, short ev, void* arg)
 
 void EventManager::writeCallback(int fd, short ev, void* arg)
 {
-	assert(ev == EV_WRITE);
+	assert(ev == EV_WRITE && instance()->writes.count(fd));
 
 	EventListener* eh = static_cast<EventListener*>(arg);
 	eh->onWrite(fd);
@@ -127,7 +129,7 @@ void EventManager::writeCallback(int fd, short ev, void* arg)
 
 void EventManager::signalCallback(int sig, short ev, void* arg)
 {
-	assert(ev == EV_SIGNAL);
+	assert(ev == EV_SIGNAL && instance()->signals.count(sig));
 
 	EventListener* eh = static_cast<EventListener*>(arg);
 	eh->onSignal(sig);
@@ -138,6 +140,11 @@ void EventManager::timerCallback(int fd, short ev, void* arg)
 	assert(ev == EV_TIMEOUT && fd == -1);
 
 	EventListener* eh = static_cast<EventListener*>(arg);
+	assert(instance()->timers.count(eh));
 	eh->onTimer(instance()->timers[eh].get<1>());
+
+	// timers are not persistent, so libevent will remove it.
+	// we need to as well
+	instance()->timers.erase(eh);
 }
 

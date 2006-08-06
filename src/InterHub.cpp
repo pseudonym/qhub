@@ -8,7 +8,6 @@
 #include "TigerHash.h"
 #include "UserInfo.h"
 #include "Plugin.h"
-#include "DNSAdapter.h"
 
 #include "error.h"
 #include "Logs.h"
@@ -17,7 +16,8 @@
 using namespace std;
 using namespace qhub;
 
-
+/*
+//deprecated
 class DNSLookup: public DNSAdapter {
 public:
 	DNSLookup(InterHub* ih, string s) : DNSAdapter(s), interHub(ih) {}
@@ -29,12 +29,12 @@ public:
 protected:
 	InterHub *interHub;
 };
-
+*/
 
 InterHub::InterHub(const string& hn, short p, const string& pa) throw()
 		: hostname(hn), port(p), password(pa), outgoing(true)
 {
-	new DNSLookup(this, hn);
+	EventManager::instance()->addTimer(this); // callback for lookup after we exit ctor
 }
 
 InterHub::InterHub(ADCSocket* s) throw()
@@ -42,16 +42,30 @@ InterHub::InterHub(ADCSocket* s) throw()
 {
 }
 
-void InterHub::onLookup(const string& ip)
+void InterHub::onTimer(int what) throw()
 {
-	Logs::stat << "Connecting to hub at ip " << ip << " and port " << getPort() << endl;
+	DnsManager::instance()->lookupName(hostname, this);
+}
+
+// from DnsListener
+void InterHub::onResult(const string& name, const vector<in_addr>& addrs) throw()
+{
+	const in_addr& ip = addrs[rand() % addrs.size()];
+	Logs::stat << "Connecting to hub at ip " << inet_ntoa(ip) << " and port " << getPort() << endl;
 	assert(getState() == PROTOCOL);
 
-	getSocket()->connect(ip, getPort());
+	getSocket()->connect(inet_ntoa(ip), getPort());
 	doSupports();
 	onConnected();
 }
 
+void InterHub::onFailure() throw()
+{
+	Logs::err << "Lookup of " << hostname << " failed, trying again in 5 minutes" << endl;
+	EventManager::instance()->addTimer(this, 0, 5*60);
+}
+
+// from ConnectionBase
 void InterHub::onConnected() throw()
 {
 	// disconnect if we don't reach NORMAL after 15 secs
@@ -61,6 +75,7 @@ void InterHub::onConnected() throw()
 	PluginManager::instance()->fire(action, this);
 }
 
+// from ConnectionBase
 void InterHub::onDisconnected(const string& clue) throw()
 {
 	ServerManager::instance()->deactivate(this);
@@ -69,6 +84,7 @@ void InterHub::onDisconnected(const string& clue) throw()
 	delete this;	// hope this doesn't cause segfaults :)
 }
 
+// from ConnectionBase
 void InterHub::doError(string const& msg, int code, string const& flag) throw()
 {
 	Command cmd('L', Command::STA);
@@ -78,6 +94,7 @@ void InterHub::doError(string const& msg, int code, string const& flag) throw()
 	send(cmd);
 }
 
+// from ConnectionBase
 void InterHub::doWarning(const string& msg) throw()
 {
 	if(state == PROTOCOL)
@@ -85,6 +102,7 @@ void InterHub::doWarning(const string& msg) throw()
 	send(Command('L', Command::STA) << "100" << msg);
 }
 
+// from ConnectionBase
 void InterHub::onLine(Command& cmd) throw(command_error)
 {
 	// get rid of timeout

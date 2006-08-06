@@ -2,6 +2,8 @@
 #define __INTERHUB_H_
 
 #include "ConnectionBase.h"
+#include "EventManager.h"
+#include "DnsManager.h"
 
 #include <string>
 #include <vector>
@@ -10,14 +12,19 @@ namespace qhub {
 
 class Hub;
 
-class InterHub : public ConnectionBase {
+class InterHub : public ConnectionBase, public EventListener, public DnsListener {
 public:
 	InterHub(const std::string& hn, short p, const std::string& pa) throw();
 	InterHub(ADCSocket* s) throw();
 	virtual ~InterHub() throw() {};
 
-	//for DNSLookup callback
-	virtual void onLookup(const std::string& ip);
+	// from EventListener
+	virtual void onTimer(int what) throw();
+
+	// from DnsListener
+	virtual void onResult(const std::string&, const std::vector<in_addr>&) throw();
+	virtual void onResult(const std::string&, const std::vector<in6_addr>&) throw() {}
+	virtual void onFailure() throw();
 
 	short getPort() const { return port; }
 

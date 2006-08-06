@@ -4,6 +4,11 @@
   also provides timer and signal registration.
 * handshake timers now work on wall time, instead of socket read timeouts
 * now using libevent signal handling (to eliminate race conditions)
+* fixed a SIGSEGV when the timer listener wasn't deleted
+* rewrote DNS resolution to work better with rewritten event system
+* fixed call of pure virtual when looking up locally-resolvable names for
+  inter-hub connections
+* added -p option to add plugins from command line
 
 - 0.10 -
 * various autoconf/automake fixes

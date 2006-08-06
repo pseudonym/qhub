@@ -25,6 +25,7 @@ ADCSocket::ADCSocket() throw()
 
 ADCSocket::~ADCSocket() throw()
 {
+	EventManager::instance()->removeTimer(this);
 	delete[] readBuffer;
 }
 

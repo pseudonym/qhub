@@ -10,6 +10,7 @@
 #include "XmlTok.h"
 #include "Util.h"
 #include "Logs.h"
+#include "PluginManager.h"
 
 using namespace qhub;
 using namespace std;
@@ -126,6 +127,7 @@ void Settings::parseArgs(int argc, char** argv)
 		("linefile", value<string>(), "protocol lines logged to 'arg'")
 		("verbose,v", "protocol lines logged to stdout (only for debugging)")
 #endif
+		("plugin,p", value<StringList>(), "load plugin 'arg'")
 		("daemonize,d", "run as daemon")
 		("quiet,q", "no output");
 
@@ -159,6 +161,11 @@ void Settings::parseArgs(int argc, char** argv)
 #endif
 		Logs::stat.rdbuf(0);
 		Logs::err.rdbuf(0);
+	}
+	if(vm.count("plugin")) {
+		const StringList& p = vm["plugin"].as<StringList>();
+		for(StringList::const_iterator i = p.begin(); i != p.end(); ++i)
+			PluginManager::instance()->open(*i);
 	}
 	if(vm.count("daemonize"))
 		// TODO check to make sure config is done and valid

@@ -24,6 +24,9 @@
 
 using namespace std;
 
+
+// these should probably be deprecated, as they aren't actually used
+// (we're just using normal queues for actual output)
 #define PRIO_NORM 200
 #define PRIO_EINF 300
 #define PRIO_LIST 400

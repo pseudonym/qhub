@@ -1,7 +1,6 @@
 #include "config.h"
 
 #include "EventManager.h"
-#include "DNSAdapter.h"
 #include "Hub.h"
 
 #include "Plugin.h"
@@ -42,6 +41,26 @@ void SigHandler::onSignal(int sig) throw()
 
 int main(int argc, char **argv)
 {
+	Logs::stat << "Starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
+
+	// do this here so we don't wind up doing extra
+	// work if all they want is --version or --help
+	Settings::instance()->parseArgs(argc, argv);
+
+
+	// make sure these are actually instantiated; their constructors
+	// load all of the configuration and bootstrap everything
+	Hub::instance();
+	ClientManager::instance();
+	ConnectionManager::instance();
+	ServerManager::instance();
+
+	// try loading
+	PluginManager::instance()->open("loader");
+
+	// Init random number generator
+	srand(time(NULL));
+
 	// kind of ugly, should switch to setting these in
 	// Manager classes somewhere
 	SigHandler sh;
@@ -50,25 +69,6 @@ int main(int argc, char **argv)
 	EventManager::instance()->addSignal(SIGPIPE, &sh);
 	EventManager::instance()->addSignal(SIGALRM, &sh);
 	EventManager::instance()->addSignal(SIGCHLD, &sh);
-
-	//do this here so we don't wind up doing extra
-	//work if all they want is --version or --help
-	Settings::instance()->parseArgs(argc, argv);
-
-	DNSAdapter::init();
-
-	Logs::stat << "Starting " PACKAGE_NAME "/" PACKAGE_VERSION << endl;
-
-	Hub::instance();
-	ClientManager::instance();
-	ConnectionManager::instance();
-	ServerManager::instance();
-
-	//try loading
-	PluginManager::instance()->open("loader");
-
-	//Init random number generator
-	srand(time(NULL));
 
 	return EventManager::instance()->run();
 }

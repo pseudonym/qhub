@@ -288,8 +288,8 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 	userInfo = new UserInfo(cmd);
 	userInfo->del("OP"); //can't have them opping themselves...
 
-	// Guarantee NI and (I4 xor I6)
-	if(!(userInfo->has("NI") && (userInfo->has("I4") ^ userInfo->has("I6"))))
+	// Guarantee NI and (I4 nand I6)
+	if(!userInfo->has("NI") || (userInfo->has("I4") && userInfo->has("I6")))
 		throw command_error("Missing/extraneous parameters in INF");
 
 	// Fix I4 and I6
@@ -309,10 +309,10 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 #endif
 	const string& pid32 = userInfo->get("PD");
 	const string& cid32 = userInfo->get("ID");
-	if(pid32.empty())
-		throw command_error("PID missing");
-	if(cid32.empty())
-		throw command_error("CID missing");
+	if(pid32.size() != 39) // 39 = ceil(24*8/5)
+		throw command_error("PID missing/invalid");
+	if(cid32.size() != 39)
+		throw command_error("CID missing/invalid");
 	uint8_t* pid = new uint8_t[TigerHash::HASH_SIZE];
 	Encoder::fromBase32(pid32.data(), pid, TigerHash::HASH_SIZE);
 	TigerHash th;

@@ -3,6 +3,7 @@
 #define QHUB_EVENTMANAGER_H
 
 #include "Singleton.h"
+#include "Util.h"
 #include "compat_hash_map.h"
 #include <boost/tuple/tuple.hpp>
 #include <event.h>
@@ -11,14 +12,6 @@ namespace qhub {
 
 // silly forward declarations
 class EventListener;
-
-// should really be in a utility header, but only temporary
-// FIXME
-template<class T>
-struct PtrHash {
-	size_t operator()(T*const e) const
-	{ return (size_t)e; }
-};
 
 /**
  * Structure for managing all events, essentially a wrapper around
