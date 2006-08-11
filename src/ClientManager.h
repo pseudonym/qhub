@@ -1,7 +1,7 @@
 #ifndef QHUB_CLIENTMANAGER_H
 #define QHUB_CLIENTMANAGER_H
 
-#include "compat_hash_map.h"
+#include "compat_hashtable.h"
 #include "Singleton.h"
 #include "id.h"
 #include "Client.h"

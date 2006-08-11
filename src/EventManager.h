@@ -4,7 +4,7 @@
 
 #include "Singleton.h"
 #include "Util.h"
-#include "compat_hash_map.h"
+#include "compat_hashtable.h"
 #include <boost/tuple/tuple.hpp>
 #include <event.h>
 

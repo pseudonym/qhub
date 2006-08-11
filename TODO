@@ -9,11 +9,13 @@ Low-level network handling
 
 add signal handlers for libevent so we can be usable by start-stop-daemon and other things
 		(like SIGHUP to reload config)
+	// mostly done; at least using it for SIGINT and SIGTERM
 
 DNS
 	remove ugly hacks, using a better ares interface
 	fix lookups so that ares_gethostbyname() isn't called in constructor: causes call of pure virtual
 			because vtbl isn't updated until constructor exits
+	// mostly done! just needs some actual, you know, testing
 
 Protocol stuff
 	fix hubcount setting on login (need to increment one of them...)
@@ -35,5 +37,3 @@ Polish plugins
 	What about filtering stuff on many outgoing clients? (think a modified list of users: the
 		plugin-instance for one user wants no other users to receive his INFs, this can mean work
 		if there are only hooks for incoming data?)) 
-	Make a clean interface for event-notification (de)registration.
-		(IO-refactor branch solves this)

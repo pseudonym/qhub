@@ -3,7 +3,7 @@
 #define _INCLUDED_PLUGIN_ACCOUNTS_H_
 
 #include "Plugin.h"
-#include "compat_hash_map.h"
+#include "compat_hashtable.h"
 #include "UserData.h"
 
 #include "VirtualFs.h"

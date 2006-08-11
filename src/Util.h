@@ -4,7 +4,7 @@
 
 #include <string>
 #include <vector>
-#include "compat_hash_map.h"
+#include "compat_hashtable.h"
 #include <boost/lexical_cast.hpp>
 #include <cerrno>
 
