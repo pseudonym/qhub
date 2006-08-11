@@ -1,3 +1,5 @@
 
-
 autoreconf --force --install will be needed when fetching sources from svn
+
+the developers use automake-1.9; fixes for earlier versions that don't
+break anything in 1.9 are appreciated

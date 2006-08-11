@@ -30,19 +30,29 @@ void DnsManager::lookupName(const string& name, DnsListener* arg) throw()
 {
 	// should really try INET6, but not really used...
 	ares_gethostbyname(chan, name.c_str(), AF_INET, lookupCallback, arg);
+	timeval tv;
+	if(ares_timeout(chan, NULL, &tv)) // NULL if no timeout
+		EventManager::instance()->addTimer(this, 0, tv.tv_sec, tv.tv_usec);
 }
 
-void DnsManager::lookupIp(const string& ip, DnsListener* arg) throw()
+void DnsManager::lookupAddr(const string& ip, DnsListener* arg) throw()
 {
 	in_addr addr;
+#ifdef ENABLE_IPV6
 	in6_addr addr6;
+#endif
 	if(inet_pton(AF_INET, ip.c_str(), &addr)) {
 		ares_gethostbyaddr(chan, &addr, sizeof(in_addr), AF_INET, lookupCallback, arg);
+#ifdef ENABLE_IPV6
 	} else if(inet_pton(AF_INET6, ip.c_str(), &addr6)) {
 		ares_gethostbyaddr(chan, &addr6, sizeof(in6_addr), AF_INET6, lookupCallback, arg);
+#endif
 	} else {
 		assert(0 && "invalid address given to DnsManager::lookupIp()");
 	}
+	timeval tv;
+	if(ares_timeout(chan, NULL, &tv)) // NULL if no timeout
+		EventManager::instance()->addTimer(this, 0, tv.tv_sec, tv.tv_usec);
 }
 
 /////////////////////////
@@ -117,6 +127,7 @@ void DnsManager::lookupCallback(void* arg, int status, struct hostent* host)
 		for(char** p = host->h_addr_list; *p; p++)
 			addrs.push_back(*reinterpret_cast<in_addr*>(*p)); // nasty casting gogo!
 		dl->onResult(host->h_name, addrs);
+#ifdef ENABLE_IPV6
 	} else if(host->h_addrtype == AF_INET6) {
 		// IPv6
 		assert(host->h_length == sizeof(in6_addr));
@@ -124,6 +135,7 @@ void DnsManager::lookupCallback(void* arg, int status, struct hostent* host)
 		for(char** p = host->h_addr_list; *p; p++)
 			addrs.push_back(*reinterpret_cast<in6_addr*>(*p));
 		dl->onResult(host->h_name, addrs);
+#endif
 	} else {
 		Logs::stat << "Lookup of " << host->h_name
 				<< " returned unknown address type, ignoring" << endl;
