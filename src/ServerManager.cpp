@@ -6,12 +6,12 @@
 using namespace std;
 using namespace qhub;
 
-ServerManager::ServerManager() throw() : sidMask(0xFFF00000)
+ServerManager::ServerManager() throw() : sidMask(0xFFFFFFFF)
 {
 	XmlTok* p = Settings::instance()->getConfig("__hub");
 	int i = Util::toInt(p->getAttr("hubsidbits"));
-	for(int x = 1 << 19; i; i--, x >>= 1)
-		sidMask |= x;
+	sidMask >>= 20 - i;
+	sidMask <<= 20 - i;
 }
 
 void ServerManager::getInterList(InterHub* ih) throw()

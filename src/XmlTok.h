@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include "Util.h"
+#include "error.h"
 
 namespace qhub {
 
@@ -15,14 +16,14 @@ public:
 	/*
 	 * Getters
 	 */
-	XmlTok(std::string const& name = Util::emptyString, XmlTok* parent = NULL) throw();
+	XmlTok(std::istream& in) throw(io_error);
+	XmlTok(std::string const& name, XmlTok* parent = NULL) throw();
 	virtual ~XmlTok() throw();
 	bool findChild(std::string const& name) const throw();
 	XmlTok* getNextChild() const throw();
 	XmlTok* getParent() const throw();
+	std::string const& getName() const throw() { return name; }
 	std::string const& getAttr(std::string const& name) const throw();
-	// NOTE: see setData
-	std::string toString(int indent = 0) const throw();
 	// NOTE: see setData
 	const std::string& getData() const throw();
 	/*
@@ -35,8 +36,7 @@ public:
 	/*
 	 * Load/Save
 	 */
-	bool load(std::string const& filename) throw();
-	bool save(std::string const& filename) const throw();
+	void save(std::ostream& out) const throw(io_error);
 	/*
 	 * Iterators
 	 */
@@ -46,6 +46,9 @@ public:
 
 	void clear() throw();
 private:
+	// NOTE: see setData
+	void save(std::ostream& out, int indent) const throw();
+
 	std::string data;
 	XmlTok* parent;
 	std::string name;
@@ -53,6 +56,10 @@ private:
 	Children children;
 	mutable Children::const_iterator found;
 	StringMap attributes;
+
+	static void startElement(void *userData, char const* name, char const** atts);
+	static void endElement(void *userData, char const* name);
+	static void dataElement(void *userData, char const* data, int length);
 };
 
 } //namespace qhub

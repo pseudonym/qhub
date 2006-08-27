@@ -8,7 +8,7 @@ namespace qhub {
 template<typename T>
 class Singleton : protected boost::noncopyable {
 public:
-	static T* instance() throw()
+	static T* instance()
 	{
 		if(!inst)
 			inst = new T();

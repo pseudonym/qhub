@@ -20,10 +20,10 @@ public:
 private:
 	friend class Singleton<Settings>;
 
-	XmlTok root;
+	XmlTok* root;
 
-	Settings() throw() { load(); }
-	~Settings() throw() { save(); }
+	Settings() throw(io_error);
+	~Settings() throw() { delete root; }
 };
 
 } // namespace qhub

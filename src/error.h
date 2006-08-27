@@ -41,6 +41,12 @@ struct logs_error : public std::runtime_error {
 	explicit logs_error(const std::string& arg) : runtime_error(arg) {}
 };
 
+// non-socket I/O errors, mainly for config files
+struct io_error : public std::runtime_error {
+	io_error() : runtime_error("io_error: problem reading/writing files") {}
+	explicit io_error(const std::string& arg) : runtime_error(arg) {}
+};
+
 } // namespace qhub
 
 #endif // QHUB_ERROR_H

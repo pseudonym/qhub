@@ -1,6 +1,7 @@
 // vim:ts=4:sw=4:noet
 #include <cassert>
 #include <iostream>
+#include <fstream>
 #include <boost/program_options.hpp>
 
 #include "error.h"
@@ -15,31 +16,34 @@
 using namespace qhub;
 using namespace std;
 
+Settings::Settings() throw(io_error) : root(NULL)
+{
+	ifstream f(CONFIGDIR "/qhub.xml");
+	if(!f.good())
+		throw io_error("could not load config file");
+	root = new XmlTok(f);
+	load();
+}
+
 XmlTok* Settings::getConfig(const string& name) throw()
 {
-	XmlTok* p = (root.findChild("qhub"), root.getNextChild());
-	assert(p);
-	if(p->findChild(name))
-		return p->getNextChild();
+	if(root->findChild(name))
+		return root->getNextChild();
 	else 
-		return p->addChild(name);
+		return root->addChild(name);
 }
 
 bool Settings::isValid() throw()
 {
-	XmlTok* p;
-	return root.findChild("qhub")
-	    && (p = root.getNextChild())
-	    && p->findChild("__connections")
-	    && p->findChild("__hub")
-//	    && (p = p->getNextChild())
-//	    && ADC::checkCID(p->getAttr("cid")) // enough checks for now :)
+	return root->getName() == "qhub"
+	    && root->findChild("__connections")
+	    && root->findChild("__hub")
 	    ;
 }
 
 void Settings::load() throw()
 {
-	if(!root.load(CONFIGDIR "/qhub.xml") || !isValid()) {
+	if(!isValid()) {
 		Logs::err << "Config file missing or corrupt, entering interactive setup\n";
 		loadInteractive();
 	}
@@ -84,16 +88,16 @@ void Settings::loadInteractive() throw()
 		cerr << "hub id is too large for number of bits!" << endl;
 	}
 
-	root.clear();
-	XmlTok* p = root.addChild("qhub");
-	p = p->addChild("__hub");
+	delete root;
+	root = new XmlTok("qhub");
+	XmlTok* p = root->addChild("__hub");
 	p->setAttr("name", name);
 	p->setAttr("hubsidbits", Util::toString(bits));
 	p->setAttr("sid", Util::toString(id << (20 - bits)));
 	if(!interpass.empty())
 		p->setAttr("interpass", interpass);
-	p = p->getParent();
-	p = p->addChild("__connections");
+
+	p = root->addChild("__connections");
 	for(vector<u_int16_t>::iterator i = cports.begin(); i != cports.end(); ++i)
 		p->addChild("clientport")->setData(Util::toString(*i));
 	for(vector<u_int16_t>::iterator i = iports.begin(); i != iports.end(); ++i)
@@ -102,8 +106,12 @@ void Settings::loadInteractive() throw()
 
 void Settings::save() throw()
 {
-	if(!root.save(CONFIGDIR "/qhub.xml"))
-		Logs::err << "Unable to save config file, check write permissions" << endl;
+	try {
+		ofstream f(CONFIGDIR "/qhub.xml");
+		root->save(f);
+	} catch(const io_error& e) {
+		Logs::err << "Unable to save qhub.xml: " << e.what() << endl;
+	}
 }
 
 static const char*const _version_str =

@@ -51,7 +51,6 @@ int Loader::load() throw()
 
 bool Loader::save() const throw()
 {
-	XmlTok root;
 	XmlTok* p = Settings::instance()->getConfig("plugins");
 	p->clear();
 	for(PluginManager::iterator i = PluginManager::instance()->begin(); i != PluginManager::instance()->end(); ++i) {
