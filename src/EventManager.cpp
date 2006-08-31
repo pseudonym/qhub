@@ -141,10 +141,12 @@ void EventManager::timerCallback(int fd, short ev, void* arg)
 
 	EventListener* eh = static_cast<EventListener*>(arg);
 	assert(instance()->timers.count(eh));
-	eh->onTimer(instance()->timers[eh].get<1>());
 
+	int i = instance()->timers[eh].get<1>();
 	// timers are not persistent, so libevent will remove it.
 	// we need to as well
 	instance()->timers.erase(eh);
+
+	eh->onTimer(i);
 }
 

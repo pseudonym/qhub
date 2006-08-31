@@ -9,6 +9,7 @@
 * fixed call of pure virtual when looking up locally-resolvable names for
   inter-hub connections
 * added -p option to add plugins from command line
+* changed XmlTok to be more flexible
 
 - 0.10 -
 * various autoconf/automake fixes
