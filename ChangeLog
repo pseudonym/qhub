@@ -10,6 +10,7 @@
   inter-hub connections
 * added -p option to add plugins from command line
 * changed XmlTok to be more flexible
+* added non-crappy dupe nick/CID checking... still needs some stuff though
 
 - 0.10 -
 * various autoconf/automake fixes

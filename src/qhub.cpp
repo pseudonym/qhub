@@ -107,7 +107,7 @@ void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 				us.find(cmd.getSource())->second->getSocket()->writeb(tmp);
 			ServerManager::instance()->remoteHubs[s]->getInterHub()->getSocket()->writeb(tmp);
 		} else {
-			assert(0);
+			return;
 		}
 		break;
 	case 'F':

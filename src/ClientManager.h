@@ -18,7 +18,8 @@ public:
 
 	void getUserList(ConnectionBase*) throw();
 
-	bool hasNick(const std::string& nick) const throw();
+	bool hasNick(const std::string& nick) const throw() { return nicks.count(nick); }
+	bool hasCid(const cid_type& cid) const throw() { return cids.count(cid); }
 
 	typedef std::hash_map<sid_type, Client*> LocalUsers;
 	typedef std::hash_map<sid_type, UserInfo*> RemoteUsers;
@@ -29,6 +30,9 @@ private:
 	LocalUsers localUsers;
 
 	RemoteUsers remoteUsers;
+
+    std::hash_set<string> nicks;
+    std::hash_set<cid_type> cids;
 };
 
 } // namespace qhub

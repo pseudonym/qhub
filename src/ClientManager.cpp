@@ -30,6 +30,8 @@ void ClientManager::addLocalClient(sid_type sid, Client* client) throw()
 {
 	assert(!hasClient(sid));
 	localUsers.insert(make_pair(sid, client));
+    nicks.insert(client->getUserInfo()->getNick());
+    cids.insert(client->getUserInfo()->getCID());
 }
 
 void ClientManager::addRemoteClient(sid_type sid, UserInfo const& ui) throw()
@@ -37,6 +39,14 @@ void ClientManager::addRemoteClient(sid_type sid, UserInfo const& ui) throw()
 	assert(!hasClient(sid) || remoteUsers.count(sid));
 	if(!remoteUsers.count(sid))
 		remoteUsers[sid] = new UserInfo(Command('B', Command::INF, sid));
+    if(ui.has("ID") && remoteUsers[sid]->has("ID")) {
+        cids.erase(remoteUsers[sid]->getCID());
+        cids.insert(ui.getCID());
+    }
+    if(ui.has("NI") && remoteUsers[sid]->has("NI")) {
+        nicks.erase(remoteUsers[sid]->getNick());
+        nicks.insert(ui.getNick());
+    }
 	remoteUsers[sid]->update(ui);
 }
 
@@ -44,9 +54,15 @@ void ClientManager::removeClient(sid_type sid) throw()
 {
 	assert(hasClient(sid));
 	if(localUsers.count(sid)) {
+        UserInfo* i = localUsers[sid]->getUserInfo();
+        nicks.erase(i->getNick());
+        cids.erase(i->getCID());
 		localUsers.erase(sid);
 	} else {
-		delete remoteUsers[sid];
+        UserInfo* i = remoteUsers[sid];
+        nicks.erase(i->getNick());
+        cids.erase(i->getCID());
+		delete i;
 		remoteUsers.erase(sid);
 	}
 }
@@ -60,17 +76,4 @@ void ClientManager::getAllInHub(sid_type hsid, std::vector<sid_type>& ret) const
 		if((i->first & mask) == (hsid & mask))
 			ret.push_back(i->first);
 }
-
-bool ClientManager::hasNick(const string& nick) const throw()
-{
-	// O(n)... not very pretty
-	for(LocalUsers::const_iterator i = localUsers.begin(); i != localUsers.end(); ++i)
-		if(nick == i->second->getUserInfo()->getNick())
-			return true;
-	for(RemoteUsers::const_iterator i = remoteUsers.begin(); i != remoteUsers.end(); ++i)
-		if(nick == i->second->getNick())
-			return true;
-	return false;
-}
-
 

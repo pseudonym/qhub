@@ -323,6 +323,18 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 		throw command_error("CID/PID mismatch");
 	userInfo->del("PD");
 
+	if(ClientManager::instance()->hasCid(userInfo->getCID()))
+		throw command_error("CID taken");
+	if(ClientManager::instance()->hasNick(userInfo->getNick())) {
+		string newNick = "guest" + ADC::fromSid(getSid());
+		if(ClientManager::instance()->hasNick(newNick)) {
+			throw command_error("nick taken, and fallback nick invalid");
+		} else {
+			doWarning("Nick taken, using nick " + newNick);
+			userInfo->set("NI", newNick);
+		}
+	}
+
 	// Broadcast
 	Plugin::ClientLogin action;
 	PluginManager::instance()->fire(action, this);
@@ -333,7 +345,7 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 		login();
 }
 
-void Client::handleInfo(Command& cmd) throw()
+void Client::handleInfo(Command& cmd) throw(command_error)
 {
 	assert(state == NORMAL);
 
@@ -347,10 +359,21 @@ void Client::handleInfo(Command& cmd) throw()
 	// Do redundancy check
 	for(UserInfo::const_iterator i = newUserInfo.begin(); i != newUserInfo.end(); ++i) {
 		if(userInfo->get(i->first) == i->second) {
-			PROTOCOL_ERROR("Redundant INF parameter recieved");
+			PROTOCOL_ERROR(string("Redundant INF parameter recieved: ")
+					+ (char)(i->first >> 8) + (char)(i->first & 0xFF) + i->second);
 			return;
 		}
 	}
+
+	// no changing CIDs on us!
+	newUserInfo.del("ID");
+
+	// check nick; we know the current one is valid
+	if(ClientManager::instance()->hasNick(newUserInfo.getNick())) {
+		doWarning("That nick is already taken");
+		newUserInfo.del("NI");
+	}
+	// TODO update nick list in ClientManager for dupes
 
 	// Broadcast
 	if(action.isSet(Plugin::MODIFIED)) {

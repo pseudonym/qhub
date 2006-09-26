@@ -8,14 +8,12 @@
 
 #include "VirtualFs.h"
 
-using namespace std;
-
 namespace qhub {
 
 class NetworkCtl : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// void* (Plugin*)
-	
+
 	NetworkCtl() throw() : Plugin("networkctl"), virtualfs(NULL) {};
 	virtual ~NetworkCtl() throw() {};
 
@@ -24,9 +22,9 @@ public:
 	virtual void on(InterConnected&, InterHub*) throw();
 	virtual void on(InterDisconnected&, InterHub*) throw();
 
-	virtual void on(ChDir, const string&, Client*) throw();
-	virtual void on(Help, const string&, Client*) throw();
-	virtual void on(Exec, const string&, Client*, const StringList&) throw();
+	virtual void on(ChDir, const std::string&, Client*) throw();
+	virtual void on(Help, const std::string&, Client*) throw();
+	virtual void on(Exec, const std::string&, Client*, const StringList&) throw();
 
 private:
 	void initVFS() throw();
@@ -34,7 +32,7 @@ private:
 
 	VirtualFs* virtualfs;
 
-	typedef set<InterHub*> Interhubs;
+	typedef std::set<InterHub*> Interhubs;
 	Interhubs interhubs;
 };
 

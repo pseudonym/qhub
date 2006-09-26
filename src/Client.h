@@ -61,14 +61,14 @@ public:
 
 private:
 	/*
-	 * Data handlers	
+	 * Data handlers
 	 */
 	void handle(Command&) throw(command_error);
 	void handleSupports(Command&) throw(command_error);
 	void handleLogin(Command&) throw(command_error);
 	void handlePassword(Command&) throw();
 	void handleDisconnect(Command&) throw();
-	void handleInfo(Command&) throw();
+	void handleInfo(Command&) throw(command_error);
 	void handleMessage(Command&) throw();
 
 	void login() throw();
