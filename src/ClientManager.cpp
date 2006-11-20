@@ -11,7 +11,7 @@ using namespace qhub;
 
 void ClientManager::getUserList(ConnectionBase* c) throw()
 {
-	Buffer::Ptr t(new Buffer());
+	Buffer::MutablePtr t(new Buffer());
 	for(LocalUsers::iterator i = localUsers.begin(); i != localUsers.end(); i++) {
 		t->append(i->second->getAdcInf());
 	}

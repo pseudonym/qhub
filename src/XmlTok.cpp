@@ -11,6 +11,8 @@
 
 #include <boost/static_assert.hpp>
 #include <boost/array.hpp>
+#include <boost/type_traits/remove_pointer.hpp>
+#include <boost/shared_ptr.hpp>
 
 #if defined(HAVE_EXPAT_H)
 # include <expat.h>
@@ -34,28 +36,26 @@ XmlTok::XmlTok(string const& n, XmlTok* p) throw()
 
 XmlTok::XmlTok(istream& is) throw(io_error)
 {
-	XML_Parser parser = XML_ParserCreate(NULL);
-	XmlTok* p = this;
-	boost::array<XML_Char, 1024> tmp;
+	using namespace boost;
 
-	XML_SetUserData(parser, &p);
-	XML_SetElementHandler(parser, startElement, endElement);
-	XML_SetCharacterDataHandler(parser, dataElement);
+	// when possible, use RAII
+	shared_ptr<remove_pointer<XML_Parser>::type> parser(XML_ParserCreate(NULL), XML_ParserFree);
+	XmlTok* p = this;
+	array<XML_Char, 1024> tmp;
+
+	XML_SetUserData(parser.get(), &p);
+	XML_SetElementHandler(parser.get(), startElement, endElement);
+	XML_SetCharacterDataHandler(parser.get(), dataElement);
 
 	streamsize n;
 	do {
 		n = is.readsome(tmp.c_array(), tmp.size());
-		Logs::stat << "Read XML: \"" << string(tmp.data(), n) << "\", length " << n << endl;
-		if(!XML_Parse(parser, tmp.data(), n, n < tmp.size())) {
+		if(!XML_Parse(parser.get(), tmp.data(), n, n < tmp.size())) {
 			format fmt("XML loading failed: %s at line %d\n");
-			fmt % XML_ErrorString(XML_GetErrorCode(parser)) % XML_GetCurrentLineNumber(parser);
-			XML_ParserFree(parser);
-			Logs::err << fmt;
+			fmt % XML_ErrorString(XML_GetErrorCode(parser.get())) % XML_GetCurrentLineNumber(parser.get());
 			throw io_error(fmt.str());
 		}
 	} while(n == tmp.size());
-
-	XML_ParserFree(parser);
 }
 
 XmlTok::~XmlTok() throw()
@@ -165,15 +165,12 @@ void XmlTok::startElement(void *userData, char const* name, char const** atts)
 
 	// if root element, set name, don't add child
 	if(!x->getParent() && x->getName().empty()) {
-		Logs::stat << "setting name to " << name << endl;
 		x->name = name;
 	} else {
-		Logs::stat << "adding child " << name << " to node " << x->getName() << endl;
 		x = x->addChild(name);
 	}
 
 	while(atts[0]) {
-		Logs::stat << "setting attrs in " << x->getName() << ": " << atts[0] << '=' << atts[1] << endl;
 		x->setAttr(atts[0], atts[1]);
 		atts += 2;
 	}
@@ -192,6 +189,5 @@ void XmlTok::dataElement(void *userData, XML_Char const* data, int length)
 {
 	XmlTok** p = (XmlTok**)userData;
 	XmlTok* x = *p;
-	Logs::stat << "setting data of " << x->getName() << " to " << string(data, length) << endl;
 	x->setData(string(data, length));
 }

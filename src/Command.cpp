@@ -63,6 +63,7 @@ Command::Command(const char* first, const char* last) throw(parse_error)
 		loc = 3;
 		break;
 	case 'D':
+	case 'E':
 		from = ADC::toSid(sl[1]);
 		to = ADC::toSid(sl[2]);
 		loc = 3;
@@ -126,6 +127,8 @@ Command::Command(char a, CmdInt c, sid_type f /*= INVALID_SID*/, const string& f
 	}
 }
 
+// only makes D-type... but will we ever need to make an
+// E-type one?
 Command::Command(CmdInt c, sid_type f, sid_type t) throw()
 		: action('D'), cmd(c), from(f), to(t), dirty(true)
 {

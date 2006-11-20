@@ -96,14 +96,15 @@ void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 				(*i)->getSocket()->writeb(tmp);
 		break;
 	case 'D':
+	case 'E':
 		if(us.count(cmd.getDest())) {
-			if(us.count(cmd.getSource()))
+			if(us.count(cmd.getSource()) && cmd.getAction() == 'E')
 				us.find(cmd.getSource())->second->getSocket()->writeb(tmp);
 			us.find(cmd.getDest())->second->getSocket()->writeb(tmp);
 		} else if(others.count(cmd.getDest())) {
 			sid_type s = cmd.getDest();
 			s &= ServerManager::instance()->getHubSidMask();
-			if(us.count(cmd.getSource()))
+			if(us.count(cmd.getSource()) && cmd.getAction() == 'E')
 				us.find(cmd.getSource())->second->getSocket()->writeb(tmp);
 			ServerManager::instance()->remoteHubs[s]->getInterHub()->getSocket()->writeb(tmp);
 		} else {
@@ -117,13 +118,15 @@ void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 		const string& feat = cmd.getFeatures();
 		for(LocalUsers::const_iterator i = us.begin(); i != us.end(); ++i) {
 			Client* c = i->second;
-			bool send = false;
+			bool send = true;
 			for(string::size_type j = 0; j < feat.size(); j += 5) {
 				if(feat[j] == '+' && c->getUserInfo()->hasSupport(feat.substr(j+1, 4)))
 					send = true;
-				if(feat[j] == '-' && !c->getUserInfo()->hasSupport(feat.substr(j+1, 4)))
+				else if(feat[j] == '-' && !c->getUserInfo()->hasSupport(feat.substr(j+1, 4)))
 					send = true;
 				else {
+					Logs::line << "not sending to user " << ADC::fromSid(c->getSid())
+							<< "because of feature " << feat.substr(j+1, 4) << endl;
 					send = false;
 					break;
 				}

@@ -9,11 +9,35 @@
 #include "Settings.h"
 #include "Logs.h"
 
+#include <boost/lambda/construct.hpp> // for delete_ptr
+
 using namespace qhub;
 using namespace std;
 
 ConnectionManager::ConnectionManager() throw()
 {
+	XmlTok* p = Settings::instance()->getConfig("__connections");
+	XmlTok* pp;
+
+	// we only want to do this the first time, not on reloads
+	p->findChild("interconnect");
+	while((pp = p->getNextChild())) {
+		const string& host = pp->getAttr("host");
+		int port = Util::toInt(pp->getAttr("port"));
+		const string& pass = pp->getAttr("password");
+		if(host.empty() || port <= 0 || port > 65535)
+			continue;
+		Logs::stat << "Connecting to " << host << ':' << port << endl; 
+		openInterConnection(host, port, pass);
+	}
+	load();
+}
+
+void ConnectionManager::load() throw()
+{
+	for_each(listenSocks.begin(), listenSocks.end(), boost::lambda::delete_ptr());
+	listenSocks.clear();
+
 	XmlTok* p = Settings::instance()->getConfig("__connections");
 	XmlTok* pp;
 
@@ -32,17 +56,6 @@ ConnectionManager::ConnectionManager() throw()
 		if(port > 0 && port <= 65535)
 			openInterPort(port);
 	}
-
-	p->findChild("interconnect");
-	while((pp = p->getNextChild())) {
-		string host = pp->getAttr("host");
-		int port = Util::toInt(pp->getAttr("port"));
-		string pass = pp->getAttr("password");
-		if(host.empty() || port <= 0 || port > 65535)
-			continue;
-		Logs::stat << "Connecting to " << host << ':' << port << endl; 
-		openInterConnection(host, port, pass);
-	}
 }
 
 void ConnectionManager::openClientPort(int port)
@@ -52,6 +65,7 @@ void ConnectionManager::openClientPort(int port)
 #ifdef ENABLE_IPV6
 	try {
 		tmp = new ServerSocket(Socket::IP6, port, ServerSocket::LEAF_HANDLER);
+		listenSocks.push_back(tmp);
 		return;
 	} catch(const socket_error&) {
 		delete tmp;
@@ -61,6 +75,7 @@ void ConnectionManager::openClientPort(int port)
 
 	try {
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::LEAF_HANDLER);
+		listenSocks.push_back(tmp);
 		return;
 	} catch(const socket_error& e) {
 		delete tmp;
@@ -75,6 +90,7 @@ void ConnectionManager::openInterPort(int port)
 #ifdef ENABLE_IPV6
 	try {
 		tmp = new ServerSocket(Socket::IP6, port, ServerSocket::INTER_HUB);
+		listenSocks.push_back(tmp);
 		return;
 	} catch(const socket_error&) {
 		delete tmp;
@@ -83,6 +99,7 @@ void ConnectionManager::openInterPort(int port)
 
 	try {
 		tmp = new ServerSocket(Socket::IP4, port, ServerSocket::INTER_HUB);
+		listenSocks.push_back(tmp);
 		return;
 	} catch(const socket_error& e) {
 		delete tmp;

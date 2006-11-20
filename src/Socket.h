@@ -53,7 +53,7 @@ public:
 
 	void connect(const string& ip, short port) throw(socket_error);
 	void bind(const string& a, short port) throw();
-	void listen(int backlog = 8192) throw();
+	void listen(int backlog = 8192) throw(socket_error);
 	void accept(int& fd, Domain& d) throw();
 
 	int read(void* buf, int len) throw(socket_error);

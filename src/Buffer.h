@@ -30,7 +30,8 @@ public:
 	virtual const uint8_t* data() const { return &buf[0]; }
 	virtual std::vector<uint8_t>::size_type size() const { return buf.size(); }
 
-	typedef boost::shared_ptr<Buffer> Ptr;
+	typedef boost::shared_ptr<const Buffer> Ptr;
+	typedef boost::shared_ptr<Buffer> MutablePtr;
 protected:
 	std::vector<uint8_t> buf;
 	int prio;

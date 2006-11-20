@@ -84,15 +84,17 @@ void Socket::connect(const string& ip, short port) throw(socket_error)
 	if(dest_addr.sin_addr.s_addr == INADDR_NONE)
 		throw socket_error(ip + " is not a valid IP address");
 
-	if(!::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr)))
+	if(!::connect(getFd(), reinterpret_cast<sockaddr*>(&dest_addr), sizeof(sockaddr))
+			&& errno != EINPROGRESS) // ok if failed because of in progress
 		throw socket_error("can't connect to " + ip + ": " + Util::errnoToString(errno));
 
 	EventManager::instance()->enableRead(getFd(), this);
 }
 
-void Socket::listen(int backlog) throw()
+void Socket::listen(int backlog) throw(socket_error)
 {
-	::listen(fd, backlog);
+	if(::listen(fd, backlog) == -1)
+		throw socket_error(Util::errnoToString(errno));
 }
 
 void Socket::bind(const string& a, short p) throw()
@@ -152,7 +154,7 @@ void Socket::bind(const string& a, short p) throw()
 void Socket::accept(int& f, Domain& d) throw()
 {
 	d = domain;
-	f = ::accept(fd, NULL,  NULL); // will return -1 on error
+	f = ::accept(fd, NULL, NULL); // will return -1 on error
 }
 
 void Socket::disconnect(const string& msg)

@@ -8,6 +8,13 @@
 
 namespace qhub {
 
+struct SettingsListener {
+	virtual void load() throw() = 0;
+
+	// quiet, compiler
+	virtual ~SettingsListener() {}
+};
+
 class Settings : public Singleton<Settings> {
 public:
 	XmlTok* getConfig(const std::string& name) throw();

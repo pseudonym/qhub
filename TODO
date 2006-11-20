@@ -28,6 +28,7 @@ More work on multihub support (much has been accomplished however)
 re-work UserData class, possibly using just a hash_map<string,boost::any>
 	boost::any_cast causes problems with plugins; the underlying dynamic_cast requires RTTI,
 		not present if plugin not yet loaded
+	use boost::variant<int, string, void*> ?
 
 Polish plugins
 	add operator functions plugin for bans, etc
