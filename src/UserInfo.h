@@ -17,7 +17,7 @@ namespace qhub {
 
 class UserInfo {
 public:
-	typedef std::map<uint16_t, string> InfMap;
+	typedef std::map<uint16_t, std::string> InfMap;
 	typedef InfMap::const_iterator const_iterator;
 	const_iterator begin() throw() { return infMap.begin(); };
 	const_iterator end() throw() { return infMap.end(); };
@@ -40,7 +40,7 @@ public:
 	Command const& toADC(sid_type sid) throw() {
 		if(modified) {
 			Command(get("HU").empty() ? 'B' : 'S', Command::INF, sid).swap(cmd);
-			string temp(2, ' ');
+			std::string temp(2, ' ');
 			for(InfMap::const_iterator i = infMap.begin(); i != infMap.end(); ++i) {
 				temp.clear();
 				temp += (char)(i->first >> 8);
@@ -69,35 +69,35 @@ public:
 	}
 
 	// Setters
-	void set(u_int16_t key, string const& val) throw() {
+	void set(u_int16_t key, std::string const& val) throw() {
 		modified = true;
 		infMap[key] = val;
 	}
-	void set(char const* key, string const& val) throw() {
+	void set(char const* key, std::string const& val) throw() {
 		assert(strlen(key) == 2);
 		set(UIID(key[0], key[1]), val);
 	}
-	void set(string const& key, string const& val) throw() {
+	void set(std::string const& key, std::string const& val) throw() {
 		assert(key.length() == 2);
 		set(UIID(key[0], key[1]), val);
 	}
-	void set(string const& keyAndVal) throw() {
+	void set(std::string const& keyAndVal) throw() {
 		assert(keyAndVal.length() >= 2);
 		set(UIID(keyAndVal[0], keyAndVal[1]), keyAndVal.substr(2));
 	}
 
 	// Getters
-	string const& get(u_int16_t key) const throw() {
+	std::string const& get(u_int16_t key) const throw() {
 		InfMap::const_iterator i = infMap.find(key);
 		if(i != infMap.end())
 			return i->second;
 		return Util::emptyString;
 	}
-	string const& get(char const* key) const throw() {
+	std::string const& get(char const* key) const throw() {
 		assert(strlen(key) == 2);
 		return get(UIID(key[0], key[1]));
 	}
-	string const& get(string const& key) const throw() {
+	std::string const& get(std::string const& key) const throw() {
 		assert(key.length() == 2);
 		return get(UIID(key[0], key[1]));
 	}
@@ -114,7 +114,7 @@ public:
 		assert(strlen(key) == 2);
 		return del(UIID(key[0], key[1]));
 	}
-	bool del(string const& key) throw() {
+	bool del(std::string const& key) throw() {
 		assert(key.length() == 2);
 		return del(UIID(key[0], key[1]));
 	}
@@ -130,22 +130,22 @@ public:
 		assert(strlen(key) == 2);
 		return has(UIID(key[0], key[1]));
 	}
-	bool has(string const& key) const throw() {
+	bool has(std::string const& key) const throw() {
 		assert(key.length() == 2);
 		return has(UIID(key[0], key[1]));
 	}
 
 	// Quick access
-	string const& getNick() const throw() {
+	std::string const& getNick() const throw() {
 		return get(UIID('N','I'));
 	}
-	string const& getCID() const throw() {
+	std::string const& getCID() const throw() {
 		return get(UIID('I','D'));
 	}
 	int const getOp() const throw() {
 		return get("OP").empty() ? 0 : 1;
 	}
-	bool const hasSupport(const string& feat) const throw()
+	bool const hasSupport(const std::string& feat) const throw()
 	{
 		const StringList& sl = Util::stringTokenize(get(UIID('S','U')), ',');
 		return find(sl.begin(), sl.end(), feat) != sl.end();

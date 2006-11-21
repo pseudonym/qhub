@@ -10,6 +10,7 @@ class Hub;
 class ServerSocket : public Socket {
 public:
 	ServerSocket(Domain domain, int port, int type);
+	~ServerSocket() throw();
 
 	enum socketTypes {
 	    INTER_HUB,

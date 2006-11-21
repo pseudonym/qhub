@@ -5,20 +5,36 @@
 #include "ADC.h"
 #include "UserInfo.h"
 #include "ServerManager.h"
+#include "ZBuffer.h"
 
 using namespace std;
 using namespace qhub;
 
 void ClientManager::getUserList(ConnectionBase* c) throw()
 {
-	Buffer::MutablePtr t(new Buffer());
+	// if we can, compress the user list
+	// TODO cache this, and rebuild every once in a while
+	// like Aquila does
+	if(c->hasSupport("ZLIF")) {
+		boost::shared_ptr<ZBuffer> t(new ZBuffer());
+		fillUserListBuf(t);
+		t->finalize();
+		c->getSocket()->writeb(t);
+	} else {
+		Buffer::MutablePtr t(new Buffer());
+		fillUserListBuf(t);
+		c->getSocket()->writeb(t);
+	}
+}
+
+void ClientManager::fillUserListBuf(Buffer::MutablePtr t)
+{
 	for(LocalUsers::iterator i = localUsers.begin(); i != localUsers.end(); i++) {
 		t->append(i->second->getAdcInf());
 	}
 	for(RemoteUsers::iterator i = remoteUsers.begin(); i != remoteUsers.end(); i++) {
 		t->append(i->second->toADC(i->first));
 	}
-	c->getSocket()->writeb(t);
 }
 
 bool ClientManager::hasClient(sid_type sid, bool localonly) const throw()

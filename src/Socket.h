@@ -22,8 +22,6 @@
 #include "Util.h"
 #include "EventManager.h"
 
-using namespace std;
-
 
 // these should probably be deprecated, as they aren't actually used
 // (we're just using normal queues for actual output)
@@ -51,21 +49,21 @@ public:
 	bool setNonBlocking() throw();
 	bool setSendTimeout(size_t seconds) throw();
 
-	void connect(const string& ip, short port) throw(socket_error);
-	void bind(const string& a, short port) throw();
+	void connect(const std::string& ip, short port) throw(socket_error);
+	void bind(const std::string& a, short port) throw();
 	void listen(int backlog = 8192) throw(socket_error);
 	void accept(int& fd, Domain& d) throw();
 
 	int read(void* buf, int len) throw(socket_error);
 	int write(void* buf, int len) throw(socket_error);
 	//beware: this will copy string. Limit use.
-	void write(string const& s, int prio = PRIO_NORM) throw();
+	void write(std::string const& s, int prio = PRIO_NORM) throw();
 	void writeb(Buffer::Ptr b) throw();
 
 	int getFd() const throw() { return fd; }
 	Domain getDomain() const throw() { return ip4OverIp6 ? IP4 : domain; };
-	string const& getSockName() const throw() { return sockName; };
-	string const& getPeerName() const throw() { return peerName; };
+	std::string const& getSockName() const throw() { return sockName; };
+	std::string const& getPeerName() const throw() { return peerName; };
 
 protected:
 	int fd;
@@ -75,12 +73,12 @@ protected:
 	socklen_t saddrl;
 	void* inaddrp;
 
-	string sockName, peerName;
+	std::string sockName, peerName;
 	bool ip4OverIp6;
 	
 	//output queue
 	//priority_queue<Buffer::Ptr> queue;
-	queue<Buffer::Ptr> queue;
+	std::queue<Buffer::Ptr> queue;
 
 	void partialWrite();
 	bool writeEnabled;
@@ -89,7 +87,7 @@ protected:
 
 	//signals that we should die
 	bool disconnected;
-	virtual void disconnect(const string& msg = Util::emptyString);
+	virtual void disconnect(const std::string& msg = Util::emptyString);
 
 private:
 	void create() throw();

@@ -3,6 +3,7 @@
 
 #define BOOST_SP_DISABLE_THREADS
 #include <boost/shared_ptr.hpp>
+#include <boost/noncopyable.hpp>
 
 #include "Command.h"
 
@@ -11,10 +12,9 @@
 
 namespace qhub {
 
-class Buffer {
+class Buffer : boost::noncopyable {
 public:
 	Buffer() : prio(0) {}
-	Buffer(Buffer& b) : buf(b.buf), prio(b.prio) {}
 	explicit Buffer(std::string const& b, int p=0) : buf(b.begin(), b.end()), prio(p) {}
 	explicit Buffer(Command const& c, int p=0) : buf(c.toString().begin(), c.toString().end()), prio(p) {}
 	explicit Buffer(int p) : prio(p) {}

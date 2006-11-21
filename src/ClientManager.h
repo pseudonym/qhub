@@ -5,6 +5,7 @@
 #include "Singleton.h"
 #include "id.h"
 #include "Client.h"
+#include "Buffer.h"
 
 namespace qhub {
 
@@ -26,6 +27,8 @@ public:
 private:
 	friend void dispatch(const Command&, ConnectionBase*) throw();
 	friend class Singleton<ClientManager>;
+
+	void fillUserListBuf(Buffer::MutablePtr);
 
 	LocalUsers localUsers;
 

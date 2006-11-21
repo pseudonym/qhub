@@ -29,7 +29,7 @@ public:
 	short getPort() const { return port; }
 
 	// from ConnectionBase
-	virtual void doError(string const& msg, int code, string const& flag) throw();
+	virtual void doError(std::string const& msg, int code, std::string const& flag) throw();
 	virtual void doWarning(const std::string& msg) throw();
 
 protected:

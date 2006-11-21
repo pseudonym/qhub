@@ -41,8 +41,8 @@ public:
 	sid_type getHubSidMask() const throw() { return sidMask; }
 	sid_type getClientSidMask() const throw() { return ~getHubSidMask(); }
 
-	typedef map<sid_type, RemoteHub*> RemoteHubs;
-	typedef vector<InterHub*> Interhubs;
+	typedef std::map<sid_type, RemoteHub*> RemoteHubs;
+	typedef std::vector<InterHub*> Interhubs;
 private:
 	friend void dispatch(const Command&, ConnectionBase*) throw();
 	friend class Singleton<ServerManager>;

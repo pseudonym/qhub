@@ -9,8 +9,6 @@
  * @deprecated
  */
 
-using namespace std;
-
 namespace qhub {
 
 struct TimerListener {

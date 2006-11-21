@@ -60,8 +60,9 @@ public:
 	typedef std::vector<feature_type> FeatureList;
 
 	Command(const Command&) throw();
-	Command(const char*, const char*) throw(parse_error);
-	Command(char a, CmdInt c, sid_type f = INVALID_SID, const std::string& feat = Util::emptyString) throw();
+	Command(const char* first, const char* last) throw(parse_error);
+	Command(char a, CmdInt c, sid_type f = INVALID_SID,
+			const std::string& feat = Util::emptyString) throw();
 	Command(CmdInt c, sid_type f, sid_type t) throw();
 
 	void swap(Command&) throw();

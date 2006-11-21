@@ -49,9 +49,6 @@ void Client::login() throw()
 
 	// send INF of hub bot to ops
 	if(userInfo->getOp())
-		// we need to make sure we don't send the reserved AAAA sid,
-		// so we add 1.  This won't conflict, as the client file
-		// descriptors start at 4 at the lowest. (0-2 are std, 3=listen)
 		send(Command('B', Command::INF, Hub::instance()->getBotSid())
 				<< "NIqhub" << "BO1" << "DEBOT -- pm to control hub"
 				<< "VE" PACKAGE_NAME "/" PACKAGE_VERSION
@@ -209,6 +206,7 @@ void Client::onLine(Command& cmd) throw(command_error)
 
 void Client::onConnected() throw()
 {
+	// disconnect if they do not complete login after 15 seconds
 	EventManager::instance()->addTimer(getSocket(), 0, 15);
 
 	Plugin::ClientConnected action;
@@ -459,6 +457,7 @@ void Client::handleSupports(Command& cmd) throw(command_error)
 	/*if(find(sl.begin("AD"), sl.end("AD"), "BASE") == sl.end()) {
 		PROTOCOL_ERROR("Invalid supports");
 	}*/
+	updateSupports(cmd);
 	send(Command('I', Command::SUP) << CmdParam("AD", "BASE"));
 	// use file descriptor for ID... just make sure we haven't overflowed
 	if((unsigned)getSocket()->getFd() != (ServerManager::instance()->getClientSidMask() & getSocket()->getFd()))

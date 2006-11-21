@@ -49,6 +49,12 @@ ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), typ
 	EventManager::instance()->enableRead(getFd(), this);
 }
 
+ServerSocket::~ServerSocket() throw()
+{
+	if(getFd() != -1)
+		close(getFd());
+}
+
 void ServerSocket::onRead(int) throw()
 {
 	while(true){

@@ -31,6 +31,7 @@ fi
 
 AC_CHECK_LIB(cares, ares_init,,[AC_MSG_ERROR([c-ares needed])])
 AC_CHECK_LIB(event, event_init,,[AC_MSG_ERROR([libevent needed])])
+AC_CHECK_LIB(z, deflate,,[AC_MSG_ERROR([zlib needed])])
 
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
