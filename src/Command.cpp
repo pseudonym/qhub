@@ -136,14 +136,16 @@ Command::Command(CmdInt c, sid_type f, sid_type t) throw()
 
 void Command::swap(Command& rhs) throw()
 {
+	using std::swap;
+
 	params.swap(rhs.params);
-	::swap(cmd, rhs.cmd);
-	::swap(action, rhs.action);
-	::swap(to, rhs.to);
-	::swap(from, rhs.from);
+	swap(cmd, rhs.cmd);
+	swap(action, rhs.action);
+	swap(to, rhs.to);
+	swap(from, rhs.from);
 	features.swap(rhs.features);
-	::swap(dirty, rhs.dirty);
-	::swap(full, rhs.full);
+	swap(dirty, rhs.dirty);
+	swap(full, rhs.full);
 }
 
 Command& Command::operator<<(const string& val) throw()
@@ -171,6 +173,7 @@ Command& Command::operator=(const Command& rhs) throw()
 
 string& Command::operator[](int pos)
 {
+	setDirty();
 	return params.at(pos);
 }
 

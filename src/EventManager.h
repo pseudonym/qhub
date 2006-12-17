@@ -7,6 +7,7 @@
 #include "compat_hashtable.h"
 #include <boost/tuple/tuple.hpp>
 #include <event.h>
+#include <cassert>
 
 namespace qhub {
 
@@ -67,11 +68,11 @@ private:
  */
 class EventListener {
 public:
-	// we want default no-action because we can, unlike stupid Java interfaces.
-	virtual void onRead(int fd) throw() {}
-	virtual void onWrite(int fd) throw() {}
-	virtual void onSignal(int sig) throw() {}
-	virtual void onTimer(int what) throw() {}
+	// they better not ask for an event they're not prepared to receive
+	virtual void onRead(int fd) throw() { assert(0 && "received event with no handler"); }
+	virtual void onWrite(int fd) throw() { assert(0 && "received event with no handler"); }
+	virtual void onSignal(int sig) throw() { assert(0 && "received event with no handler"); }
+	virtual void onTimer(int what) throw() { assert(0 && "received event with no handler"); }
 
 	virtual ~EventListener() throw() {} // to shut the compiler up :)
 };
