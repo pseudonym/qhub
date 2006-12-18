@@ -189,6 +189,7 @@ void Client::onLine(Command& cmd) throw(command_error)
 	switch(cmd.getAction()) {
 	case 'B':
 	case 'D':
+	case 'E':
 	case 'H':
 	case 'F':
 		break;

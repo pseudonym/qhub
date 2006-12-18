@@ -91,7 +91,7 @@ Command::Command(const char* first, const char* last) throw(parse_error)
 		for(StringList::iterator i = sl.begin() + loc + numPosParams[cmd]; i != sl.end(); ++i) {
 			// param name parts can't be escaped chars
 			if(i->size() < 2 || ADC::CSE(i->substr(0, 2)).size() != 2)
-				throw parse_error("invalid named parameter");
+				throw parse_error("invalid named parameter: " + *i);
 			else
 				*this << *i;
 		}
@@ -218,6 +218,7 @@ const string& Command::toString() const throw()
 			full += ' ';
 			break;
 		case 'D':
+		case 'E':
 			full += ADC::fromSid(from);
 			full += ' ';
 			full += ADC::fromSid(to);
