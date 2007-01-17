@@ -47,7 +47,7 @@ XmlTok::XmlTok(istream& is) throw(io_error)
 	XML_SetElementHandler(parser.get(), startElement, endElement);
 	XML_SetCharacterDataHandler(parser.get(), dataElement);
 
-	streamsize n;
+	size_t n;
 	do {
 		n = is.readsome(tmp.c_array(), tmp.size());
 		if(!XML_Parse(parser.get(), tmp.data(), n, n < tmp.size())) {

@@ -73,6 +73,7 @@ int main(int argc, char **argv)
 	return EventManager::instance()->run();
 }
 
+#if 0
 namespace qhub {
 
 void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
@@ -139,4 +140,4 @@ void dispatch(Command const& cmd, ConnectionBase* except /*=NULL*/) throw()
 }
 
 } // namespace qhub
-
+#endif

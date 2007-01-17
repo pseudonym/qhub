@@ -14,8 +14,6 @@ class InterHub;
 class Command;
 class ConnectionBase;
 
-extern void dispatch(const Command&, ConnectionBase*) throw();
-
 class RemoteHub {
 public:
 	RemoteHub(const UserInfo& u, InterHub* i) throw()
@@ -41,10 +39,12 @@ public:
 	sid_type getHubSidMask() const throw() { return sidMask; }
 	sid_type getClientSidMask() const throw() { return ~getHubSidMask(); }
 
+	void broadcast(const Command&, ConnectionBase* except) throw();
+	void direct(sid_type s, const Command&) throw();
+
 	typedef std::map<sid_type, RemoteHub*> RemoteHubs;
 	typedef std::vector<InterHub*> Interhubs;
 private:
-	friend void dispatch(const Command&, ConnectionBase*) throw();
 	friend class Singleton<ServerManager>;
 
 	sid_type sidMask;

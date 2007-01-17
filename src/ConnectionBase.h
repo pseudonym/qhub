@@ -38,6 +38,7 @@ public:
 	void send(const Command& cmd) { sock->write(cmd.toString(), 0); };
 	bool hasSupport(const std::string& feat) const throw() { return supp.count(feat); }
 	void updateSupports(const Command& cmd) throw();
+	void dispatch(const Command& cmd) throw();
 
 	State getState() const throw() { return state; };
 	ADCSocket* getSocket() throw() { return sock; };
@@ -53,13 +54,12 @@ public:
 	virtual void onConnected() throw() = 0;
 	virtual void onDisconnected(std::string const& clue) throw() = 0;
 
-
 protected:
 	// much easier than changing all the assignments to setState() :)
 	State state;
-	std::set<std::string> supp;
 
 private:
+	std::set<std::string> supp;
 	ADCSocket* sock;
 };
 

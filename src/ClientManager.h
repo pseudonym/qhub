@@ -19,13 +19,16 @@ public:
 
 	void getUserList(ConnectionBase*) throw();
 
+	void broadcast(const Command&) throw();
+	void broadcastFeature(const Command&) throw();
+	void direct(const Command&) throw();
+
 	bool hasNick(const std::string& nick) const throw() { return nicks.count(nick); }
 	bool hasCid(const cid_type& cid) const throw() { return cids.count(cid); }
 
 	typedef std::hash_map<sid_type, Client*> LocalUsers;
 	typedef std::hash_map<sid_type, UserInfo*> RemoteUsers;
 private:
-	friend void dispatch(const Command&, ConnectionBase*) throw();
 	friend class Singleton<ClientManager>;
 
 	void fillUserListBuf(Buffer::MutablePtr);

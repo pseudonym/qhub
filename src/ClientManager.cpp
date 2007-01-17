@@ -6,6 +6,7 @@
 #include "UserInfo.h"
 #include "ServerManager.h"
 #include "ZBuffer.h"
+#include "Logs.h"
 
 using namespace std;
 using namespace qhub;
@@ -91,5 +92,50 @@ void ClientManager::getAllInHub(sid_type hsid, std::vector<sid_type>& ret) const
 	for(RemoteUsers::const_iterator i = remoteUsers.begin(); i != remoteUsers.end(); ++i)
 		if((i->first & mask) == (hsid & mask))
 			ret.push_back(i->first);
+}
+
+void ClientManager::broadcast(const Command& cmd) throw()
+{
+	Buffer::Ptr tmp(new Buffer(cmd));
+	typedef LocalUsers::const_iterator CI;
+	for(CI i = localUsers.begin(); i != localUsers.end(); ++i)
+		i->second->getSocket()->writeb(tmp);
+}
+
+void ClientManager::broadcastFeature(const Command& cmd) throw()
+{
+	Buffer::Ptr tmp(new Buffer(cmd));
+	const string& feat = cmd.getFeatures();
+	typedef LocalUsers::const_iterator CI;
+
+	for(CI i = localUsers.begin(); i != localUsers.end(); ++i) {
+		Client* c = i->second;
+		bool send = true;
+		for(string::const_iterator j = feat.begin(); j != feat.end(); j += 5) {
+			if(*j == '+' && !c->getUserInfo()->hasSupport(string(j+1, j+4))
+					|| *j == '-' && c->getUserInfo()->hasSupport(string(j+1, j+4)))
+				Logs::line << "not sending to user " << ADC::fromSid(c->getSid())
+						<< " because of feature " << string(j+1, j+4) << endl;
+				send = false;
+				break;
+		}
+		if(send)
+			c->getSocket()->writeb(tmp);
+	}
+}
+
+void ClientManager::direct(const Command& cmd) throw()
+{
+	LocalUsers::const_iterator i = localUsers.find(cmd.getDest());
+	if(i != localUsers.end()) {
+		i->second->send(cmd);
+		return;
+	}
+	RemoteUsers::const_iterator j = remoteUsers.find(cmd.getDest());
+	if(j != remoteUsers.end()) {
+		sid_type s = cmd.getDest();
+		s &= ServerManager::instance()->getHubSidMask();
+		ServerManager::instance()->direct(s, cmd);
+	}
 }
 

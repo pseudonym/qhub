@@ -56,9 +56,6 @@ public:
 	typedef Params::iterator ParamIter;
 	typedef Params::const_iterator ConstParamIter;
 
-	typedef uint32_t feature_type;
-	typedef std::vector<feature_type> FeatureList;
-
 	Command(const Command&) throw();
 	Command(const char* first, const char* last) throw(parse_error);
 	Command(char a, CmdInt c, sid_type f = INVALID_SID,
@@ -97,9 +94,6 @@ public:
 	const std::string& getFeatures() const throw() { return features; }
 
 private:
-	static feature_type toFeature(const std::string& f) throw();
-	static std::string fromFeature(feature_type f) throw();
-
 	void setDirty() throw() { dirty = true; };
 	void checkFeatures() const throw(parse_error);
 
@@ -120,8 +114,6 @@ private:
 };
 
 typedef Command::NamedParam CmdParam;
-
-extern void dispatch(const Command&, ConnectionBase* = NULL) throw();
 
 inline void swap(Command& l, Command& r) throw() { l.swap(r); }
 

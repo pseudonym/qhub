@@ -248,17 +248,6 @@ const string& Command::toString() const throw()
 	return full;
 }
 
-Command::feature_type Command::toFeature(const string& f) throw()
-{
-	assert(f.size() == 4);
-	return *reinterpret_cast<const feature_type*>(f.data());
-}
-
-string Command::fromFeature(feature_type f) throw()
-{
-	return string(reinterpret_cast<const char*>(&f), 4);
-}
-
 void Command::checkFeatures() const throw(parse_error)
 {
 	if(features.size() % 5)

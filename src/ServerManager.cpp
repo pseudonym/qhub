@@ -56,3 +56,21 @@ bool ServerManager::hasServer(sid_type sid) const throw()
 {
 	return remoteHubs.count(sid);
 }
+
+void ServerManager::broadcast(const Command& cmd, ConnectionBase* except) throw()
+{
+	typedef Interhubs::const_iterator CI;
+	Buffer::Ptr tmp(new Buffer(cmd));
+
+	for(CI i = interhubs.begin(); i != interhubs.end(); ++i)
+		if(*i != except)
+			(*i)->getSocket()->writeb(tmp);
+}
+
+void ServerManager::direct(sid_type s, const Command& cmd) throw()
+{
+	RemoteHubs::const_iterator i = remoteHubs.find(s);
+	if(i != remoteHubs.end())
+		i->second->getInterHub()->send(cmd);
+}
+

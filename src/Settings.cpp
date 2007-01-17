@@ -18,10 +18,15 @@ using namespace std;
 
 Settings::Settings() throw(io_error) : root(NULL)
 {
-	ifstream f(CONFIGDIR "/qhub.xml");
-	if(!f.good())
-		throw io_error("could not load config file");
-	root = new XmlTok(f);
+	try {
+		ifstream f(CONFIGDIR "/qhub.xml");
+		if(!f.good())
+			throw io_error("could not load config file");
+		root = new XmlTok(f);
+	} catch(const io_error& e) {
+		// nothing to do; won't be valid so it will enter
+		// interactive load
+	}
 	load();
 }
 
@@ -35,7 +40,9 @@ XmlTok* Settings::getConfig(const string& name) throw()
 
 bool Settings::isValid() throw()
 {
-	return root->getName() == "qhub"
+	return true
+		&& root
+		&& root->getName() == "qhub"
 	    && root->findChild("__connections")
 	    && root->findChild("__hub")
 	    ;
