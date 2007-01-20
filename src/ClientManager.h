@@ -13,6 +13,7 @@ class ClientManager : public Singleton<ClientManager> {
 public:
 	bool hasClient(sid_type sid, bool localonly = false) const throw();
 	void addLocalClient(sid_type sid, Client* client) throw();
+	void userUpdated(sid_type sid, UserInfo const&) throw();
 	void addRemoteClient(sid_type sid, UserInfo const&) throw();
 	void removeClient(sid_type sid) throw();
 	void getAllInHub(sid_type, std::vector<sid_type>&) const throw();

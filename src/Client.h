@@ -70,6 +70,7 @@ private:
 	void handleDisconnect(Command&) throw();
 	void handleInfo(Command&) throw(command_error);
 	void handleMessage(Command&) throw();
+	void handleAddr(UserInfo&) throw(command_error);
 
 	void login() throw();
 	void logout() throw();

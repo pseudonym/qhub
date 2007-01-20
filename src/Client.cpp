@@ -276,13 +276,6 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 {
 	assert(state == IDENTIFY);
 
-	/*if(ClientManager::instance()->hasClient(cid) || cid == getHub()->getCID32()) {
-		// Ping other user, perhaps it's a ghost
-		getHub()->direct(cid, "\n");
-		PROTOCOL_ERROR("CID busy, change CID or wait");
-		// Note: Don't forget to check again at HPAS.. perhaps someone beat us to it.
-	}*/
-
 	// Load info
 	userInfo = new UserInfo(cmd);
 	userInfo->del("OP"); //can't have them opping themselves...
@@ -291,21 +284,8 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 	if(!userInfo->has("NI") || (userInfo->has("I4") && userInfo->has("I6")))
 		throw command_error("Missing/extraneous parameters in INF");
 
-	// Fix I4 and I6
-	if(userInfo->has("I4") && userInfo->get("I4") == "0.0.0.0") {
-		if(getSocket()->getDomain() == Socket::IP4)
-			userInfo->set("I4", getSocket()->getPeerName());
-		else
-			throw command_error("'I4' sent in INF but not connected via IPv4");
-	}
-#ifdef ENABLE_IPV6
-	else if(userInfo->has("I6") && userInfo->get("I6") == "[0:0:0:0:0:0:0:0]") {
-		if(getSocket()->getDomain() == Socket::IP6)
-			userInfo->set("I6", getSocket()->getPeerName());
-		else
-			throw command_error("'I6' sent in INF but not connected via IPv6");
-	}
-#endif
+	handleAddr(*userInfo);
+
 	const string& pid32 = userInfo->get("PD");
 	const string& cid32 = userInfo->get("ID");
 	if(pid32.size() != 39) // 39 = ceil(24*8/5)
@@ -355,6 +335,8 @@ void Client::handleInfo(Command& cmd) throw(command_error)
 	if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::STOPPED))
 		return;
 
+	handleAddr(newUserInfo);
+
 	// Do redundancy check
 	for(UserInfo::const_iterator i = newUserInfo.begin(); i != newUserInfo.end(); ++i) {
 		if(userInfo->get(i->first) == i->second) {
@@ -368,21 +350,43 @@ void Client::handleInfo(Command& cmd) throw(command_error)
 	newUserInfo.del("ID");
 
 	// check nick; we know the current one is valid
-	if(ClientManager::instance()->hasNick(newUserInfo.getNick())) {
-		doWarning("That nick is already taken");
-		newUserInfo.del("NI");
+	if(newUserInfo.has("NI")) {
+		if(ClientManager::instance()->hasNick(newUserInfo.getNick())) {
+			doWarning("That nick is already taken");
+			newUserInfo.del("NI");
+		} else {
+			ClientManager::instance()->userUpdated(getSid(), newUserInfo);
+		}
 	}
-	// TODO update nick list in ClientManager for dupes
 
 	// Broadcast
-	if(action.isSet(Plugin::MODIFIED)) {
-		dispatch(newUserInfo.toADC(getSid()));
-	} else {
-		dispatch(cmd);
-	}
+	dispatch(newUserInfo.toADC(getSid()));
 
 	// Merge new data
 	userInfo->update(newUserInfo);
+}
+
+void Client::handleAddr(UserInfo& ui) throw(command_error)
+{
+	// Fix I4 and I6
+	if(ui.has("I4")) {
+		if(getSocket()->getDomain() != Socket::IP4)
+			throw command_error("'I4' sent in INF but not connected via IPv4");
+		else if(ui.get("I4") != "0.0.0.0"
+				&& ui.get("I4") != getSocket()->getPeerName())
+			doWarning("invalid IP address sent; correcting");
+		ui.set("I4", getSocket()->getPeerName());
+	}
+#ifdef ENABLE_IPV6
+	else if(ui.has("I6")) {
+		if(getSocket()->getDomain() != Socket::IP6)
+			throw command_error("'I6' sent in INF but not connected via IPv6");
+		else if(ui.get("I6") != "[0:0:0:0:0:0:0:0]"
+				&& ui.get("I6") != getSocket()->getPeerName())
+			doWarning("iinvalid IP address sent; correcting");
+		ui.set("I6", getSocket()->getPeerName());
+	}
+#endif
 }
 
 void Client::handleMessage(Command& cmd) throw()

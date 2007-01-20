@@ -47,7 +47,9 @@ Command::Command(const char* first, const char* last) throw(parse_error)
 {
 	initNumPosParams();
 	// optimize later
-	StringList sl = Util::stringTokenize(full);
+	// this is lazy due to a DC++ bug that sends empty parameters...
+	// ideally, we should not be using it
+	StringList sl = Util::lazyStringTokenize(full);
 	full += '\n';
 	if(full.size() < 5 || sl[0].size() != 4)
 		throw parse_error("invalid message type");

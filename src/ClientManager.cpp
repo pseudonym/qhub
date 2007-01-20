@@ -51,6 +51,21 @@ void ClientManager::addLocalClient(sid_type sid, Client* client) throw()
     cids.insert(client->getUserInfo()->getCID());
 }
 
+void ClientManager::userUpdated(sid_type sid, UserInfo const& ui) throw()
+{
+	LocalUsers::iterator i = localUsers.find(sid);
+	if(i == localUsers.end())
+		assert(0); // maybe use this for remote later, but now...
+
+	const string& oldNick = i->second->getUserInfo()->getNick();
+	const string& newNick = ui.getNick();
+	if(ui.has("NI")) {
+		nicks.erase(oldNick);
+		nicks.insert(newNick);
+	}
+	// CID can't change, nothing else to do
+}
+
 void ClientManager::addRemoteClient(sid_type sid, UserInfo const& ui) throw()
 {
 	assert(!hasClient(sid) || remoteUsers.count(sid));
