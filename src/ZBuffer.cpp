@@ -33,7 +33,7 @@ void ZBuffer::init()
 	zcontext->zalloc = NULL;
 	zcontext->zfree = NULL;
 	zcontext->opaque = NULL;
-	// maybe compression level should be an option...
+	// FIXME compression level should be an option...
 	if(deflateInit(zcontext, Z_BEST_COMPRESSION) != Z_OK)
 		throw runtime_error("could not initialize zlib stream");
 }
@@ -82,15 +82,13 @@ void ZBuffer::finalize()
 
 const uint8_t* ZBuffer::data() const
 {
-	if(!finalized)
-		throw runtime_error("zlib stream not finalized before use!");
+	assert(finalized && "zlib stream not finalized before use!");
 	return Buffer::data();
 }
 
 std::vector<uint8_t>::size_type ZBuffer::size() const
 {
-	if(!finalized)
-		throw runtime_error("zlib stream not finalized before use!");
+	assert(finalized && "zlib stream not finalized before use!");
 	return Buffer::size();
 }
 

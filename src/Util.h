@@ -36,6 +36,13 @@ public:
 		return strerror(err);
 	}
 
+	// seems to make sense to just make all these into one function
+	template<typename To, typename From>
+	static To convert(const From& v) throw(boost::bad_lexical_cast)
+	{
+		return boost::lexical_cast<To>(v);
+	}
+
 	static int toInt(char const* p) throw(boost::bad_lexical_cast)
 	{
 		return boost::lexical_cast<int>(p);

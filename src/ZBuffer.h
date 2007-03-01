@@ -20,6 +20,7 @@ public:
 	virtual const uint8_t* data() const;
 	virtual std::vector<uint8_t>::size_type size() const;
 
+	typedef boost::shared_ptr<ZBuffer> MutablePtr;
 protected:
 	void init();
 

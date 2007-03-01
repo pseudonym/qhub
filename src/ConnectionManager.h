@@ -11,7 +11,7 @@ namespace qhub {
 
 class ServerSocket;
 
-class ConnectionManager : public Singleton<ConnectionManager>, public SettingsListener {
+class ConnectionManager : public Singleton<ConnectionManager> {
 public:
 	void openClientPort(int port);
 	void openInterPort(int port);
@@ -20,7 +20,7 @@ public:
 	void acceptLeaf(int fd, Socket::Domain d);
 	void acceptInterHub(int fd, Socket::Domain d);
 
-	virtual void load() throw();
+	void load() throw();
 
 private:
 	friend class Singleton<ConnectionManager>;

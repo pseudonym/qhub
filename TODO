@@ -3,7 +3,6 @@ Start doing things on the TODO
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
 
 Low-level network handling
-	Queue broadcast messages
 	Rate-limiting (allow bursting or not? its DDOSable.)
 	Add customizable flood protection in ADCSocket
 

@@ -8,6 +8,7 @@
 #include "UserData.h"
 #include "ADC.h"
 #include "Logs.h"
+#include "Util.h"
 #include "ClientManager.h"
 #include "ServerManager.h"
 #include "PluginManager.h"
@@ -46,6 +47,39 @@ void Client::login() throw()
 	PluginManager::instance()->fire(action, this);
 	if(action.isSet(Plugin::DISCONNECTED) || action.isSet(Plugin::HANDLED))
 		return;
+
+	// increment corresponding hub count
+	if(userInfo->getOp()) {
+		int i = 0;
+		try {
+			i = Util::convert<int>(userInfo->get("HO"));
+		} catch(...) {
+			doWarning("HO field in INF is invalid or nonexistent");
+			// just pretend it's 0
+		}
+		i++;
+		userInfo->set("HO", Util::convert<string>(i));
+	} else if(!password.empty()) { // registered user
+		int i = 0;
+		try {
+			i = Util::convert<int>(userInfo->get("HR"));
+		} catch(...) {
+			doWarning("HR field in INF is invalid or nonexistent");
+		}
+		i++;
+		userInfo->set("HR", Util::convert<string>(i));
+	} else { // normal user
+		int i = 0;
+		try {
+			i = Util::convert<int>(userInfo->get("HN"));
+		} catch(...) {
+			doWarning("HN field in INF is invalid or nonexistent");
+		}
+		i++;
+		userInfo->set("HR", Util::convert<string>(i));
+	}
+
+	password.clear();
 
 	// send INF of hub bot to ops
 	if(userInfo->getOp())
@@ -452,7 +486,6 @@ void Client::handlePassword(Command& cmd) throw()
 		return;
 	}*/
 	// Oki, do login
-	password.clear();
 	login();
 }
 

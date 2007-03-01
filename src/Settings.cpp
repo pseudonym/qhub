@@ -64,7 +64,7 @@ void Settings::loadInteractive() throw()
 	getline(cin, name);
 	cout << "Client ports (0 when done): ";
 	while(cin) {
-		int port;
+		int port = 0;
 		cin >> port;
 		if(!port)
 			break;
@@ -72,7 +72,7 @@ void Settings::loadInteractive() throw()
 	}
 	cout << "Interconnect ports (0 when done): ";
 	while(cin) {
-		int port;
+		int port = 0;
 		cin >> port;
 		if(!port)
 			break;

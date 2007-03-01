@@ -13,9 +13,9 @@ public:
 	~ServerSocket() throw();
 
 	enum socketTypes {
-	    INTER_HUB,
-	    LEAF_HANDLER,
-	    LAST
+		INTER_HUB,
+		LEAF_HANDLER,
+		LAST
 	};
 
 protected:

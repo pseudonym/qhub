@@ -35,11 +35,13 @@ namespace qhub {
 
 class Socket : public EventListener {
 public:
-	enum Domain { IP4 = PF_INET, 
+	enum Domain {
+		IP4 = PF_INET, 
 #ifdef ENABLE_IPV6
-        IP6 = PF_INET6 
+		IP6 = PF_INET6 
 #endif
-        };
+	};
+
 	Socket(Domain d = IP4, int t = SOCK_STREAM, int p = 0) throw(socket_error); // new sockets
 	Socket(int fd, Domain d) throw(); // existing sockets
 	virtual ~Socket() throw();

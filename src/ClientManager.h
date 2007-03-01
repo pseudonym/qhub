@@ -9,7 +9,7 @@
 
 namespace qhub {
 
-class ClientManager : public Singleton<ClientManager> {
+class ClientManager : public Singleton<ClientManager>, public EventListener {
 public:
 	bool hasClient(sid_type sid, bool localonly = false) const throw();
 	void addLocalClient(sid_type sid, Client* client) throw();
@@ -21,6 +21,9 @@ public:
 	void getUserList(ConnectionBase*) throw();
 
 	void broadcast(const Command&) throw();
+	virtual void onTimer(int) throw();
+	void purgeQueue() throw();
+
 	void broadcastFeature(const Command&) throw();
 	void direct(const Command&) throw();
 
@@ -38,8 +41,13 @@ private:
 
 	RemoteUsers remoteUsers;
 
-    std::hash_set<string> nicks;
-    std::hash_set<cid_type> cids;
+	std::hash_set<string> nicks;
+	std::hash_set<cid_type> cids;
+
+	std::vector<Command> broadcastQueue;
+
+	ClientManager() throw() {}
+	~ClientManager() throw() {}
 };
 
 } // namespace qhub
