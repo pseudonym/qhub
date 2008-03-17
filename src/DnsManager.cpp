@@ -113,7 +113,7 @@ void DnsManager::sockCallback(void* arg, int fd, int read, int write)
 		EventManager::instance()->disableWrite(fd);
 }
 
-void DnsManager::lookupCallback(void* arg, int status, struct hostent* host)
+void DnsManager::lookupCallback(void* arg, int status, int timeouts, struct hostent* host)
 {
 	DnsListener* dl = static_cast<DnsListener*>(arg);
 

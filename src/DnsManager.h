@@ -36,7 +36,7 @@ private:
 	ares_channel chan;
 
 	static void sockCallback(void* arg, int fd, int read, int write);
-	static void lookupCallback(void* arg, int status, struct hostent* host);
+	static void lookupCallback(void* arg, int status, int timeouts, struct hostent* host);
 
 	DnsManager() throw();
 	~DnsManager() throw() {}
