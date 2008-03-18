@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef CONNECTIONBASE_H
-#define CONNECTIONBASE_H
+#ifndef QHUB_CONNECTIONBASE_H
+#define QHUB_CONNECTIONBASE_H
 
 #include <boost/utility.hpp>
 #include <set>
@@ -65,4 +65,4 @@ private:
 
 } //namespace qhub
 
-#endif // CONNECTIONBASE_H
+#endif // QHUB_CONNECTIONBASE_H

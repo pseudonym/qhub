@@ -1,9 +1,13 @@
-#ifndef __DNSADAPTER_H_
-#define __DNSADAPTER_H_
+#ifndef QHUB_DNSADAPTER_H
+#define QHUB_DNSADAPTER_H
 
 #include "EventManager.h"
 #include <string>
 #include <ares.h>
+
+/*
+ * This is deprecated and will be removed soon
+ */
 
 namespace qhub {
 
@@ -29,8 +33,6 @@ protected:
 	int fd;
 };
 
-
 }
-
 
 #endif

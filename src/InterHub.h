@@ -1,5 +1,5 @@
-#ifndef __INTERHUB_H_
-#define __INTERHUB_H_
+#ifndef QHUB_INTERHUB_H
+#define QHUB_INTERHUB_H
 
 #include "ConnectionBase.h"
 #include "EventManager.h"
@@ -59,5 +59,4 @@ private:
 
 } // namespace qhub
 
-
-#endif // __INTERHUB_H
+#endif // QHUB_INTERHUB_H

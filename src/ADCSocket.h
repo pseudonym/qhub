@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_ADCSOCKET_H_
-#define _INCLUDED_ADCSOCKET_H_
+#ifndef QHUB_ADCSOCKET_H
+#define QHUB_ADCSOCKET_H
 
 #include "Socket.h"
 
@@ -48,4 +48,4 @@ private:
 
 } //namespace qhub
 
-#endif //_INCLUDED_ADCSOCKET_H_
+#endif //QHUB_ADCSOCKET_H

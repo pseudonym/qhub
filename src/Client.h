@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_CLIENT_H_
-#define _INCLUDED_CLIENT_H_
+#ifndef QHUB_CLIENT_H
+#define QHUB_CLIENT_H
 
 #include <vector>
 #include <string>
@@ -86,4 +86,4 @@ private:
 
 }
 
-#endif //_INCLUDED_CLIENT_H_
+#endif //QHUB_CLIENT_H

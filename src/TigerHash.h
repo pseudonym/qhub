@@ -16,16 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _TIGER_HASH
-#define _TIGER_HASH
+#ifndef QHUB_TIGERHASH_H
+#define QHUB_TIGERHASH_H
 
-#include <sys/types.h>
+#include "types.h"
 
 #define _ULL(x) x##ull
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 class TigerHash {
 public:
@@ -33,37 +29,32 @@ public:
 	enum { HASH_SIZE = 24 };
 
 	TigerHash() : pos(0) {
-		res[0]=_ULL(0x0123456789ABCDEF);
-		res[1]=_ULL(0xFEDCBA9876543210);
-		res[2]=_ULL(0xF096A5B4C3B2E187);
+		res[0] = _ULL(0x0123456789ABCDEF);
+		res[1] = _ULL(0xFEDCBA9876543210);
+		res[2] = _ULL(0xF096A5B4C3B2E187);
 	}
 
 	~TigerHash() {
 	}
 
 	/** Calculates the Tiger hash of the data. */
-	void update(const void* data, u_int32_t len);
+	void update(const void* data, uint32_t len);
 	/** Call once all data has been processed. */
-	u_int8_t* finalize();
+	uint8_t* finalize();
 
-	u_int8_t* getResult() { return (u_int8_t*) res; };
+	uint8_t* getResult() { return reinterpret_cast<uint8_t*>(res); };
 private:
 	enum { BLOCK_SIZE = 512/8 };
 	/** 512 bit blocks for the compress function */
-	u_int8_t tmp[512/8];
+	uint8_t tmp[BLOCK_SIZE];
 	/** State / final hash value */
-	u_int64_t res[3];
+	uint64_t res[3];
 	/** Total number of bytes compressed */
-	u_int64_t pos;
+	uint64_t pos;
 	/** S boxes */
-	static u_int64_t table[];
+	static uint64_t table[];
 
-	void tigerCompress(const u_int64_t* data, u_int64_t state[3]);
+	void tigerCompress(const uint64_t* data, uint64_t state[3]);
 };
 
-#endif // _TIGER_HASH
-
-/**
- * @file
- * $Id: TigerHash.h,v 1.4 2004/04/18 12:51:14 arnetheduck Exp $
- */
+#endif // QHUB_TIGERHASH_H

@@ -1,5 +1,5 @@
-#ifndef LOGS_H_INCLUDED
-#define LOGS_H_INCLUDED
+#ifndef QHUB_LOGS_H
+#define QHUB_LOGS_H
 
 #include <ostream>
 #include <string>
@@ -28,4 +28,4 @@ using boost::format;
 
 }
 
-#endif // LOGS_H_INCLUDED
+#endif // QHUB_LOGS_H

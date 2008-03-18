@@ -6,19 +6,6 @@
 
 namespace qhub {
 
-/*
-class work
-{
-public:
-	work(int work, int priority) : consume(work), prio(priority) {};
-	virtual void doWork(void) = 0;
-	virtual bool operator<(const work& a) { return prio<a.prio;};
-protected:
-	int consume;
-	int prio;
-};
-*/
-
 class TokenBucket
 {
 public:

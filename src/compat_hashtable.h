@@ -58,6 +58,4 @@ template<> struct hash< std::string >
 /** END FIX **/
 
 
-#endif
-
-
+#endif //QHUB_COMPAT_HASHTABLE_H

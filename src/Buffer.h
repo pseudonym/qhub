@@ -1,5 +1,5 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef QHUB_BUFFER_H
+#define QHUB_BUFFER_H
 
 #define BOOST_SP_DISABLE_THREADS
 #include <boost/shared_ptr.hpp>
@@ -39,4 +39,4 @@ protected:
 
 }
 
-#endif
+#endif // QHUB_BUFFER_H

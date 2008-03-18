@@ -1,7 +1,9 @@
 #ifndef QHUB_TYPES_H
 #define QHUB_TYPES_H
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #ifdef HAVE_STDINT_H
 #include "stdint.h"

@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_USERINFO_H_
-#define _INCLUDED_USERINFO_H_
+#ifndef QHUB_USERINFO_H
+#define QHUB_USERINFO_H
 
 #include <map>
 #include <string>
@@ -161,4 +161,4 @@ private:
 
 } //namespace qhub
 
-#endif //_INCLUDED_USERINFO_H_
+#endif //QHUB_USERINFO_H

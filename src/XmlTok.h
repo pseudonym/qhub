@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_XMLTOK_H_
-#define _INCLUDED_XMLTOK_H_
+#ifndef QHUB_XMLTOK_H
+#define QHUB_XMLTOK_H
 
 #include <vector>
 #include <string>
@@ -64,4 +64,4 @@ private:
 
 } //namespace qhub
 
-#endif //_INCLUDED_XMLTOK_H_
+#endif //QHUB_XMLTOK_H

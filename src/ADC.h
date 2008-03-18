@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_ADC_H_
-#define _INCLUDED_ADC_H_
+#ifndef QHUB_ADC_H
+#define QHUB_ADC_H
 
 #include <string>
 #include "Util.h"
@@ -21,4 +21,4 @@ public:
 
 } //namespace qhub
 
-#endif //_INCLUDED_ADC_H_
+#endif //QHUB_ADC_H

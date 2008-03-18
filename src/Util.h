@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_UTIL_H_
-#define _INCLUDED_UTIL_H_
+#ifndef QHUB_UTIL_H
+#define QHUB_UTIL_H
 
 #include <string>
 #include <vector>
@@ -69,4 +69,4 @@ public:
 
 } //namespace qhub
 
-#endif //_INCLUDED_UTIL_H_
+#endif //QHUB_UTIL_H
