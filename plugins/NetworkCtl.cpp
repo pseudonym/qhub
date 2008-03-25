@@ -17,11 +17,7 @@ using namespace qhub;
 /*
  * Plugin loader
  */
-
-extern "C" {
-	void* getPlugin() { return new NetworkCtl(); }
-} //extern "C"
-
+QHUB_GET_PLUGIN(NetworkCtl)
 
 
 /*

@@ -14,11 +14,7 @@ using namespace qhub;
 /*
  * Plugin loader
  */
-
-extern "C" {
-	void* getPlugin() { return new VirtualFs(); }
-} //extern "C"
-
+QHUB_GET_PLUGIN(VirtualFs)
 
 
 /*

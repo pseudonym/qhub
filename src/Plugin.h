@@ -177,6 +177,14 @@ private:
 	void* handle;
 };
 
+/*
+ * macro for defining the function used to retrieve plugin from shared library.
+ * static cast to plugin first because plugin part of object might not be at
+ * offset 0.
+ */
+#define QHUB_GET_PLUGIN(Name) \
+	extern "C" void* getPlugin() { return static_cast<Plugin*>(new Name); }
+
 } //namespace qhub
 
 #endif //QHUB_PLUGIN_H

@@ -12,11 +12,7 @@ using namespace qhub;
 /*
  * Plugin loader
  */
-
-extern "C" {
-	void* getPlugin() { return new Loader(); }
-} //extern "C"
-
+QHUB_GET_PLUGIN(Loader)
 
 
 /*

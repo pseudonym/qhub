@@ -15,11 +15,7 @@ using namespace std;
 /*
  * Plugin loader
  */
-
-extern "C" {
-	void* getPlugin() { return new Accounts(); }
-} //extern "C"
-
+QHUB_GET_PLUGIN(Accounts)
 
 
 /*

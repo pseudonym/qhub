@@ -19,11 +19,7 @@ using namespace qhub;
 /*
  * Plugin loader
  */
-
-extern "C" {
-	void* getPlugin() { return new Bans(); }
-} //extern "C"
-
+QHUB_GET_PLUGIN(Bans)
 
 
 /*

@@ -13,11 +13,7 @@ using namespace qhub;
 /*
  * Plugin loader
  */
-
-extern "C" {
-	void* getPlugin() { return new FsUtil(); }
-} //extern "C"
-
+QHUB_GET_PLUGIN(FsUtil)
 
 
 /*
