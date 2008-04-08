@@ -1,19 +1,17 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_PLUGINS_DIR_H_
-#define _INCLUDED_PLUGINS_DIR_H_
+#ifndef QHUB_PLUGIN_VIRTUALFSDIR_H
+#define QHUB_PLUGIN_VIRTUALFSDIR_H
 
 #include "Util.h"
 
 #include <map>
 #include <cassert>
 
-using namespace std;
-
 namespace qhub {
 
 class Dir {
 public:
-	Dir(string const& n = Util::emptyString, Dir* parent = NULL) throw() : name(n), partial(false) {
+	Dir(std::string const& n = Util::emptyString, Dir* parent = NULL) throw() : name(n), partial(false) {
 		if(parent != NULL) {
 			subDirs[".."] = parent;
 			partial = parent->partial;
@@ -25,21 +23,21 @@ public:
 				delete i->second;
 		}
 	}
-	string toString(int indent = 0) const throw() {
-		string ret;
+	std::string toString(int indent = 0) const throw() {
+		std::string ret;
 		for(SubDirs::const_iterator i = subDirs.begin(); i != subDirs.end(); ++i) {
-			ret += string(indent, ' ') + i->first + "/\n";
+			ret += std::string(indent, ' ') + i->first + "/\n";
 			if(i->first != "..")
 				ret += i->second->toString(indent + 1);
 		}
 		for(Nodes::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
-			ret += string(indent, ' ') + i->first + "\n";
+			ret += std::string(indent, ' ') + i->first + "\n";
 		}
 		ret.erase(ret.end()-1);
 		return ret;
 	}
-	string ls() const throw() {
-		string ret;
+	std::string ls() const throw() {
+		std::string ret;
 		for(SubDirs::const_iterator i = subDirs.begin(); i != subDirs.end(); ++i) {
 			ret += i->first + "/\n";
 		}
@@ -49,7 +47,7 @@ public:
 		ret.erase(ret.end()-1);
 		return ret;
 	}	
-	string toPath() const throw() {
+	std::string toPath() const throw() {
 		SubDirs::const_iterator i = subDirs.find("..");
 		if(i == subDirs.end())
 			return "/";
@@ -62,7 +60,7 @@ public:
 			next = i->second;
 		return next;
 	}
-	Dir* cd(string const& path) throw() {
+	Dir* cd(std::string const& path) throw() {
 		Dir* next = NULL;
 		// go to root
 		if(path.empty() || path[0] == '/')
@@ -98,21 +96,21 @@ public:
 		}
 		return next;
 	}
-	Dir* md(string const& path) throw() {
+	Dir* md(std::string const& path) throw() {
 		if(path.empty() || path == "/")
 			return NULL;
-		string::size_type i = path.rfind('/');
-		if(i == string::npos) { // no preceding path
+		std::string::size_type i = path.rfind('/');
+		if(i == std::string::npos) { // no preceding path
 			return (subDirs[path] = new Dir(path, this));
 		} else {
 			Dir* d = cd(path.substr(0, i));
 			if(!d)
 				return NULL;
-			string l = path.substr(i + 1);
+			std::string l = path.substr(i + 1);
 			return (d->subDirs[l] = new Dir(l, d));
 		}
 	}
-	Dir* rd(string const& path) throw() {
+	Dir* rd(std::string const& path) throw() {
 		Dir* next = cd(path);
 		if(!next || next->subDirs.size() != 1) // remove existing/empty dirs only
 			return NULL;
@@ -133,9 +131,9 @@ public:
 		return data;
 	}
 	
-	Dir* splitPath(string& name) {
-		string::size_type i = name.rfind('/');
-		if(i == string::npos) { // no preceding path
+	Dir* splitPath(std::string& name) {
+		std::string::size_type i = name.rfind('/');
+		if(i == std::string::npos) { // no preceding path
 			return this;
 		} else {
 			Dir* d = cd(name.substr(0, i));
@@ -146,8 +144,8 @@ public:
 			return NULL;
 		}
 	}
-	bool mkNode(string const& name, VirtualFsListener* data) throw() {
-		string tmp = name;
+	bool mkNode(std::string const& name, VirtualFsListener* data) throw() {
+		std::string tmp = name;
 		Dir* d = splitPath(tmp);
 		if(d) {
 			d->nodes[tmp] = data;
@@ -155,8 +153,8 @@ public:
 		}
 		return false;
 	}
-	bool rmNode(string const& name) throw() {
-		string tmp = name;
+	bool rmNode(std::string const& name) throw() {
+		std::string tmp = name;
 		Dir* d = splitPath(tmp);
 		if(d) {
 			Nodes::iterator i = d->nodes.find(tmp);
@@ -167,8 +165,8 @@ public:
 		}
 		return false;	
 	}
-	VirtualFsListener* getNode(string& name) throw() {
-		string tmp = name;
+	VirtualFsListener* getNode(std::string& name) throw() {
+		std::string tmp = name;
 		Dir* d = splitPath(tmp);
 		if(d) {
 			// find complete match
@@ -200,12 +198,12 @@ public:
 	void setPartialMatch(bool b) throw() { partial = b; };
 	
 private:
-	string name;
+	std::string name;
 	bool partial;
-	typedef map<string, Dir*> SubDirs;
+	typedef std::map<std::string, Dir*> SubDirs;
 	SubDirs subDirs;
 	VirtualFsListener* data;
-	typedef map<string, VirtualFsListener*> Nodes;
+	typedef std::map<std::string, VirtualFsListener*> Nodes;
 	Nodes nodes;
 };
 

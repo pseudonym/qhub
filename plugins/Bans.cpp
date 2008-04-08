@@ -14,6 +14,7 @@
 #include "Logs.h"
 #include "Settings.h"
 
+using namespace std;
 using namespace qhub;
 
 /*

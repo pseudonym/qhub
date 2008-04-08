@@ -8,6 +8,7 @@
 #include "Settings.h"
 #include "PluginManager.h"
 
+using namespace std;
 using namespace qhub;
 
 /*

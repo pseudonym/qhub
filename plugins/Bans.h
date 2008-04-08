@@ -1,14 +1,12 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_PLUGIN_BANS_H_
-#define _INCLUDED_PLUGIN_BANS_H_
+#ifndef QHUB_PLUGIN_BANS_H
+#define QHUB_PLUGIN_BANS_H
 
 #include "Plugin.h"
 #include "compat_hashtable.h"
 #include "UserData.h"
 
 #include "VirtualFs.h"
-
-using namespace std;
 
 namespace qhub {
 
@@ -23,30 +21,30 @@ public:
 	virtual void on(PluginStopped&, Plugin*) throw();
 	virtual void on(ClientLogin&, Client*) throw();
 
-	virtual void on(ChDir, const string&, Client*) throw();
-	virtual void on(Help, const string&, Client*) throw();
-	virtual void on(Exec, const string&, Client*, const StringList&) throw();
+	virtual void on(ChDir, const std::string&, Client*) throw();
+	virtual void on(Help, const std::string&, Client*) throw();
+	virtual void on(Exec, const std::string&, Client*, const StringList&) throw();
 
 private:
 	bool load() throw();
 	bool save() throw();
 	void initVFS() throw();
 	void deinitVFS() throw();
-	static time_t parseTime(const string&);
+	static time_t parseTime(const std::string&);
 	struct BanInfo;	// silly forward declarations...
 	static void killUser(Client*, const BanInfo&) throw();
 
 	VirtualFs* virtualfs;
 
 	struct BanInfo {
-		BanInfo(time_t t, const string& b, const string& r) throw() : timeout(t), banner(b), reason(r) {}
+		BanInfo(time_t t, const std::string& b, const std::string& r) throw() : timeout(t), banner(b), reason(r) {}
 		time_t timeout;
-		string banner;
-		string reason;
+		std::string banner;
+		std::string reason;
 	};
 
 
-	typedef hash_map<string,BanInfo> BanList;
+	typedef std::hash_map<std::string,BanInfo> BanList;
 	BanList ipBans;
 	BanList nickBans;
 	BanList cidBans;
@@ -54,4 +52,4 @@ private:
 
 } //namespace qhub
 
-#endif //_INCLUDED_PLUGIN_BANS_H_
+#endif // QHUB_PLUGIN_BANS_H

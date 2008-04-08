@@ -1,14 +1,12 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_PLUGIN_LOADER_H_
-#define _INCLUDED_PLUGIN_LOADER_H_
+#ifndef QHUB_PLUGIN_LOADER_H
+#define QHUB_PLUGIN_LOADER_H
 
 #include "Plugin.h"
 #include "UserData.h"
 #include "Client.h"
 
 #include "VirtualFs.h"
-
-using namespace std;
 
 namespace qhub {
 
@@ -22,9 +20,9 @@ public:
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
 
-	virtual void on(ChDir, const string&, Client*) throw();
-	virtual void on(Help, const string&, Client*) throw();
-	virtual void on(Exec, const string&, Client*, const StringList&) throw();
+	virtual void on(ChDir, const std::string&, Client*) throw();
+	virtual void on(Help, const std::string&, Client*) throw();
+	virtual void on(Exec, const std::string&, Client*, const StringList&) throw();
 
 private:
 	VirtualFs* virtualfs;
@@ -37,4 +35,4 @@ private:
 
 } //namespace qhub
 
-#endif //_INCLUDED_PLUGIN_LOADER_H_
+#endif // QHUB_PLUGIN_LOADER_H

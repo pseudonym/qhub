@@ -1,14 +1,15 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_PLUGIN_ACCOUNTS_H_
-#define _INCLUDED_PLUGIN_ACCOUNTS_H_
+#ifndef QHUB_PLUGIN_ACCOUNTS_H
+#define QHUB_PLUGIN_ACCOUNTS_H
+
+#include <string>
+#include <utility>
 
 #include "Plugin.h"
 #include "compat_hashtable.h"
 #include "UserData.h"
 
 #include "VirtualFs.h"
-
-using namespace std;
 
 namespace qhub {
 
@@ -26,9 +27,9 @@ public:
 	virtual void on(ClientInfo&, Client*, UserInfo&) throw();
 	virtual void on(UserConnected&, Client*) throw();
 
-	virtual void on(ChDir, const string&, Client*) throw();
-	virtual void on(Help, const string&, Client*) throw();
-	virtual void on(Exec, const string&, Client*, const StringList&) throw();
+	virtual void on(ChDir, const std::string&, Client*) throw();
+	virtual void on(Help, const std::string&, Client*) throw();
+	virtual void on(Exec, const std::string&, Client*, const StringList&) throw();
 
 private:
 	bool load() throw();
@@ -37,10 +38,10 @@ private:
 	void deinitVFS() throw();
 	
 	VirtualFs* virtualfs;
-	typedef hash_map<string, pair<string,int> > Users; // too simple.. works for now
+	typedef std::hash_map<std::string, std::pair<std::string,int> > Users; // too simple.. works for now
 	Users users;
 };
 
 } //namespace qhub
 
-#endif //_INCLUDED_PLUGIN_ACCOUNTS_H_
+#endif // QHUB_PLUGIN_ACCOUNTS_H

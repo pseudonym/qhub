@@ -12,6 +12,7 @@
 #include "InterHub.h"
 #include "ConnectionManager.h"
 
+using namespace std;
 using namespace qhub;
 
 /*

@@ -1,14 +1,13 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_PLUGIN_FSUTIL_H_
-#define _INCLUDED_PLUGIN_FSUTIL_H_
+#ifndef QHUB_PLUGIN_FSUTIL_H
+#define QHUB_PLUGIN_FSUTIL_H
 
 #include "Plugin.h"
 #include "UserData.h"
 #include "Client.h"
+#include "compat_hashtable.h"
 
 #include "VirtualFs.h"
-
-using namespace std;
 
 namespace qhub {
 
@@ -21,13 +20,13 @@ public:
 
 	virtual void on(PluginStarted&, Plugin*) throw();
 	virtual void on(PluginStopped&, Plugin*) throw();
-	virtual void on(UserCommand&, Client*, string&) throw();
-	virtual void on(UserMessage&, Client*, Command&, string&) throw();
-	virtual void on(UserPrivateMessage&, Client*, Command&, string&, sid_type) throw();
+	virtual void on(UserCommand&, Client*, std::string&) throw();
+	virtual void on(UserMessage&, Client*, Command&, std::string&) throw();
+	virtual void on(UserPrivateMessage&, Client*, Command&, std::string&, sid_type) throw();
 
-	virtual void on(ChDir, const string&, Client*) throw();
-	virtual void on(Help, const string&, Client*) throw();
-	virtual void on(Exec, const string&, Client*, const StringList&) throw();
+	virtual void on(ChDir, const std::string&, Client*) throw();
+	virtual void on(Help, const std::string&, Client*) throw();
+	virtual void on(Exec, const std::string&, Client*, const StringList&) throw();
 
 private:
 	bool load() throw();
@@ -36,11 +35,11 @@ private:
 	void deinitVFS() throw();
 	
 	VirtualFs* virtualfs;
-	typedef hash_map<string, string> Aliases;
+	typedef std::hash_map<std::string, std::string> Aliases;
 	Aliases aliases;
-	string aliasPrefix;
+	std::string aliasPrefix;
 };
 
 } //namespace qhub
 
-#endif //_INCLUDED_PLUGIN_FSUTIL_H_
+#endif // QHUB_PLUGIN_FSUTIL_H

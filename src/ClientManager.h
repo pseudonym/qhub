@@ -41,7 +41,7 @@ private:
 
 	RemoteUsers remoteUsers;
 
-	std::hash_set<string> nicks;
+	std::hash_set<std::string> nicks;
 	std::hash_set<cid_type> cids;
 
 	std::vector<Command> broadcastQueue;

@@ -1,6 +1,6 @@
 // vim:ts=4:sw=4:noet
-#ifndef _INCLUDED_PLUGIN_VIRTUALFS_H_
-#define _INCLUDED_PLUGIN_VIRTUALFS_H_
+#ifndef QHUB_PLUGIN_VIRTUALFS_H
+#define QHUB_PLUGIN_VIRTUALFS_H
 
 #include "Plugin.h"
 #include "UserData.h"
@@ -53,4 +53,4 @@ private:
 
 } //namespace qhub
 
-#endif //_INCLUDED_PLUGIN_VIRTUALFS_H_
+#endif // QHUB_PLUGIN_VIRTUALFS_H

@@ -9,6 +9,7 @@
 
 #include "VirtualFsDir.h"
 
+using namespace std;
 using namespace qhub;
 
 /*

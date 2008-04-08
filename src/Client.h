@@ -10,8 +10,6 @@
 
 namespace qhub {
 
-using namespace std;
-
 class Hub;
 class UserData;
 class UserInfo;
@@ -41,23 +39,23 @@ public:
 	 * Various calls (don't send in bad states!)
 	 */
 	// Special login call
-	void doAskPassword(string const& pwd) throw(); // send at LOGIN only!
+	void doAskPassword(std::string const& pwd) throw(); // send at LOGIN only!
 	// Error types
-	virtual void doWarning(string const& msg) throw();
-	virtual void doError(string const& msg, int code, const std::string& flag) throw();
-	virtual void doDisconnect(string const& msg = Util::emptyString) throw();
+	virtual void doWarning(std::string const& msg) throw();
+	virtual void doError(std::string const& msg, int code, const std::string& flag) throw();
+	virtual void doDisconnect(std::string const& msg = Util::emptyString) throw();
 	// Message types
-	void doHubMessage(string const& msg) throw();
-	void doPrivateMessage(string const& msg) throw();
+	void doHubMessage(std::string const& msg) throw();
+	void doPrivateMessage(std::string const& msg) throw();
 	// Disconnect
-	void doDisconnectBy(sid_type kicker, string const& msg) throw();
+	void doDisconnectBy(sid_type kicker, std::string const& msg) throw();
 
 	/*
 	 * Calls from ADCSocket
 	 */
 	virtual void onLine(Command& cmd) throw(command_error);
 	virtual void onConnected() throw();
-	virtual void onDisconnected(string const& clue) throw();
+	virtual void onDisconnected(std::string const& clue) throw();
 
 private:
 	/*
@@ -80,8 +78,8 @@ private:
 	UserInfo* userInfo;
 
 	sid_type sid;
-	string password;
-	vector<u_int8_t> salt;
+	std::string password;
+	std::vector<u_int8_t> salt;
 };
 
 }
