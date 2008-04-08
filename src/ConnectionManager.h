@@ -25,7 +25,9 @@ public:
 private:
 	friend class Singleton<ConnectionManager>;
 
-	std::vector<ServerSocket*> listenSocks;
+	typedef std::vector<ServerSocket*> SockList;
+
+	SockList listenSocks;
 
 	ConnectionManager() throw();
 	~ConnectionManager() throw() {}
