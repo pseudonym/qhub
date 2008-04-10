@@ -1,4 +1,5 @@
 #include <dlfcn.h>
+#include <stdexcept>
 
 #include "PluginManager.h"
 #include "Logs.h"
@@ -6,60 +7,79 @@
 using namespace std;
 using namespace qhub;
 
-const string PluginManager::PLUGIN_EXTENSION = ".so";
+namespace {
+
+const string PLUGIN_EXTENSION = ".so";
+
+typedef Plugin* (*GetPlugin)();
+typedef void (*PutPlugin)(Plugin*);
+
+} // anon namespace
 
 bool PluginManager::open(string const& name, string const& insertBefore) throw()
 {
-	string filename = "qhub-" + name + PLUGIN_EXTENSION;
-	void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
-	char const* error;
+#define CHECKERR() if(const char* err = dlerror()) throw runtime_error(err)
+	try {
+		const string filename = "qhub-" + name + PLUGIN_EXTENSION;
+		void* h = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
+		CHECKERR();
 
-	if(h != NULL) {
-		void* ptr = dlsym(h, "getPlugin");
-		if((error = dlerror()) == NULL) {
-			get_plugin_t getPlugin = (get_plugin_t)ptr;
-			Plugin* p = (Plugin*)getPlugin();
-			if(p) {
-				p->handle = h;
-				Plugin::PluginStarted action;
-				p->on(action, p); // init self before others
-				fire(action, p);
-				if(insertBefore.empty()) {
-					plugins.push_back(p);
-				} else {
-					iterator j = begin();
-					for(iterator i = begin(); i != end(); j = ++i) {
-						if((*i)->getId() == insertBefore)
-							break;
-					}
-					plugins.insert(j, 1, p);
-				}
-				Logs::stat << "Loading plugin \"" << name << "\" SUCCESS!\n";
-				return true;
+		GetPlugin getPlugin = (GetPlugin) dlsym(h, "getPlugin");
+		CHECKERR();
+
+		PutPlugin putPlugin = (PutPlugin) dlsym(h, "putPlugin");
+		CHECKERR();
+
+		if(!getPlugin || !putPlugin)
+			throw runtime_error("get and/or put functions are NULL");
+
+		Plugin* p = getPlugin();
+		p->handle = h;
+
+		Plugin::PluginStarted action;
+		p->on(action, p); // init self before others
+		fire(action, p);
+
+		if(insertBefore.empty()) {
+			plugins.push_back(p);
+		} else {
+			iterator i;
+			for(i = begin(); i != end(); ++i) {
+				if((*i)->getId() == insertBefore)
+					break;
 			}
+			plugins.insert(i, p);
 		}
-	} else {
-		error = dlerror();
+		Logs::stat << "Loading plugin \"" << name << "\" SUCCESS!\n";
+		return true;
+#undef CHECKERR
+	} catch(const runtime_error& e) {
+		Logs::err << "Loading plugin \"" << name << "\" FAILED! " << e.what() << endl;
+		return false;
 	}
-	Logs::err << "Loading plugin \"" << name << "\" FAILED! " <<
-			(error != NULL ? error : "") << endl;
-	return false;
 }
 
 bool PluginManager::remove(string const& name) throw()
 {
 	for(Plugins::iterator i = plugins.begin(); i != plugins.end(); ++i){
 		if((*i)->getId() == name) {
-			// deinit self before others
-			Plugin::PluginStopped action;
-			(*i)->on(action, *i);
-			void* h = (*i)->handle;
-			delete *i;
-			dlclose(h); // close AFTER deleting, not while
-			plugins.erase(i);
 			// fire in reverse order
+			Plugin::PluginStopped action;
 			for(Plugins::reverse_iterator j = plugins.rbegin(); j != plugins.rend(); ++j)
 				(*j)->on(action, *i);
+
+			Plugin* p = *i;
+			plugins.erase(i);
+			void* h = p->handle;
+
+			// clear errors just in case
+			dlerror();
+
+			PutPlugin putPlugin = (PutPlugin) dlsym(h, "putPlugin");
+			assert(dlerror() == NULL); // better not happen... it worked at open
+			putPlugin(p);
+
+			dlclose(h); // close AFTER deleting, not while
 			return true;
 		}
 	}

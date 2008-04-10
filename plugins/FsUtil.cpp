@@ -12,9 +12,9 @@ using namespace std;
 using namespace qhub;
 
 /*
- * Plugin loader
+ * Plugin loader/unloader
  */
-QHUB_GET_PLUGIN(FsUtil)
+QHUB_PLUGIN(FsUtil)
 
 
 /*

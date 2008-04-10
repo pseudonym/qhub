@@ -179,11 +179,15 @@ private:
 
 /*
  * macro for defining the function used to retrieve plugin from shared library.
- * static cast to plugin first because plugin part of object might not be at
- * offset 0.
+ * Also has function to delete, because it's generally a bad idea to create and
+ * delete objects in different modules, due to possibly differing memory
+ * allocators (read this somewhere, but don't remember where).
+ *
+ * Also, just because we have C linkage doesn't mean we can't use C++ types.
  */
-#define QHUB_GET_PLUGIN(Name) \
-	extern "C" void* getPlugin() { return static_cast<Plugin*>(new Name); }
+#define QHUB_PLUGIN(Name) \
+	extern "C" Plugin* getPlugin() { return new Name; } \
+	extern "C" void putPlugin(Plugin* p) { delete p; }
 
 } //namespace qhub
 

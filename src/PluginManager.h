@@ -12,8 +12,6 @@ namespace qhub {
 
 class PluginManager : public Singleton<PluginManager> {
 public:
-	static const std::string PLUGIN_EXTENSION;
-
 	bool open(std::string const& name, std::string const& insertBefore = Util::emptyString) throw();
 	bool remove(std::string const& name) throw();
 	void removeAll() throw();
@@ -66,7 +64,6 @@ public:
 
 private:
 	Plugins plugins;
-	typedef void* (*get_plugin_t)();
 };
 
 } // namespace qhub

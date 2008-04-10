@@ -13,9 +13,9 @@ using namespace qhub;
 using namespace std;
 
 /*
- * Plugin loader
+ * Plugin loader/unloader
  */
-QHUB_GET_PLUGIN(Accounts)
+QHUB_PLUGIN(Accounts)
 
 
 /*

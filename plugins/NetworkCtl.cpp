@@ -16,9 +16,9 @@ using namespace std;
 using namespace qhub;
 
 /*
- * Plugin loader
+ * Plugin loader/unloader
  */
-QHUB_GET_PLUGIN(NetworkCtl)
+QHUB_PLUGIN(NetworkCtl)
 
 
 /*
