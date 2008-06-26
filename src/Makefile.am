@@ -1,7 +1,8 @@
 bin_PROGRAMS = qhub
 qhub_CXXFLAGS = -Wall -Werror -DDEBUG -g -DCONFIGDIR=\"$(sysconfdir)/\"
 qhub_LDFLAGS = -export-dynamic -rpath $(libdir) -lboost_program_options
-qhub_SOURCES  = qhub.cpp MyTime.h types.h 
+
+qhub_SOURCES  = qhub.cpp types.h 
 qhub_SOURCES += Util.h Util.cpp
 qhub_SOURCES += Encoder.h Encoder.cpp TigerHash.h TigerHash.cpp
 qhub_SOURCES += TokenBucket.h TokenBucket.cpp Socket.h
