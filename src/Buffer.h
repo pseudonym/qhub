@@ -1,11 +1,13 @@
 #ifndef QHUB_BUFFER_H
 #define QHUB_BUFFER_H
 
-#define BOOST_SP_DISABLE_THREADS
-#include <boost/shared_ptr.hpp>
-#include <boost/noncopyable.hpp>
-
+#include "qhub.h"
 #include "Command.h"
+
+#include <vector>
+
+#include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace qhub {
 

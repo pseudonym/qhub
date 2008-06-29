@@ -19,7 +19,7 @@
 #ifndef QHUB_TIGERHASH_H
 #define QHUB_TIGERHASH_H
 
-#include "types.h"
+#include "qhub.h"
 
 namespace qhub {
 

@@ -1,15 +1,14 @@
 #ifndef QHUB_DNSMANAGER_H
 #define QHUB_DNSMANAGER_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "Singleton.h"
+#include "qhub.h"
 #include "EventManager.h"
-#include <ares.h>
-#include <vector>
+#include "Singleton.h"
+
 #include <string>
+#include <vector>
+
+#include <ares.h>
 
 namespace qhub {
 

@@ -1,9 +1,9 @@
 // vim:ts=4:sw=4:noet
-
 #include "ConnectionBase.h"
+
 #include "ClientManager.h"
-#include "ServerManager.h"
 #include "Command.h"
+#include "ServerManager.h"
 
 #include <boost/utility.hpp>
 

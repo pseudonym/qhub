@@ -1,10 +1,11 @@
 #ifndef QHUB_SETTINGS_H
 #define QHUB_SETTINGS_H
 
-#include <string>
-
+#include "qhub.h"
 #include "Singleton.h"
 #include "XmlTok.h"
+
+#include <string>
 
 namespace qhub {
 

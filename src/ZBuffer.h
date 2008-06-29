@@ -3,6 +3,7 @@
 #define QHUB_ZBUFFER_H
 
 #include "Buffer.h"
+
 #include <zlib.h>
 
 namespace qhub {

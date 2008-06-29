@@ -21,8 +21,10 @@
 #ifndef QHUB_ENCODER_H
 #define QHUB_ENCODER_H
 
-#include <string>
+#include "qhub.h"
+
 #include <cassert>
+#include <string>
 
 namespace qhub {
 

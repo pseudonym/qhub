@@ -2,18 +2,13 @@
 #ifndef QHUB_PLUGIN_H
 #define QHUB_PLUGIN_H
 
+#include "qhub.h"
+
+#include <cassert>
 #include <string>
 #include <vector>
-#include <cassert>
-
-#include "id.h"
 
 namespace qhub {
-
-class Client;
-class UserInfo;
-class InterHub;
-class Command;
 
 class Plugin {
 	/*

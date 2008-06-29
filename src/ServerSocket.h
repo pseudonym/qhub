@@ -1,11 +1,10 @@
 #ifndef QHUB_SERVERSOCKET_H
 #define QHUB_SERVERSOCKET_H
 
+#include "qhub.h"
 #include "Socket.h"
 
 namespace qhub {
-
-class Hub;
 
 class ServerSocket : public Socket {
 public:

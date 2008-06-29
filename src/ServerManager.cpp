@@ -1,7 +1,9 @@
+// vim:ts=4:sw=4:noet
 #include "ServerManager.h"
+
 #include "InterHub.h"
-#include "XmlTok.h"
 #include "Settings.h"
+#include "XmlTok.h"
 
 using namespace std;
 using namespace qhub;

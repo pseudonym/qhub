@@ -1,13 +1,12 @@
 // vim:ts=4:sw=4:noet
 #include "VirtualFs.h"
-
-#include "Client.h"
-#include "UserData.h"
-#include "Logs.h"
-#include "Hub.h"
-#include "ADC.h"
-
 #include "VirtualFsDir.h"
+
+#include "ADC.h"
+#include "Client.h"
+#include "Hub.h"
+#include "Logs.h"
+#include "UserData.h"
 
 using namespace std;
 using namespace qhub;

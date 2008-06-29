@@ -2,11 +2,11 @@
 #ifndef QHUB_PLUGIN_BANS_H
 #define QHUB_PLUGIN_BANS_H
 
-#include "Plugin.h"
-#include "compat_hashtable.h"
-#include "UserData.h"
-
 #include "VirtualFs.h"
+
+#include "compat_hashtable.h"
+#include "Plugin.h"
+#include "UserData.h"
 
 namespace qhub {
 

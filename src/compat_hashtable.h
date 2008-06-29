@@ -7,7 +7,7 @@
  * the library provider is smoking.
  */
 
-#include "config.h"
+#include "qhub.h"
 
 #ifdef HAVE_STD__HASH_MAP
 #include <hash_map>

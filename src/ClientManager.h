@@ -1,11 +1,15 @@
 #ifndef QHUB_CLIENTMANAGER_H
 #define QHUB_CLIENTMANAGER_H
 
+#include "qhub.h"
 #include "compat_hashtable.h"
-#include "Singleton.h"
-#include "id.h"
-#include "Client.h"
 #include "Buffer.h"
+#include "Command.h"
+#include "EventManager.h"
+#include "Singleton.h"
+
+#include <string>
+#include <vector>
 
 namespace qhub {
 
@@ -28,7 +32,7 @@ public:
 	void direct(const Command&) throw();
 
 	bool hasNick(const std::string& nick) const throw() { return nicks.count(nick); }
-	bool hasCid(const cid_type& cid) const throw() { return cids.count(cid); }
+	bool hasCid(const std::string& cid) const throw() { return cids.count(cid); }
 
 	typedef std::hash_map<sid_type, Client*> LocalUsers;
 	typedef std::hash_map<sid_type, UserInfo*> RemoteUsers;
@@ -42,7 +46,7 @@ private:
 	RemoteUsers remoteUsers;
 
 	std::hash_set<std::string> nicks;
-	std::hash_set<cid_type> cids;
+	std::hash_set<std::string> cids;
 
 	std::vector<Command> broadcastQueue;
 

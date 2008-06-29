@@ -1,13 +1,12 @@
-#include "config.h"
-
+// vim:ts=4:sw=4:noet
 #include "ConnectionManager.h"
 
-#include "InterHub.h"
-#include "Client.h"
 #include "ADCSocket.h"
+#include "Client.h"
+#include "InterHub.h"
+#include "Logs.h"
 #include "ServerSocket.h"
 #include "Settings.h"
-#include "Logs.h"
 
 #include <boost/lambda/construct.hpp> // for delete_ptr
 

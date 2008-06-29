@@ -1,6 +1,8 @@
 #ifndef QHUB_TOKENBUCKET_H
 #define QHUB_TOKENBUCKET_H
 
+#include "qhub.h"
+
 #include <sys/time.h>
 #include <time.h>
 

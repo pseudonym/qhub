@@ -2,9 +2,11 @@
 #ifndef QHUB_USERDATA_H
 #define QHUB_USERDATA_H
 
+#include "qhub.h"
+#include "Util.h"
+
 #include <map>
 #include <string>
-#include "Util.h"
 
 namespace qhub {
 

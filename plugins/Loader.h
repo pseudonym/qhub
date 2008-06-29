@@ -2,11 +2,10 @@
 #ifndef QHUB_PLUGIN_LOADER_H
 #define QHUB_PLUGIN_LOADER_H
 
+#include "VirtualFs.h"
+
 #include "Plugin.h"
 #include "UserData.h"
-#include "Client.h"
-
-#include "VirtualFs.h"
 
 namespace qhub {
 

@@ -1,16 +1,15 @@
 #ifndef QHUB_INTERHUB_H
 #define QHUB_INTERHUB_H
 
+#include "qhub.h"
 #include "ConnectionBase.h"
-#include "EventManager.h"
 #include "DnsManager.h"
+#include "EventManager.h"
 
 #include <string>
 #include <vector>
 
 namespace qhub {
-
-class Hub;
 
 class InterHub : public ConnectionBase, public EventListener, public DnsListener {
 public:

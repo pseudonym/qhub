@@ -2,10 +2,11 @@
 #ifndef QHUB_ERROR_H
 #define QHUB_ERROR_H
 
+#include "qhub.h"
+#include "Util.h"
+
 #include <stdexcept>
 #include <string>
-
-#include "Util.h"
 
 namespace qhub {
 

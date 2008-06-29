@@ -1,9 +1,11 @@
 // vim:ts=4:sw=4:noet
 #include "ADC.h"
-#include <cassert>
-#include "Util.h"
-#include "TigerHash.h"
+
+#include "error.h"
 #include "Encoder.h"
+#include "Util.h"
+
+#include <cassert>
 
 using namespace qhub;
 using namespace std;

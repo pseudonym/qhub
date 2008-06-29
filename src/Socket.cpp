@@ -1,9 +1,14 @@
 // vim:ts=4:sw=4:noet
 #include "Socket.h"
+
 #include "Logs.h"
 
-#include "config.h"
-#include "error.h"
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace qhub;

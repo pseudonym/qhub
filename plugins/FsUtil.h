@@ -2,12 +2,12 @@
 #ifndef QHUB_PLUGIN_FSUTIL_H
 #define QHUB_PLUGIN_FSUTIL_H
 
+#include "VirtualFs.h"
+
+#include "compat_hashtable.h"
+#include "Client.h"
 #include "Plugin.h"
 #include "UserData.h"
-#include "Client.h"
-#include "compat_hashtable.h"
-
-#include "VirtualFs.h"
 
 namespace qhub {
 

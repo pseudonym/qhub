@@ -1,11 +1,13 @@
+// vim:ts=4:sw=4:noet
 #include "DnsManager.h"
+
 #include "Logs.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 using namespace std;
 using namespace qhub;

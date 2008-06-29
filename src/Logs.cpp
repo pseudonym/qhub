@@ -1,7 +1,10 @@
+// vim:ts=4:sw=4:noet
 #include "Logs.h"
+
 #include "error.h"
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 using namespace qhub;

@@ -1,12 +1,14 @@
+// vim:ts=4:sw=4:noet
 #include "ClientManager.h"
-#include "Util.h"
-#include "Encoder.h"
-#include "Hub.h"
+
 #include "ADC.h"
-#include "UserInfo.h"
-#include "ServerManager.h"
-#include "ZBuffer.h"
+#include "Client.h"
+#include "ConnectionBase.h"
 #include "Logs.h"
+#include "ServerManager.h"
+#include "UserInfo.h"
+#include "Util.h"
+#include "ZBuffer.h"
 
 using namespace std;
 using namespace qhub;

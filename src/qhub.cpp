@@ -1,17 +1,13 @@
-#include "config.h"
-
+// vim:ts=4:sw=4:noet
+#include "qhub.h"
+#include "ClientManager.h"
+#include "ConnectionManager.h"
 #include "EventManager.h"
 #include "Hub.h"
-
-#include "Plugin.h"
-#include "ClientManager.h"
-#include "ServerManager.h"
-#include "ConnectionManager.h"
-#include "PluginManager.h"
-#include "Settings.h"
 #include "Logs.h"
-#include "Command.h"
-#include "InterHub.h"
+#include "PluginManager.h"
+#include "ServerManager.h"
+#include "Settings.h"
 
 using namespace std;
 using namespace qhub;

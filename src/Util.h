@@ -2,15 +2,16 @@
 #ifndef QHUB_UTIL_H
 #define QHUB_UTIL_H
 
+#include "qhub.h"
+#include "compat_hashtable.h"
+
+#include <cerrno>
 #include <string>
 #include <vector>
-#include "compat_hashtable.h"
+
 #include <boost/lexical_cast.hpp>
-#include <cerrno>
 
 namespace qhub {
-
-class UserData;
 
 typedef std::vector<std::string> StringList;
 typedef std::hash_map<std::string,std::string> StringMap;

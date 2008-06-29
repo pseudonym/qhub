@@ -2,10 +2,11 @@
 #ifndef QHUB_ADC_H
 #define QHUB_ADC_H
 
-#include <string>
-#include "Util.h"
+#include "qhub.h"
 #include "error.h"
-#include "id.h"
+#include "Util.h"
+
+#include <string>
 
 namespace qhub {
 

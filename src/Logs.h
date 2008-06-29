@@ -1,8 +1,11 @@
 #ifndef QHUB_LOGS_H
 #define QHUB_LOGS_H
 
+#include "qhub.h"
+
 #include <ostream>
 #include <string>
+
 #include <boost/format.hpp>
 
 namespace qhub {

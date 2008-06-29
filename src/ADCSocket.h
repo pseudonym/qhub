@@ -2,13 +2,13 @@
 #ifndef QHUB_ADCSOCKET_H
 #define QHUB_ADCSOCKET_H
 
+#include "qhub.h"
 #include "Socket.h"
-
 #include "Util.h"
 
-namespace qhub {
+#include <string>
 
-class ConnectionBase;
+namespace qhub {
 
 class ADCSocket : public Socket {
 public:

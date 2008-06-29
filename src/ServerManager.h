@@ -1,18 +1,15 @@
 #ifndef QHUB_SERVERMANAGER_H
 #define QHUB_SERVERMANAGER_H
 
+#include "qhub.h"
 #include "Singleton.h"
-#include "id.h"
 #include "UserInfo.h"
-#include <string>
+
 #include <map>
+#include <string>
 #include <vector>
 
 namespace qhub {
-
-class InterHub;
-class Command;
-class ConnectionBase;
 
 class RemoteHub {
 public:

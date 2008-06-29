@@ -1,16 +1,18 @@
 // vim:ts=4:sw=4:noet
-#include <boost/cast.hpp>
 
 #include "NetworkCtl.h"
+
 #include "VirtualFs.h"
 
 #include "Client.h"
+#include "ConnectionManager.h"
 #include "Hub.h"
-#include "XmlTok.h"
+#include "InterHub.h"
 #include "Logs.h"
 #include "Settings.h"
-#include "InterHub.h"
-#include "ConnectionManager.h"
+#include "XmlTok.h"
+
+#include <boost/cast.hpp>
 
 using namespace std;
 using namespace qhub;

@@ -1,7 +1,7 @@
-#include "config.h"
-#include "types.h"
+// vim:ts=4:sw=4:noet
 #include "TokenBucket.h"
 
+#include <ctime>
 #include <numeric>
 
 using namespace std;

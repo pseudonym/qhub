@@ -1,15 +1,14 @@
 #ifndef QHUB_CONNECTIONMANAGER_H
 #define QHUB_CONNECTIONMANAGER_H
 
+#include "qhub.h"
 #include "Singleton.h"
-#include "Settings.h"
 #include "Socket.h"
+
 #include <string>
 #include <vector>
 
 namespace qhub {
-
-class ServerSocket;
 
 class ConnectionManager : public Singleton<ConnectionManager> {
 public:

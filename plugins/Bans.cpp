@@ -1,18 +1,22 @@
 // vim:ts=4:sw=4:noet
+#include "Bans.h"
+
+#include "VirtualFs.h"
+
+#include "Client.h"
+#include "Logs.h"
+#include "Settings.h"
+#include "UserData.h"
+#include "UserInfo.h"
+#include "XmlTok.h"
+
 #include <boost/cast.hpp>
 #include <sstream>
 #include <iterator>
 
-#include "Bans.h"
-#include "VirtualFs.h"
-
-#include "Client.h"
-#include "Hub.h"
-#include "UserInfo.h"
-#include "UserData.h"
-#include "XmlTok.h"
-#include "Logs.h"
-#include "Settings.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 using namespace std;
 using namespace qhub;

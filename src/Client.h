@@ -2,18 +2,14 @@
 #ifndef QHUB_CLIENT_H
 #define QHUB_CLIENT_H
 
-#include <vector>
-#include <string>
-
+#include "qhub.h"
 #include "ConnectionBase.h"
 #include "Util.h"
 
-namespace qhub {
+#include <string>
+#include <vector>
 
-class Hub;
-class UserData;
-class UserInfo;
-class ADCSocket;
+namespace qhub {
 
 class Client : public ConnectionBase {
 public:

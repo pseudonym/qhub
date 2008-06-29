@@ -2,14 +2,14 @@
 #ifndef QHUB_USERINFO_H
 #define QHUB_USERINFO_H
 
-#include <map>
-#include <string>
-
-#include "config.h"
-#include "Util.h"
-#include "Socket.h"
+#include "qhub.h"
 #include "ADC.h"
 #include "Command.h"
+#include "Socket.h"
+#include "Util.h"
+
+#include <map>
+#include <string>
 
 namespace qhub {
 

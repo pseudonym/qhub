@@ -1,17 +1,15 @@
 // vim:ts=4:sw=4:noet
-#include <cassert>
-#include <iostream>
-#include <fstream>
-#include <boost/program_options.hpp>
-
-#include "error.h"
-
 #include "Settings.h"
-#include "Hub.h"
-#include "XmlTok.h"
-#include "Util.h"
+
 #include "Logs.h"
 #include "PluginManager.h"
+#include "Util.h"
+#include "XmlTok.h"
+
+#include <fstream>
+#include <iostream>
+
+#include <boost/program_options.hpp>
 
 using namespace qhub;
 using namespace std;

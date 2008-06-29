@@ -1,18 +1,16 @@
 #ifndef QHUB_COMMAND_H
 #define QHUB_COMMAND_H
 
+#include "qhub.h"
+#include "error.h"
+#include "Util.h"
+
 #include <string>
 #include <map>
 #include <vector>
 #include <cassert>
 
-#include "id.h"
-#include "error.h"
-#include "Util.h"
-
 namespace qhub {
-
-class ConnectionBase;
 
 class Command {
 public:

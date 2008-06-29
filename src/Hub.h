@@ -2,10 +2,11 @@
 #ifndef QHUB_HUB_H
 #define QHUB_HUB_H
 
-#include <string>
-
-#include "Client.h"
+#include "qhub.h"
+#include "Command.h"
 #include "Singleton.h"
+
+#include <string>
 
 namespace qhub {
 

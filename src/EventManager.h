@@ -2,12 +2,16 @@
 #ifndef QHUB_EVENTMANAGER_H
 #define QHUB_EVENTMANAGER_H
 
+#include "qhub.h"
+#include "compat_hashtable.h"
 #include "Singleton.h"
 #include "Util.h"
-#include "compat_hashtable.h"
-#include <boost/tuple/tuple.hpp>
-#include <event.h>
+
 #include <cassert>
+
+#include <boost/tuple/tuple.hpp>
+
+#include <event.h>
 
 namespace qhub {
 

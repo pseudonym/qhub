@@ -1,17 +1,18 @@
 // vim:ts=4:sw=4:noet
 #include "Client.h"
-#include "Hub.h"
-#include "TigerHash.h"
-#include "Encoder.h"
-#include "Plugin.h"
-#include "UserInfo.h"
-#include "UserData.h"
+
 #include "ADC.h"
-#include "Logs.h"
-#include "Util.h"
 #include "ClientManager.h"
-#include "ServerManager.h"
+#include "Encoder.h"
+#include "Hub.h"
+#include "Logs.h"
+#include "Plugin.h"
 #include "PluginManager.h"
+#include "ServerManager.h"
+#include "TigerHash.h"
+#include "UserData.h"
+#include "UserInfo.h"
+#include "Util.h"
 
 using namespace std;
 using namespace qhub;

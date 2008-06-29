@@ -1,27 +1,18 @@
 #ifndef QHUB_SOCKET_H
 #define QHUB_SOCKET_H
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <netdb.h>
-#include <cerrno>
-#include <sys/socket.h>
-#include <sys/resource.h>
-#include <sys/poll.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
-#include <string>
-#include <queue>
-
-#include "config.h"
+#include "qhub.h"
 #include "Buffer.h"
-#include "Util.h"
 #include "EventManager.h"
+#include "Util.h"
 
+#include <cerrno>
+#include <csignal>
+#include <queue>
+#include <string>
+
+#include <sys/socket.h>
+#include <sys/types.h>
 
 // these should probably be deprecated, as they aren't actually used
 // (we're just using normal queues for actual output)

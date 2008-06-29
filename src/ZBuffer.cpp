@@ -1,9 +1,9 @@
 // vim:ts=4:sw=4:noet
-
 #include "ZBuffer.h"
 
-#include <zlib.h>
 #include <boost/scoped_array.hpp>
+
+#include <zlib.h>
 
 using namespace std;
 using namespace qhub;

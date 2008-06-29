@@ -1,9 +1,10 @@
 // vim:ts=4:sw=4:noet
 #include "ADCSocket.h"
-#include "Util.h"
-#include "Logs.h"
+
 #include "error.h"
+#include "Command.h"
 #include "ConnectionBase.h"
+#include "Logs.h"
 
 #define BUF_SIZE 1024
 

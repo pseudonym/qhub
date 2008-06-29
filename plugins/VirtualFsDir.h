@@ -4,8 +4,8 @@
 
 #include "Util.h"
 
-#include <map>
 #include <cassert>
+#include <map>
 
 namespace qhub {
 

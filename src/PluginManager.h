@@ -1,6 +1,7 @@
 #ifndef QHUB_PLUGINMANAGER_H
 #define QHUB_PLUGINMANAGER_H
 
+#include "qhub.h"
 #include "Singleton.h"
 #include "Plugin.h"
 #include "Util.h"

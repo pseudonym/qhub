@@ -2,15 +2,16 @@
 #ifndef QHUB_CONNECTIONBASE_H
 #define QHUB_CONNECTIONBASE_H
 
-#include <boost/utility.hpp>
+#include "qhub.h"
+#include "error.h"
+#include "ADCSocket.h"
+#include "Command.h"
+#include "Util.h"
+
 #include <set>
 #include <string>
 
-#include "error.h"
-
-#include "Util.h"
-#include "ADCSocket.h"
-#include "Command.h"
+#include <boost/noncopyable.hpp>
 
 namespace qhub {
 

@@ -1,26 +1,8 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <netdb.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <sys/resource.h>
-#include <sys/poll.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include "error.h"
-#include "Logs.h"
+// vim:ts=4:sw=4:noet
 #include "ServerSocket.h"
-#include "InterHub.h"
-#include "Hub.h"
+
 #include "ConnectionManager.h"
+#include "Logs.h"
 
 using namespace std;
 using namespace qhub;

@@ -2,11 +2,13 @@
 #ifndef QHUB_XMLTOK_H
 #define QHUB_XMLTOK_H
 
+#include "qhub.h"
+#include "error.h"
+#include "Util.h"
+
+#include <iosfwd>
 #include <vector>
 #include <string>
-#include <utility>
-#include "Util.h"
-#include "error.h"
 
 namespace qhub {
 

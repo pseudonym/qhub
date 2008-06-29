@@ -1,7 +1,8 @@
+// vim:ts=4:sw=4:noet
 #include "Command.h"
-#include "Util.h"
+
 #include "ADC.h"
-#include "Logs.h"
+#include "Util.h"
 
 using namespace std;
 using namespace qhub;

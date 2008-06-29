@@ -2,11 +2,9 @@
 #ifndef QHUB_PLUGIN_NETWORK_CTL_H
 #define QHUB_PLUGIN_NETWORK_CTL_H
 
-#include <set>
-
-#include "Plugin.h"
-
 #include "VirtualFs.h"
+
+#include <set>
 
 namespace qhub {
 

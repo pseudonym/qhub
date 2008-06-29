@@ -1,8 +1,11 @@
-#include <dlfcn.h>
+// vim:ts=4:sw=4:noet
+#include "PluginManager.h"
+
+#include "Logs.h"
+
 #include <stdexcept>
 
-#include "PluginManager.h"
-#include "Logs.h"
+#include <dlfcn.h>
 
 using namespace std;
 using namespace qhub;
