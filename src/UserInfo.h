@@ -13,7 +13,7 @@
 
 namespace qhub {
 
-#define UIID(a,b) ((((uint16_t)a & 255)<<8)|((uint16_t)b & 255))
+#define UIID(a,b) uint16_t(((uint16_t(a) & 255)<<8)|(uint16_t(b) & 255))
 
 class UserInfo {
 public:

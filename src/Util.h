@@ -22,7 +22,6 @@ struct PtrHash {
 	{ return (size_t)e; }
 };
 
-
 class Util {
 public:
 	static std::string const emptyString;
@@ -64,7 +63,6 @@ public:
 	static StringList stringTokenize(std::string const& msg, char token = ' ') throw();
 	static StringList lazyStringTokenize(std::string const& msg, char token = ' ') throw();
 	static StringList lazyQuotedStringTokenize(std::string const& msg) throw(); // token = ' ', quote = '"'
-
 };
 
 } //namespace qhub

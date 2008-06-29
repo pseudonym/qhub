@@ -41,7 +41,7 @@ Socket::~Socket() throw()
 void Socket::create() throw()
 {
 	if(domain == Socket::IP4) {
-		saddrp = (struct sockaddr*)new sockaddr_in;
+		saddrp = reinterpret_cast<struct sockaddr*>(new sockaddr_in);
 		saddrl = sizeof(sockaddr_in);
 		memset(saddrp, '\0', saddrl);
 		inaddrp = &((struct sockaddr_in*)saddrp)->sin_addr;

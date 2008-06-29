@@ -11,7 +11,7 @@ namespace qhub {
 class UserData {
 public:
 	typedef std::string string;
-	typedef string key_type;
+	typedef std::string key_type;
 
 #define GET_AND_SET(type, Type) \
 public: \

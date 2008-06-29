@@ -25,6 +25,6 @@ protected:
 	int type;
 };
 
-}
+} // namespace qhub
 
 #endif // QHUB_SERVERSOCKET_H

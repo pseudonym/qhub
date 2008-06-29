@@ -25,6 +25,7 @@
 using namespace std;
 using namespace qhub;
 
+// we can't handle it not being char
 BOOST_STATIC_ASSERT(sizeof(XML_Char) == 1);
 
 char XmlTok::indentChar = '\t';
@@ -51,7 +52,7 @@ XmlTok::XmlTok(istream& is) throw(io_error)
 	do {
 		n = is.readsome(tmp.c_array(), tmp.size());
 		if(!XML_Parse(parser.get(), tmp.data(), n, n < tmp.size())) {
-			format fmt("XML loading failed: %s at line %d\n");
+			boost::format fmt("XML loading failed: %s at line %d\n");
 			fmt % XML_ErrorString(XML_GetErrorCode(parser.get())) % XML_GetCurrentLineNumber(parser.get());
 			throw io_error(fmt.str());
 		}

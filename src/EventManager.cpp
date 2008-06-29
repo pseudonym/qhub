@@ -1,11 +1,11 @@
 // vim:ts=4:sw=4:noet
 #include "EventManager.h"
+
 #include "Logs.h"
 
 using namespace std;
 using namespace qhub;
 using boost::get;
-
 
 EventManager::EventManager() throw()
 {

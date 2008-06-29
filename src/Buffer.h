@@ -7,11 +7,12 @@
 
 #include "Command.h"
 
-//Buffer for writeQueues for example.
-//Has operator<() for priority_queue() compatibility, and an associated priority
-
 namespace qhub {
 
+/*
+ * Buffer for socket write queue
+ * Has operator<() for priority_queue() compatibility, and an associated priority
+ */
 class Buffer : boost::noncopyable {
 public:
 	Buffer() : prio(0) {}
@@ -37,6 +38,6 @@ protected:
 	int prio;
 };
 
-}
+} // namespace qhub
 
 #endif // QHUB_BUFFER_H

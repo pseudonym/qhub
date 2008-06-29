@@ -10,7 +10,6 @@
 using namespace std;
 using namespace qhub;
 
-
 ADCSocket::ADCSocket(int fd, Domain domain) throw()
 		: Socket(fd, domain),
 		readBuffer(new char[BUF_SIZE]), readPos(0), conn(NULL)

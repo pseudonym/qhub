@@ -28,7 +28,6 @@ public:
 	/*
 	 * Plugin calls
 	 */
-	
 	enum {
 		// Plugin messages
 		PLUGIN_STARTED,
@@ -186,8 +185,8 @@ private:
  * Also, just because we have C linkage doesn't mean we can't use C++ types.
  */
 #define QHUB_PLUGIN(Name) \
-	extern "C" Plugin* getPlugin() { return new Name; } \
-	extern "C" void putPlugin(Plugin* p) { delete p; }
+extern "C" Plugin* getPlugin() { return new Name; } \
+extern "C" void putPlugin(Plugin* p) { delete p; }
 
 } //namespace qhub
 

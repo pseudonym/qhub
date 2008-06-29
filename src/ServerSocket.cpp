@@ -25,7 +25,8 @@
 using namespace std;
 using namespace qhub;
 
-ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), type(t) {
+ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), type(t)
+{
 	int yes = 1;
 
 	if(setsockopt(getFd(), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
