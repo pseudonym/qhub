@@ -79,7 +79,7 @@ private:
 
 	sid_type sid;
 	std::string password;
-	std::vector<u_int8_t> salt;
+	std::vector<uint8_t> salt;
 };
 
 }

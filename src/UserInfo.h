@@ -69,7 +69,7 @@ public:
 	}
 
 	// Setters
-	void set(u_int16_t key, std::string const& val) throw() {
+	void set(uint16_t key, std::string const& val) throw() {
 		modified = true;
 		infMap[key] = val;
 	}
@@ -87,7 +87,7 @@ public:
 	}
 
 	// Getters
-	std::string const& get(u_int16_t key) const throw() {
+	std::string const& get(uint16_t key) const throw() {
 		InfMap::const_iterator i = infMap.find(key);
 		if(i != infMap.end())
 			return i->second;
@@ -103,7 +103,7 @@ public:
 	}
 
 	// Delete
-	bool del(u_int16_t key) throw() {
+	bool del(uint16_t key) throw() {
 		InfMap::iterator i = infMap.find(key);
 		if(i == infMap.end())
 			return false;
@@ -120,7 +120,7 @@ public:
 	}
 
 	// Check
-	bool has(u_int16_t key) const throw() {
+	bool has(uint16_t key) const throw() {
 		InfMap::const_iterator i = infMap.find(key);
 		if(i == infMap.end() || i->second.empty())
 			return false;

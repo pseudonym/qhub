@@ -18,11 +18,11 @@ voidPtr const Util::emptyVoidPtr = NULL;
 StringList const Util::emptyStringList;
 UserData Util::data;
 
-vector<u_int8_t> Util::genRand(int bytes) throw() {
+vector<uint8_t> Util::genRand(int bytes) throw() {
 	int buf[(bytes + sizeof(int) - 1) / sizeof(int)];
 	generate_n(buf, sizeof(buf)/sizeof(int), rand);
-	u_int8_t* b = reinterpret_cast<u_int8_t*>(buf);
-	return vector<u_int8_t>(b, b + bytes);
+	uint8_t* b = reinterpret_cast<uint8_t*>(buf);
+	return vector<uint8_t>(b, b + bytes);
 }
 
 void Util::daemonize() throw()

@@ -16,15 +16,15 @@ class ConnectionBase;
 
 class Command {
 public:
-	static u_int32_t stringToFourCC(std::string const& c) {
+	static uint32_t stringToFourCC(std::string const& c) {
 		assert(c.size() == 4);
-		return ((u_int32_t)c[0])|((u_int32_t)c[1]<<8)|((u_int32_t)c[2]<<16)|((u_int32_t)c[3]<<24);
+		return ((uint32_t)c[0])|((uint32_t)c[1]<<8)|((uint32_t)c[2]<<16)|((uint32_t)c[3]<<24);
 	}
 
 	static std::map<uint32_t,int> numPosParams;
 	static void initNumPosParams() throw();
 
-#define MAKE_CMD(n, a, b, c) n = (((u_int32_t)a<<8) | (((u_int32_t)b)<<16) | (((u_int32_t)c)<<24))
+#define MAKE_CMD(n, a, b, c) n = (((uint32_t)a<<8) | (((uint32_t)b)<<16) | (((uint32_t)c)<<24))
 	enum CmdInt {
 		MAKE_CMD(CTM, 'C','T','M'),
 		MAKE_CMD(DSC, 'D','S','C'),

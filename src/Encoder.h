@@ -29,8 +29,8 @@ namespace qhub {
 class Encoder
 {
 public:
-	static std::string& toBase32(const u_int8_t* src, size_t len, std::string& tgt);
-	static std::string toBase32(const u_int8_t* src, size_t len) {
+	static std::string& toBase32(const uint8_t* src, size_t len, std::string& tgt);
+	static std::string toBase32(const uint8_t* src, size_t len) {
 		std::string tmp;
 		return toBase32(src, len, tmp);
 	}
@@ -43,7 +43,7 @@ public:
 		return base32Alphabet[src];
 	}
 
-	static void fromBase32(const char* src, u_int8_t* dst, size_t len);
+	static void fromBase32(const char* src, uint8_t* dst, size_t len);
 	static uint8_t fromBase32(char ch)
 	{
 		return base32Table[uint8_t(ch)];

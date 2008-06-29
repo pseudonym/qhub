@@ -59,7 +59,7 @@ void Settings::load() throw()
 void Settings::loadInteractive() throw()
 {
 	string name, interpass, prefix;
-	vector<u_int16_t> cports, iports;
+	vector<uint16_t> cports, iports;
 	cout << "Hub name: ";
 	getline(cin, name);
 	cout << "Client ports (0 when done): ";
@@ -105,9 +105,9 @@ void Settings::loadInteractive() throw()
 		p->setAttr("interpass", interpass);
 
 	p = root->addChild("__connections");
-	for(vector<u_int16_t>::iterator i = cports.begin(); i != cports.end(); ++i)
+	for(vector<uint16_t>::iterator i = cports.begin(); i != cports.end(); ++i)
 		p->addChild("clientport")->setData(Util::toString(*i));
-	for(vector<u_int16_t>::iterator i = iports.begin(); i != iports.end(); ++i)
+	for(vector<uint16_t>::iterator i = iports.begin(); i != iports.end(); ++i)
 		p->addChild("interport")->setData(Util::toString(*i));
 }
 
