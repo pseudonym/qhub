@@ -16,7 +16,6 @@ public:
 	static sid_type toSid(const std::string&) throw(parse_error);
 	static std::string fromSid(sid_type) throw();
 	static std::string& toString(StringList const& sl, std::string& out) throw();
-	static bool checkCID(const std::string& cid) throw();
 };
 
 } //namespace qhub

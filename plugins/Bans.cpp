@@ -282,7 +282,7 @@ void Bans::on(Exec, const string& cwd, Client* c, const StringList& arg) throw()
 			c->doPrivateMessage("Syntax: bannick <nick> <time> [description]");
 		}
 	} else if(arg[0] == "bancid") {
-		if(arg.size() > 2 && !ADC::checkCID(arg[1])) {
+		if(arg.size() > 2 && false /*!ADC::checkCID(arg[1])*/) { // FIXME
 			c->doPrivateMessage("Invalid CID.");
 			return;
 		}

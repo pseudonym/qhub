@@ -88,10 +88,3 @@ string& ADC::toString(StringList const& sl, string& out) throw()
 	out[out.size()-1] = '\n';
 	return out;
 }
-
-bool ADC::checkCID(const string& cid) throw()
-{
-	vector<uint8_t> tmp(TigerHash::HASH_SIZE);
-	Encoder::fromBase32(cid.c_str(), &tmp.front(), TigerHash::HASH_SIZE);
-	return cid == Encoder::toBase32(&tmp.front(), TigerHash::HASH_SIZE);
-}
