@@ -16,21 +16,6 @@
 using namespace std;
 using namespace qhub;
 
-/*
-//deprecated
-class DNSLookup: public DNSAdapter {
-public:
-	DNSLookup(InterHub* ih, string s) : DNSAdapter(s), interHub(ih) {}
-	virtual void complete(const string& r)
-	{
-		interHub->onLookup(r);
-	}
-
-protected:
-	InterHub *interHub;
-};
-*/
-
 InterHub::InterHub(const string& hn, short p, const string& pa) throw()
 		: hostname(hn), port(p), password(pa), outgoing(true)
 {

@@ -32,17 +32,6 @@ ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), typ
 		Logs::err << "warning: setsockopt:SO_REUSEADDR: " << Util::errnoToString(errno) << endl;
 	}
 
-	//just let the kernel handle this for us...
-	//2.6 is probably pretty good at it.
-	/*yes = 16384;
-	//yes = 1024;
-	if (setsockopt(fd,SOL_SOCKET,SO_SNDBUF,&yes,sizeof(int)) == -1) {
-		printf("Error setting send buffer.\n");
-	   }
-	if (setsockopt(fd,SOL_SOCKET,SO_RCVBUF,&yes,sizeof(int)) == -1) {
-		printf("Error setting receive buffer.\n");
-	   }*/
-
 	bind(Util::emptyString, port);	// empty = use INADDR_ANY
 	listen();
 

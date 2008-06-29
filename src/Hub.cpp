@@ -36,13 +36,3 @@ Command Hub::getAdcInf() const throw()
 			<< CmdParam("DE", getDescription())
 			<< "HU1" << "BO1" << "HI1";
 }
-
-/*void Hub::userDisconnect(string const& actor, string const& victim, string const& msg) throw()
-{
-	Users::iterator i;
-	if((i = activeUsers.find(victim)) != activeUsers.end())
-		i->second->doDisconnectBy(actor, msg);
-	else if((i = passiveUsers.find(victim)) != passiveUsers.end())
-		i->second->doDisconnectBy(actor, msg);
-}*/
-
