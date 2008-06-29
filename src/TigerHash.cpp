@@ -17,10 +17,79 @@
  */
 
 #include "TigerHash.h"
-#include <string.h>
+
+#include <cstring>
 
 using namespace std;
 using namespace qhub;
+
+// forward declarations of internal functions/data
+namespace {
+	extern void tigerCompress(const uint64_t *str, uint64_t state[3]);
+	extern uint64_t table[];
+} // anon namespace
+
+#define _ULL(x) x##ull
+
+TigerHash::TigerHash() : pos(0)
+{
+	res[0] = _ULL(0x0123456789ABCDEF);
+	res[1] = _ULL(0xFEDCBA9876543210);
+	res[2] = _ULL(0xF096A5B4C3B2E187);
+}
+
+void TigerHash::update(const void* data, uint32_t length) {
+	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE-1);
+	const uint8_t* str = (const uint8_t*)data;
+	// First empty tmp buffer if possible
+	if(tmppos > 0) {
+		uint32_t n = length <= BLOCK_SIZE-tmppos ? length : BLOCK_SIZE-tmppos;
+		memcpy(tmp + tmppos, str, n);
+		str += n;
+		pos += n;
+		length -= n;
+
+		if((tmppos + n) == BLOCK_SIZE) {
+			tigerCompress((uint64_t*)tmp, res);
+			tmppos = 0;
+		}
+	}
+
+	// Process the bulk of data
+	while(length>=BLOCK_SIZE) {
+		tigerCompress((uint64_t*)str, res);
+		str += BLOCK_SIZE;
+		pos += BLOCK_SIZE;
+		length -= BLOCK_SIZE;
+	}
+
+	// Copy the rest to the tmp buffer
+	memcpy(tmp, str, length);
+	pos += length;
+}
+
+uint8_t* TigerHash::finalize() {
+	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE-1);
+	// Tmp buffer always has at least one pos, otherwise it would have
+	// been processed in update()
+
+	tmp[tmppos++] = 0x01;
+
+	if(tmppos > (BLOCK_SIZE - sizeof(uint64_t))) {
+		memset(tmp + tmppos, 0, BLOCK_SIZE - tmppos);
+		tigerCompress(((uint64_t*)tmp), res);
+		memset(tmp, 0, BLOCK_SIZE);
+	} else {
+		memset(tmp + tmppos, 0, BLOCK_SIZE - tmppos - sizeof(uint64_t));
+	}
+
+	((uint64_t*)(&(tmp[56])))[0] = pos<<3;
+	tigerCompress((uint64_t*)tmp, res);
+	return getResult();
+}
+
+// put implementation stuff into anonymous namespace
+namespace {
 
 #define PASSES 3
 
@@ -36,14 +105,14 @@ using namespace qhub;
 
 #define round(a,b,c,x,mul) \
 	c ^= x; \
-	a -= t1[(uint8_t)(c)] ^ \
-	t2[(uint8_t)(((uint32_t)(c))>>(2*8))] ^ \
-	t3[(uint8_t)((c)>>(4*8))] ^ \
-	t4[(uint8_t)(((uint32_t)((c)>>(4*8)))>>(2*8))] ; \
-	b += t4[(uint8_t)(((uint32_t)(c))>>(1*8))] ^ \
-	t3[(uint8_t)(((uint32_t)(c))>>(3*8))] ^ \
-	t2[(uint8_t)(((uint32_t)((c)>>(4*8)))>>(1*8))] ^ \
-	t1[(uint8_t)(((uint32_t)((c)>>(4*8)))>>(3*8))]; \
+	a -= t1[uint8_t(c)] ^ \
+	t2[uint8_t(uint32_t(c)>>(2*8))] ^ \
+	t3[uint8_t((c)>>(4*8))] ^ \
+	t4[uint8_t(uint32_t((c)>>(4*8))>>(2*8))] ; \
+	b += t4[uint8_t(uint32_t(c)>>(1*8))] ^ \
+	t3[uint8_t(uint32_t(c)>>(3*8))] ^ \
+	t2[uint8_t(uint32_t((c)>>(4*8))>>(1*8))] ^ \
+	t1[uint8_t(uint32_t((c)>>(4*8))>>(3*8))]; \
 	b *= mul;
 
 #define pass(a,b,c,mul) \
@@ -109,61 +178,11 @@ using namespace qhub;
 }
 
 /* The compress function is a function. Requires smaller cache?    */
-void TigerHash::tigerCompress(const uint64_t *str, uint64_t state[3]) {
+void tigerCompress(const uint64_t *str, uint64_t state[3]) {
 	tiger_compress_macro(((const uint64_t*)str), ((uint64_t*)state));
 }
 
-void TigerHash::update(const void* data, uint32_t length) {
-	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE-1);
-	const uint8_t* str = (const uint8_t*)data;
-	// First empty tmp buffer if possible
-	if(tmppos > 0) {
-		uint32_t n = length <= BLOCK_SIZE-tmppos ? length : BLOCK_SIZE-tmppos;
-		memcpy(tmp + tmppos, str, n);
-		str += n;
-		pos += n;
-		length -= n;
-
-		if((tmppos + n) == BLOCK_SIZE) {
-			tigerCompress((uint64_t*)tmp, res);
-			tmppos = 0;
-		}
-	}
-
-	// Process the bulk of data
-	while(length>=BLOCK_SIZE) {
-		tigerCompress((uint64_t*)str, res);
-		str += BLOCK_SIZE;
-		pos += BLOCK_SIZE;
-		length -= BLOCK_SIZE;
-	}
-
-	// Copy the rest to the tmp buffer
-	memcpy(tmp, str, length);
-	pos += length;
-}
-
-uint8_t* TigerHash::finalize() {
-	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE-1);
-	// Tmp buffer always has at least one pos, otherwise it would have
-	// been processed in update()
-
-	tmp[tmppos++] = 0x01;
-
-	if(tmppos > (BLOCK_SIZE - sizeof(uint64_t))) {
-		memset(tmp + tmppos, 0, BLOCK_SIZE - tmppos);
-		tigerCompress(((uint64_t*)tmp), res);
-		memset(tmp, 0, BLOCK_SIZE);
-	} else {
-		memset(tmp + tmppos, 0, BLOCK_SIZE - tmppos - sizeof(uint64_t));
-	}
-
-	((uint64_t*)(&(tmp[56])))[0] = pos<<3;
-	tigerCompress((uint64_t*)tmp, res);
-	return getResult();
-}
-
-uint64_t TigerHash::table[4*256] = {
+uint64_t table[4*256] = {
 		_ULL(0x02AAB17CF7E90C5E)   /*    0 */,    _ULL(0xAC424B03E243A8EC)   /*    1 */,
 		_ULL(0x72CD5BE30DD5FCD3)   /*    2 */,    _ULL(0x6D019B93F6F97F3A)   /*    3 */,
 		_ULL(0xCD9978FFD21F9193)   /*    4 */,    _ULL(0x7573A1C9708029E2)   /*    5 */,
@@ -677,3 +696,5 @@ uint64_t TigerHash::table[4*256] = {
 		_ULL(0xCD56D9430EA8280E)   /* 1020 */,    _ULL(0xC12591D7535F5065)   /* 1021 */,
 		_ULL(0xC83223F1720AEF96)   /* 1022 */,    _ULL(0xC3A0396F7363A51F)   /* 1023 */
 };
+
+} // anon namespace

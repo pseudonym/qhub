@@ -21,8 +21,6 @@
 
 #include "types.h"
 
-#define _ULL(x) x##ull
-
 namespace qhub {
 
 class TigerHash {
@@ -30,14 +28,8 @@ public:
 	/** Hash size in bytes */
 	enum { HASH_SIZE = 24 };
 
-	TigerHash() : pos(0) {
-		res[0] = _ULL(0x0123456789ABCDEF);
-		res[1] = _ULL(0xFEDCBA9876543210);
-		res[2] = _ULL(0xF096A5B4C3B2E187);
-	}
-
-	~TigerHash() {
-	}
+	TigerHash();
+	~TigerHash() {}
 
 	/** Calculates the Tiger hash of the data. */
 	void update(const void* data, uint32_t len);
@@ -53,10 +45,6 @@ private:
 	uint64_t res[3];
 	/** Total number of bytes compressed */
 	uint64_t pos;
-	/** S boxes */
-	static uint64_t table[];
-
-	void tigerCompress(const uint64_t* data, uint64_t state[3]);
 };
 
 } // namespace qhub
