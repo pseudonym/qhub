@@ -22,13 +22,10 @@ using namespace qhub;
  */
 QHUB_PLUGIN(NetworkCtl)
 
-
 /*
  * Plugin details
  */
-
 UserData::key_type NetworkCtl::idVirtualFs = "virtualfs";
-
 
 void NetworkCtl::initVFS() throw()
 {

@@ -16,18 +16,11 @@ using namespace qhub;
  */
 QHUB_PLUGIN(VirtualFs)
 
-
 /*
  * Plugin details
  */
-
 UserData::key_type VirtualFs::idVirtualFs = "virtualfs";
 UserData::key_type VirtualFs::idVirtualPath = "virtualpath";
-
-/*void VirtualFs::Message::reply(string const& msg) throw()
-{
-	client->doPrivateMessage(msg);
-}*/
 
 void VirtualFs::init() throw()
 {

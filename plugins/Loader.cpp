@@ -16,11 +16,9 @@ using namespace qhub;
  */
 QHUB_PLUGIN(Loader)
 
-
 /*
  * Plugin details
  */
-
 UserData::key_type Loader::idVirtualFs = "virtualfs";
 
 int Loader::load() throw()
@@ -218,4 +216,3 @@ void Loader::on(Exec, const string& cwd, Client* c, const StringList& arg) throw
 		}
 	}
 }
-

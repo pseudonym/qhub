@@ -18,11 +18,9 @@ using namespace std;
  */
 QHUB_PLUGIN(Accounts)
 
-
 /*
  * Plugin details
  */
-
 UserData::key_type Accounts::idUserLevel = "userlevel";
 UserData::key_type Accounts::idVirtualFs = "virtualfs";
 
@@ -219,72 +217,3 @@ void Accounts::on(Exec, const string& cwd, Client* client, const StringList& arg
 		client->doPrivateMessage(ret);
 	}
 }
- /*
-void Accounts::on(PluginMessage&, Plugin* p, void* d) throw()
-{
-	if(virtualfs && p == virtualfs) {
-		VirtualFs::Message* m = static_cast<VirtualFs::Message*>(d);
-		assert(m);
-		if(m->type == VirtualFs::Message::CHDIR) {
-			m->reply("This is the accounts section. Create and remove accounts and properties here.");
-		} else if(m->type == VirtualFs::Message::HELP) {
-			if(m->cwd == "/accounts/") {
-				m->reply(
-				    "The following commands are available to you:\n"
-				    "load\t\t\t\tloads the users file from disk\n"
-				    "save\t\t\t\tsaves the users file to disk\n"
-				    "add <user> <password> <level>\tadds a user\n"
-				    "del <user>\t\t\tremoves a user\n"
-				    "list [wildcard]\t\t\tshows the list of registered users"
-				    //"show <user>\t\tshows information about a user"
-				);
-			}
-		} else if(m->type == VirtualFs::Message::EXEC) {
-			assert(m->arg.size() >= 1);
-			if(m->arg[0] == "load") {
-				if(load()) {
-					m->reply("Success: User accounts file reloaded.");
-				} else {
-					m->reply("Failure: Failed to reload user accounts file.");
-				}
-			} else if(m->arg[0] == "save") {
-				if(save()) {
-					m->reply("Success: User accounts file saved.");
-				} else {
-					m->reply("Failure: Failed to save user accounts file.");
-				}
-			} else if(m->arg[0] == "add") {
-				if(m->arg.size() == 4) {
-					users[m->arg[1]] = make_pair(m->arg[2], Util::toInt(m->arg[3]));
-					m->reply("Success: User created/updated.");
-				} else if(m->arg.size() == 3) {
-					users[m->arg[1]] = make_pair(m->arg[2], 1);
-					m->reply("Success: User created/updated.");
-					// check if user online..
-					// add OP1 if so
-				} else {
-					m->reply("Syntax: add <nick> <password> <level=1>");
-				}
-			} else if(m->arg[0] == "del") {
-				if(m->arg.size() == 2) {
-					Users::iterator i = users.find(m->arg[1]);
-					if(i != users.end()) {
-						users.erase(i);
-						m->reply("Success: User deleted.");
-					} else {
-						m->reply("Failure: User not found.");
-					}
-				} else {
-					m->reply("Syntax: del <nick>");
-				}
-			} else if(m->arg[0] == "list") {
-				string ret = "Success: Registered users:";
-				for(Users::iterator i = users.begin(); i != users.end(); ++i) {
-					ret += '\n';
-					ret += i->first;
-				}
-				m->reply(ret);
-			}
-		}
-	}
-}*/
