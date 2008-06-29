@@ -19,6 +19,9 @@
 #include "TigerHash.h"
 #include <string.h>
 
+using namespace std;
+using namespace qhub;
+
 #define PASSES 3
 
 #define t1 (table)

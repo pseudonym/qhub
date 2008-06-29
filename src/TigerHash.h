@@ -23,6 +23,8 @@
 
 #define _ULL(x) x##ull
 
+namespace qhub {
+
 class TigerHash {
 public:
 	/** Hash size in bytes */
@@ -56,5 +58,7 @@ private:
 
 	void tigerCompress(const uint64_t* data, uint64_t state[3]);
 };
+
+} // namespace qhub
 
 #endif // QHUB_TIGERHASH_H
