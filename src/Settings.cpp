@@ -120,11 +120,14 @@ void Settings::save() throw()
 }
 
 static const char*const _version_str =
-PACKAGE_NAME "/" PACKAGE_VERSION " built " __DATE__ "\n"
-"Written by Walter Doekes (Sedulus),\n"
-"\tJohn Backstrand (sandos), and Matt Pearson (Pseudo)\n"
-"Homepage: http://ddc.berlios.de\n"
-"SVN:      svn://svn.berlios.de/ddc/qhub\n";
+	PACKAGE_NAME "/" PACKAGE_VERSION ", built " __DATE__ "\n"
+	"Written by:\n"
+	"\tWalter Doekes (Sedulus)\n"
+	"\tJohn Backstrand (sandos)\n"
+	"\tMatt Pearson (Pseudonym)\n"
+	"http://ddc.berlios.de\n"
+	"http://github.com/pseudonym/qhub\n"
+	;
 
 void Settings::parseArgs(int argc, char** argv)
 {
