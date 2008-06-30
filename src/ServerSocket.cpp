@@ -2,12 +2,14 @@
 #include "ServerSocket.h"
 
 #include "ConnectionManager.h"
+#include "EventManager.h"
 #include "Logs.h"
 
 using namespace std;
 using namespace qhub;
 
-ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), type(t)
+ServerSocket::ServerSocket(Domain domain, uint16_t port, ListenType t)
+	: Socket(domain), type(t)
 {
 	int yes = 1;
 
@@ -23,37 +25,31 @@ ServerSocket::ServerSocket(Domain domain, int port, int t) : Socket(domain), typ
 
 ServerSocket::~ServerSocket() throw()
 {
-	if(getFd() != -1)
+	if(getFd() != -1) {
+		EventManager::instance()->disableRead(getFd());
 		close(getFd());
+	}
 }
 
 void ServerSocket::onRead(int) throw()
 {
-	while(true){
-		int fd;
-		Domain d;
-		Socket::accept(fd, d);
-		if(fd != -1){
-			switch(type){
-			case INTER_HUB:
-				Logs::stat << "accepted ihub socket " << fd << endl;
-				ConnectionManager::instance()->acceptInterHub(fd, d);
-				break;
-			case LEAF_HANDLER:
-				Logs::stat << "accepted leaf socket " << fd << endl;
-				ConnectionManager::instance()->acceptLeaf(fd, d);
-				break;
-			default:
-				assert(0 && "unknown type for listening socket.");
-			}
-		} else {
-			break;
-		}
+	int fd;
+	Domain d;
+	Socket::accept(fd, d);
+	if(fd < 0) {
+		// huh? I guess we'll ignore it...
+		return;
+	}
+	switch(type) {
+	case INTER_HUB:
+		Logs::stat << "accepted ihub socket " << fd << endl;
+		ConnectionManager::instance()->acceptInterHub(fd, d);
+		break;
+	case LEAF_HANDLER:
+		Logs::stat << "accepted leaf socket " << fd << endl;
+		ConnectionManager::instance()->acceptLeaf(fd, d);
+		break;
+	default:
+		assert(0 && "unknown type for listening socket.");
 	}
 }
-
-void ServerSocket::onWrite(int) throw()
-{
-	assert(0 && "ServerSocket received a write.");
-}
-

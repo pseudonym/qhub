@@ -42,8 +42,8 @@ public:
 	bool setNonBlocking() throw();
 	bool setSendTimeout(size_t seconds) throw();
 
-	void connect(const std::string& ip, short port) throw(socket_error);
-	void bind(const std::string& a, short port) throw();
+	void connect(const std::string& ip, uint16_t port) throw(socket_error);
+	void bind(const std::string& a, uint16_t port) throw();
 	void listen(int backlog = 8192) throw(socket_error);
 	void accept(int& fd, Domain& d) throw();
 
@@ -70,7 +70,6 @@ protected:
 	bool ip4OverIp6;
 	
 	//output queue
-	//priority_queue<Buffer::Ptr> queue;
 	std::queue<Buffer::Ptr> queue;
 
 	void partialWrite();

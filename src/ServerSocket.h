@@ -8,20 +8,18 @@ namespace qhub {
 
 class ServerSocket : public Socket {
 public:
-	ServerSocket(Domain domain, int port, int type);
-	~ServerSocket() throw();
-
-	enum socketTypes {
+	enum ListenType {
 		INTER_HUB,
 		LEAF_HANDLER,
-		LAST
 	};
 
-protected:
-	virtual void onRead(int) throw();
-	virtual void onWrite(int) throw();
+	ServerSocket(Domain domain, uint16_t port, ListenType type);
+	~ServerSocket() throw();
 
-	int type;
+	virtual void onRead(int) throw();
+
+protected:
+	ListenType type;
 };
 
 } // namespace qhub

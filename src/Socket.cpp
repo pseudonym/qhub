@@ -78,7 +78,7 @@ void Socket::destroy() throw()
 #endif
 }
 
-void Socket::connect(const string& ip, short port) throw(socket_error)
+void Socket::connect(const string& ip, uint16_t port) throw(socket_error)
 {
 	sockaddr_in dest_addr;
 
@@ -102,7 +102,7 @@ void Socket::listen(int backlog) throw(socket_error)
 		throw socket_error(Util::errnoToString(errno));
 }
 
-void Socket::bind(const string& a, short p) throw()
+void Socket::bind(const string& a, uint16_t p) throw()
 {
 #ifdef HAVE_INET_PTON
 	if(inet_pton(af, a.c_str(), inaddrp) == 0) {
