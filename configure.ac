@@ -100,39 +100,11 @@ if test "X$ipv6" = "Xyes"; then
   AC_DEFINE([ENABLE_IPV6], 1, [Define if IPv6 support is enabled.])
 fi
 
-
-# We need to find one working header file out of a bunch.
-# CHECK_HEADERS is not good enough, because it includes all headers
-# that exists, but we want only those that work.
-
-# Therefore, use CHECK_HEADER (autoheader will not put that into
-# config.h.in) and stick the result into CPPFLAGS as a -D option.
-
-tmp_headers=""
-for hdr in hash_map ext/hash_map; do
-  AC_CHECK_HEADER($hdr, tmp_headers="$tmp_headers $hdr")
-done
-
-AC_CACHE_CHECK(whether any hash_map header works,
- cvc_cv_hash_map_works,
- cvc_cv_hash_map_works="no"
- for hdr in $tmp_headers; do
-  for ns in std __gnu_cxx; do
-   if test "$cvc_cv_hash_map_works" = "no"; then
-    AC_TRY_LINK([
-#include<$hdr>
-],
-[$ns::hash_map<int, unsigned> x;]
- , cvc_cv_hash_map_works="$ns::$hdr")
-   fi
-  done
- done)
-
-if test "$cvc_cv_hash_map_works" = "no"; then
-  AC_MSG_ERROR(working hash_map header not found)
-else
-  CPPFLAGS="$CPPFLAGS -DHAVE_"`echo $cvc_cv_hash_map_works | sed 'y%abcdefghijklmnopqrstuvwxyz.:/-%ABCDEFGHIJKLMNOPQRSTUVWXYZ____%'`
-fi
+# see if we have unordered_(map|set), either normally or as part of tr1
+AC_CXX_HEADER_UNORDERED_MAP
+AC_CXX_HEADER_UNORDERED_SET
+AC_CXX_HEADER_TR1_UNORDERED_MAP
+AC_CXX_HEADER_TR1_UNORDERED_SET
 
 ##check for functions
 

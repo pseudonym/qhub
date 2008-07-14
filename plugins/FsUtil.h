@@ -4,7 +4,7 @@
 
 #include "VirtualFs.h"
 
-#include "compat_hashtable.h"
+#include "fast_map.h"
 #include "Client.h"
 #include "Plugin.h"
 #include "UserData.h"
@@ -35,7 +35,7 @@ private:
 	void deinitVFS() throw();
 	
 	VirtualFs* virtualfs;
-	typedef std::hash_map<std::string, std::string> Aliases;
+	typedef fast_map<std::string, std::string>::type Aliases;
 	Aliases aliases;
 	std::string aliasPrefix;
 };

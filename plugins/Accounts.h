@@ -4,7 +4,7 @@
 
 #include "VirtualFs.h"
 
-#include "compat_hashtable.h"
+#include "fast_map.h"
 #include "Plugin.h"
 #include "UserData.h"
 
@@ -38,7 +38,8 @@ private:
 	void deinitVFS() throw();
 	
 	VirtualFs* virtualfs;
-	typedef std::hash_map<std::string, std::pair<std::string,int> > Users; // too simple.. works for now
+	// too simple.. works for now
+	typedef fast_map<std::string, std::pair<std::string,int> >::type Users;
 	Users users;
 };
 

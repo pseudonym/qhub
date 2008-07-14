@@ -4,7 +4,7 @@
 
 #include "VirtualFs.h"
 
-#include "compat_hashtable.h"
+#include "fast_map.h"
 #include "Plugin.h"
 #include "UserData.h"
 
@@ -44,7 +44,7 @@ private:
 	};
 
 
-	typedef std::hash_map<std::string,BanInfo> BanList;
+	typedef fast_map<std::string,BanInfo>::type BanList;
 	BanList ipBans;
 	BanList nickBans;
 	BanList cidBans;

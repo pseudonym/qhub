@@ -3,7 +3,7 @@
 #define QHUB_UTIL_H
 
 #include "qhub.h"
-#include "compat_hashtable.h"
+#include "fast_map.h"
 
 #include <cerrno>
 #include <string>
@@ -14,14 +14,8 @@
 namespace qhub {
 
 typedef std::vector<std::string> StringList;
-typedef std::hash_map<std::string,std::string> StringMap;
+typedef fast_map<std::string,std::string>::type StringMap;
 typedef void* voidPtr;
-
-template<class T>
-struct PtrHash {
-	size_t operator()(T*const e) const
-	{ return (size_t)e; }
-};
 
 class Util {
 public:

@@ -3,7 +3,7 @@
 #define QHUB_EVENTMANAGER_H
 
 #include "qhub.h"
-#include "compat_hashtable.h"
+#include "fast_map.h"
 #include "Singleton.h"
 #include "Util.h"
 
@@ -52,10 +52,10 @@ private:
 	// tables of active events
 	// (yes, there is some duplication with libevent, but
 	// we need access to this information)
-	std::hash_map<int, boost::tuple<event,EventListener*> > reads;
-	std::hash_map<int, boost::tuple<event,EventListener*> > writes;
-	std::hash_map<int, boost::tuple<event,EventListener*> > signals;
-	std::hash_map<EventListener*, boost::tuple<event,int>, PtrHash<EventListener> > timers;
+	fast_map<int, boost::tuple<event,EventListener*> >::type reads;
+	fast_map<int, boost::tuple<event,EventListener*> >::type writes;
+	fast_map<int, boost::tuple<event,EventListener*> >::type signals;
+	fast_map<EventListener*, boost::tuple<event,int> >::type timers;
 
 	// callback functions (members because they might need to
 	// access tables as part of dispatch process)

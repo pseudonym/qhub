@@ -2,7 +2,8 @@
 #define QHUB_CLIENTMANAGER_H
 
 #include "qhub.h"
-#include "compat_hashtable.h"
+#include "fast_map.h"
+#include "fast_set.h"
 #include "Buffer.h"
 #include "Command.h"
 #include "EventManager.h"
@@ -34,8 +35,8 @@ public:
 	bool hasNick(const std::string& nick) const throw() { return nicks.count(nick); }
 	bool hasCid(const std::string& cid) const throw() { return cids.count(cid); }
 
-	typedef std::hash_map<sid_type, Client*> LocalUsers;
-	typedef std::hash_map<sid_type, UserInfo*> RemoteUsers;
+	typedef fast_map<sid_type, Client*>::type LocalUsers;
+	typedef fast_map<sid_type, UserInfo*>::type RemoteUsers;
 private:
 	friend class Singleton<ClientManager>;
 
@@ -45,8 +46,8 @@ private:
 
 	RemoteUsers remoteUsers;
 
-	std::hash_set<std::string> nicks;
-	std::hash_set<std::string> cids;
+	fast_set<std::string>::type nicks;
+	fast_set<std::string>::type cids;
 
 	std::vector<Command> broadcastQueue;
 
