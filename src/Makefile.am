@@ -3,7 +3,8 @@ qhub_CXXFLAGS = -Wall -Werror -DDEBUG -g -DCONFIGDIR=\"$(sysconfdir)/\"
 qhub_LDFLAGS = -export-dynamic -rpath $(libdir) -lboost_program_options
 
 qhub_SOURCES  = qhub.h qhub.cpp
-qhub_SOURCES += compat_hashtable.h error.h
+qhub_SOURCES += error.h
+qhub_SOURCES += fast_map.h fast_set.h
 qhub_SOURCES += ADC.h ADC.cpp
 qhub_SOURCES += ADCSocket.h ADCSocket.cpp
 qhub_SOURCES += Buffer.h
