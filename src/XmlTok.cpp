@@ -33,7 +33,7 @@ XmlTok::XmlTok(string const& n, XmlTok* p) throw()
 {
 }
 
-XmlTok::XmlTok(istream& is) throw(io_error)
+XmlTok::XmlTok(istream& is) throw(io_error) : parent(NULL)
 {
 	using namespace boost;
 
