@@ -6,6 +6,7 @@
 #include "Util.h"
 #include "XmlTok.h"
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 
@@ -34,14 +35,23 @@ bool Settings::isValid() throw()
 
 void Settings::load() throw()
 {
+	// set up config dir
+	if(configDir.empty()) {
+		if(getenv("QHUB_CONFIG"))
+			configDir = getenv("QHUB_CONFIG");
+		else
+			configDir = ".";
+	}
+
+	// try loading from config file
 	try {
-		ifstream f(CONFIGDIR "/qhub.xml");
+		string fn = configDir + "/qhub.xml";
+		ifstream f(fn.c_str());
 		if(!f.good())
 			throw io_error("could not load config file");
 		root = new XmlTok(f);
 	} catch(const io_error& e) {
-		// nothing to do; won't be valid so it will enter
-		// interactive load
+		Logs::err << e.what() << endl;
 	}
 
 	if(!isValid()) {
@@ -108,7 +118,8 @@ void Settings::loadInteractive() throw()
 void Settings::save() throw()
 {
 	try {
-		ofstream f(CONFIGDIR "/qhub.xml");
+		string fn = configDir + "/qhub.xml";
+		ofstream f(fn.c_str());
 		root->save(f);
 	} catch(const io_error& e) {
 		Logs::err << "Unable to save qhub.xml: " << e.what() << endl;
@@ -140,6 +151,7 @@ void Settings::parseArgs(int argc, char** argv)
 		("verbose,v", "protocol lines logged to stdout (only for debugging)")
 #endif
 		("plugin,p", value<StringList>(), "load plugin 'arg'")
+		("config-dir,c", value<string>(), "load configuration from 'arg'")
 		("daemonize,d", "run as daemon")
 		("quiet,q", "no output");
 
@@ -178,6 +190,9 @@ void Settings::parseArgs(int argc, char** argv)
 		const StringList& p = vm["plugin"].as<StringList>();
 		for(StringList::const_iterator i = p.begin(); i != p.end(); ++i)
 			PluginManager::instance()->open(*i);
+	}
+	if(vm.count("config-dir")) {
+		configDir = vm["config-dir"].as<string>();
 	}
 	if(vm.count("daemonize"))
 		// TODO check to make sure config is done and valid

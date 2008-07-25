@@ -22,6 +22,7 @@ private:
 	friend class Singleton<Settings>;
 
 	XmlTok* root;
+	std::string configDir;
 
 	Settings() throw() : root(NULL) {}
 	~Settings() throw() { delete root; }

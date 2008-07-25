@@ -1,5 +1,5 @@
 bin_PROGRAMS = qhub
-qhub_CXXFLAGS = -Wall -Werror -DDEBUG -g -DCONFIGDIR=\"$(sysconfdir)/\"
+qhub_CXXFLAGS = -Wall -Werror -DDEBUG -g
 qhub_LDFLAGS = -export-dynamic -rpath $(libdir) -lboost_program_options
 
 qhub_SOURCES  = qhub.h qhub.cpp
