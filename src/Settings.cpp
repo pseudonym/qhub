@@ -14,20 +14,6 @@
 using namespace qhub;
 using namespace std;
 
-Settings::Settings() throw(io_error) : root(NULL)
-{
-	try {
-		ifstream f(CONFIGDIR "/qhub.xml");
-		if(!f.good())
-			throw io_error("could not load config file");
-		root = new XmlTok(f);
-	} catch(const io_error& e) {
-		// nothing to do; won't be valid so it will enter
-		// interactive load
-	}
-	load();
-}
-
 XmlTok* Settings::getConfig(const string& name) throw()
 {
 	if(root->findChild(name))
@@ -48,6 +34,16 @@ bool Settings::isValid() throw()
 
 void Settings::load() throw()
 {
+	try {
+		ifstream f(CONFIGDIR "/qhub.xml");
+		if(!f.good())
+			throw io_error("could not load config file");
+		root = new XmlTok(f);
+	} catch(const io_error& e) {
+		// nothing to do; won't be valid so it will enter
+		// interactive load
+	}
+
 	if(!isValid()) {
 		Logs::err << "Config file missing or corrupt, entering interactive setup\n";
 		loadInteractive();

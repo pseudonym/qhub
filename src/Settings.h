@@ -23,7 +23,7 @@ private:
 
 	XmlTok* root;
 
-	Settings() throw(io_error);
+	Settings() throw() : root(NULL) {}
 	~Settings() throw() { delete root; }
 };
 

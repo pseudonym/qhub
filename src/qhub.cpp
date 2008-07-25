@@ -43,6 +43,7 @@ int main(int argc, char **argv)
 	// work if all they want is --version or --help
 	Settings::instance()->parseArgs(argc, argv);
 
+	Settings::instance()->load(); // load settings from config file
 
 	// make sure these are actually instantiated; their constructors
 	// load all of the configuration and bootstrap everything
