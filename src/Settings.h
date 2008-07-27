@@ -12,6 +12,7 @@ namespace qhub {
 class Settings : public Singleton<Settings> {
 public:
 	XmlTok* getConfig(const std::string& name) throw();
+	const std::string& getConfigDir() throw() { return configDir; }
 	bool isValid() throw();
 	void load() throw();
 	void loadInteractive() throw();
