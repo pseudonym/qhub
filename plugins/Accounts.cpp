@@ -10,6 +10,8 @@
 #include "Logs.h"
 #include "Settings.h"
 
+#include <fstream>
+
 using namespace qhub;
 using namespace std;
 
@@ -26,35 +28,52 @@ UserData::key_type Accounts::idVirtualFs = "virtualfs";
 
 bool Accounts::load() throw()
 {
-	XmlTok* p = Settings::instance()->getConfig("accounts");
-	users.clear(); // clean old users
-	p->findChild("user");
-	XmlTok* tmp;
-	while((tmp = p->getNextChild())) {
-		int lvl;
-		try {
-			lvl = Util::toInt(tmp->getAttr("level"));
-		} catch (const boost::bad_lexical_cast&) {
-			// if not there, default to 1
-			lvl = 1;
+	try {
+		string fn = Settings::instance()->getConfigDir() + "/accounts.xml";
+		ifstream is(fn.c_str());
+		XmlTok root(is);
+		if(root.getName() != "accounts")
+			throw runtime_error("invalid root element");
+
+		users.clear(); // clean old users
+		root.findChild("user");
+		while(XmlTok* tmp = root.getNextChild()) {
+			int lvl;
+			try {
+				lvl = Util::toInt(tmp->getAttr("level"));
+			} catch (const boost::bad_lexical_cast&) {
+				// if not there, default to 1
+				lvl = 1;
+			}
+			users[tmp->getAttr("nick")] =
+					make_pair(tmp->getAttr("password"), lvl);
 		}
-		users[tmp->getAttr("nick")] =
-				make_pair(tmp->getAttr("password"), lvl);
+		return true;
+	} catch(const exception& e) {
+		Logs::err << "Accounts: could not load accounts.xml: " << e.what() << endl;
+		return false;
 	}
-	return true;
 }
 
 bool Accounts::save() const throw()
 {
-	XmlTok* p = Settings::instance()->getConfig("accounts");
-	p->clear();
-	for(Users::const_iterator i = users.begin(); i != users.end(); ++i) {
-		XmlTok* tmp = p->addChild("user");
-		tmp->setAttr("nick", i->first);
-		tmp->setAttr("password", i->second.first);
-		tmp->setAttr("level", Util::toString(i->second.second));
+	try {
+		XmlTok root("accounts");
+		for(Users::const_iterator i = users.begin(); i != users.end(); ++i) {
+			XmlTok* tmp = root.addChild("user");
+			tmp->setAttr("nick", i->first);
+			tmp->setAttr("password", i->second.first);
+			tmp->setAttr("level", Util::toString(i->second.second));
+		}
+		string fn = Settings::instance()->getConfigDir() + "/accounts.xml";
+		ofstream os(fn.c_str());
+		root.save(os);
+
+		return true;
+	} catch(const exception& e) {
+		Logs::err << "Accounts: could not save accounts.xml: " << e.what() << endl;
+		return false;
 	}
-	return true;
 }
 
 void Accounts::initVFS() throw()
