@@ -10,9 +10,11 @@
 #include "UserInfo.h"
 #include "XmlTok.h"
 
-#include <boost/cast.hpp>
-#include <sstream>
+#include <fstream>
 #include <iterator>
+#include <sstream>
+
+#include <boost/cast.hpp>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -33,13 +35,21 @@ UserData::key_type Bans::idVirtualFs = "virtualfs";
 
 bool Bans::load() throw()
 {
-	XmlTok* p = Settings::instance()->getConfig("bans");
-	ipBans.clear(), nickBans.clear(), cidBans.clear(); // clean old bans
-	if(p->findChild("ipbans")) {
-		p = p->getNextChild();
-		XmlTok* tmp;
-		p->findChild("ip");
-		while((tmp = p->getNextChild())) {
+	try {
+		string fn = Settings::instance()->getConfigDir() + "/bans.xml";
+		ifstream is(fn.c_str());
+		XmlTok root(is);
+		if(root.getName() != "bans")
+			throw runtime_error("invalid root element");
+
+		// clean old bans
+		ipBans.clear();
+		nickBans.clear();
+		cidBans.clear();
+
+		// load ip bans
+		root.findChild("ip");
+		while(XmlTok* tmp = root.getNextChild()) {
 			const string& banner = tmp->getAttr("banner");
 			const string& reason = tmp->getAttr("reason");
 			const string& ip = tmp->getData();
@@ -47,13 +57,10 @@ bool Bans::load() throw()
 			BanInfo bi(t, banner, reason);
 			ipBans.insert(make_pair(ip, bi));
 		}
-		p = p->getParent();
-	}
-	if(p->findChild("nickbans")) {
-		p = p->getNextChild();
-		XmlTok* tmp;
-		p->findChild("nick");
-		while((tmp = p->getNextChild())) {
+
+		// load nick bans
+		root.findChild("nick");
+		while(XmlTok* tmp = root.getNextChild()) {
 			const string& banner = tmp->getAttr("banner");
 			const string& reason = tmp->getAttr("reason");
 			const string& nick = tmp->getData();
@@ -61,13 +68,10 @@ bool Bans::load() throw()
 			BanInfo bi(t, banner, reason);
 			nickBans.insert(make_pair(nick, bi));
 		}
-		p = p->getParent();
-	}
-	if(p->findChild("cidbans")) {
-		p = p->getNextChild();
-		XmlTok* tmp;
-		p->findChild("cid");
-		while((tmp = p->getNextChild())) {
+
+		// load CID bans
+		root.findChild("cid");
+		while(XmlTok* tmp = root.getNextChild()) {
 			const string& banner = tmp->getAttr("banner");
 			const string& reason = tmp->getAttr("reason");
 			const string& cid = tmp->getData();
@@ -75,58 +79,68 @@ bool Bans::load() throw()
 			BanInfo bi(t, banner, reason);
 			cidBans.insert(make_pair(cid, bi));
 		}
-		p = p->getParent();
+
+		return true;
+	} catch(const exception& e) {
+		Logs::err << "Bans: could not load bans.xml: " << e.what() << endl;
+		return false;
 	}
-	return true;
 }
 
 bool Bans::save() throw()
 {
-	XmlTok* p = Settings::instance()->getConfig("bans");
-	p->clear();
-	p = p->addChild("ipbans");
-	for(BanList::iterator i = ipBans.begin(); i != ipBans.end(); ) {
-		if(i->second.timeout <= time(0)) {
-			ipBans.erase(i++);
-			continue;
-		}
-		XmlTok* tmp = p->addChild("ip");
-		tmp->setAttr("banner", i->second.banner);
-		tmp->setAttr("reason", i->second.reason);
-		tmp->setAttr("timeout", Util::toString(i->second.timeout));
-		tmp->setData(i->first);
-		++i;
-	}
-	p = p->getParent();
-	p = p->addChild("nickbans");
-	for(BanList::iterator i = nickBans.begin(); i != nickBans.end(); ) {
-		if(i->second.timeout <= time(0)) {
-			nickBans.erase(i++);
-			continue;
-		}
-		XmlTok* tmp = p->addChild("nick");
-		tmp->setAttr("banner", i->second.banner);
-		tmp->setAttr("reason", i->second.reason);
-		tmp->setAttr("timeout", Util::toString(i->second.timeout));
-		tmp->setData(i->first);
-		++i;
-	}
-	p = p->getParent();
-	p = p->addChild("cidbans");
-	for(BanList::iterator i = cidBans.begin(); i != cidBans.end(); ) {
-		if(i->second.timeout <= time(0)) {
-			cidBans.erase(i++);
-			continue;
-		}
-		XmlTok* tmp = p->addChild("cid");
-		tmp->setAttr("banner", i->second.banner);
-		tmp->setAttr("reason", i->second.reason);
-		tmp->setAttr("timeout", Util::toString(i->second.timeout));
-		tmp->setData(i->first);
-		++i;
-	}
+	try {
+		XmlTok root("bans");
 
-	return true;
+		// IP bans
+		for(BanList::iterator i = ipBans.begin(); i != ipBans.end(); ) {
+			if(i->second.timeout <= time(0)) {
+				ipBans.erase(i++);
+				continue;
+			}
+			XmlTok* tmp = root.addChild("ip");
+			tmp->setAttr("banner", i->second.banner);
+			tmp->setAttr("reason", i->second.reason);
+			tmp->setAttr("timeout", Util::toString(i->second.timeout));
+			tmp->setData(i->first);
+			++i;
+		}
+		// nick bans
+		for(BanList::iterator i = nickBans.begin(); i != nickBans.end(); ) {
+			if(i->second.timeout <= time(0)) {
+				nickBans.erase(i++);
+				continue;
+			}
+			XmlTok* tmp = root.addChild("nick");
+			tmp->setAttr("banner", i->second.banner);
+			tmp->setAttr("reason", i->second.reason);
+			tmp->setAttr("timeout", Util::toString(i->second.timeout));
+			tmp->setData(i->first);
+			++i;
+		}
+		// CID bans
+		for(BanList::iterator i = cidBans.begin(); i != cidBans.end(); ) {
+			if(i->second.timeout <= time(0)) {
+				cidBans.erase(i++);
+				continue;
+			}
+			XmlTok* tmp = root.addChild("cid");
+			tmp->setAttr("banner", i->second.banner);
+			tmp->setAttr("reason", i->second.reason);
+			tmp->setAttr("timeout", Util::toString(i->second.timeout));
+			tmp->setData(i->first);
+			++i;
+		}
+		// save to XML file
+		string fn = Settings::instance()->getConfigDir() + "/bans.xml";
+		ofstream os(fn.c_str());
+		root.save(os);
+
+		return true;
+	} catch(const exception& e) {
+		Logs::err << "Bans: could not save bans.xml: " << e.what() << endl;
+		return false;
+	}
 }
 
 void Bans::initVFS() throw()
