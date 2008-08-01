@@ -8,6 +8,8 @@
 #include "UserInfo.h"
 #include "XmlTok.h"
 
+#include <fstream>
+
 using namespace std;
 using namespace qhub;
 
@@ -25,36 +27,48 @@ UserData::key_type FsUtil::idVirtualFs = "virtualfs";
 
 bool FsUtil::load() throw()
 {
-	aliases.clear(); // clean old data
-	XmlTok* p = Settings::instance()->getConfig("fsutil");
-	if(p->findChild("aliases")) {
-		p = p->getNextChild();
-		aliasPrefix = p->getAttr("prefix");
+	try {
+		string fn = Settings::instance()->getConfigDir() + "/fsutil.xml";
+		ifstream is(fn.c_str());
+		XmlTok root(is);
+		if(root.getName() != "fsutil")
+			throw runtime_error("invalid root element");
+
+		aliases.clear(); // clean old data
+		aliasPrefix = root.getAttr("prefix");
 		if(aliasPrefix.empty())
 			aliasPrefix = "+";
-		if(p->findChild("alias")) {
-			XmlTok* tmp;
-			while((tmp = p->getNextChild())) {
-				aliases[tmp->getAttr("in")] = tmp->getAttr("out");
-			}
-		}
-		p = p->getParent();
+
+		root.findChild("alias");
+		while(XmlTok* tmp = root.getNextChild())
+			aliases[tmp->getAttr("in")] = tmp->getAttr("out");
+
+		return true;
+	} catch(const exception& e) {
+		Logs::err << "FsUtil: could not load fsutil.xml: " << e.what() << endl;
+		return false;
 	}
-	return true;
 }
 
 bool FsUtil::save() const throw()
 {
-	XmlTok* p = Settings::instance()->getConfig("fsutil");
-	p->clear();
-	p = p->addChild("aliases");
-	p->setAttr("prefix", aliasPrefix);
-	for(Aliases::const_iterator i = aliases.begin(); i != aliases.end(); ++i) {
-		XmlTok* tmp = p->addChild("alias");
-		tmp->setAttr("in", i->first);
-		tmp->setAttr("out", i->second);
+	try {
+		XmlTok root("fsutil");
+		root.setAttr("prefix", aliasPrefix);
+		for(Aliases::const_iterator i = aliases.begin(); i != aliases.end(); ++i) {
+			XmlTok* tmp = root.addChild("alias");
+			tmp->setAttr("in", i->first);
+			tmp->setAttr("out", i->second);
+		}
+		string fn = Settings::instance()->getConfigDir() + "/fsutil.xml";
+		ofstream os(fn.c_str());
+		root.save(os);
+
+		return true;
+	} catch(const exception& e) {
+		Logs::err << "FsUtil: could not save fsutil.xml: " << e.what() << endl;
+		return false;
 	}
-	return true;
 }
 
 void FsUtil::initVFS() throw()
