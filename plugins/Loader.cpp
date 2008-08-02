@@ -8,6 +8,8 @@
 #include "Util.h"
 #include "XmlTok.h"
 
+#include <fstream>
+
 using namespace std;
 using namespace qhub;
 
@@ -23,14 +25,20 @@ UserData::key_type Loader::idVirtualFs = "virtualfs";
 
 int Loader::load() throw()
 {
-	int success = 0;
-	int failure = 0;
-	XmlTok* p = Settings::instance()->getConfig("plugins");
-	if(p->findChild("plugin")) {
-		XmlTok* tmp;
-		while((tmp = p->getNextChild())) {
+	try {
+		string fn = Settings::instance()->getConfigDir() + "/plugins.xml";
+		ifstream is(fn.c_str());
+		XmlTok root(is);
+		if(root.getName() != "plugins")
+			throw runtime_error("invalid root element");
+
+		root.findChild("plugin");
+		int success = 0;
+		int failure = 0;
+		while(XmlTok* tmp = root.getNextChild()) {
 			string const& name = tmp->getData();
-			if(!PluginManager::instance()->has(name) && name != "loader") { // we're not added yet! don't want inf-recurse
+			// check if we are already added; don't want inf-recurse
+			if(!PluginManager::instance()->has(name) && name != "loader") {
 				Logs::stat << "\nloading plugin \"" << name << "\"\n";
 				if(PluginManager::instance()->open(name)) {
 					success++;
@@ -39,21 +47,30 @@ int Loader::load() throw()
 				}
 			}
 		}
-	} else {
+		return failure == 0 ? success : -failure;
+	} catch(const exception& e) {
+		Logs::err << "Loader: could not load plugins.xml: " << e.what() << endl;
 		return 0;
 	}
-	return failure == 0 ? success : -failure;
 }
 
 bool Loader::save() const throw()
 {
-	XmlTok* p = Settings::instance()->getConfig("plugins");
-	p->clear();
-	for(PluginManager::iterator i = PluginManager::instance()->begin(); i != PluginManager::instance()->end(); ++i) {
-		XmlTok* tmp = p->addChild("plugin");
-		tmp->setData((*i)->getId());
+	try {
+		XmlTok root("plugins");
+		for(PluginManager::iterator i = PluginManager::instance()->begin(); i != PluginManager::instance()->end(); ++i) {
+			XmlTok* tmp = root.addChild("plugin");
+			tmp->setData((*i)->getId());
+		}
+		string fn = Settings::instance()->getConfigDir() + "/plugins.xml";
+		ofstream os(fn.c_str());
+		root.save(os);
+
+		return true;
+	} catch(const exception& e) {
+		Logs::err << "Loader: could not save plugins.xml: " << e.what() << endl;
+		return false;
 	}
-	return true;
 }
 
 void Loader::initVFS() throw()
