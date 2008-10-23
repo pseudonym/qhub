@@ -43,10 +43,12 @@ void Settings::load() throw()
 			configDir = ".";
 	}
 
+	if(chdir(configDir.c_str()) < 0)
+		throw io_error("Could not change to configuration directory: " + Util::errnoToString());
+
 	// try loading from config file
 	try {
-		string fn = configDir + "/qhub.xml";
-		ifstream f(fn.c_str());
+		ifstream f("qhub.xml");
 		if(!f.good())
 			throw io_error("could not load config file");
 		root = new XmlTok(f);
