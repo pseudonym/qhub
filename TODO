@@ -3,33 +3,41 @@ Start doing things on the TODO
 Fix autoconf-macros: remove unused, and start using more of the existing ones.
 
 Low-level network handling
+	Rework things, moving line-based ADC stuff to ConnectionBase
+	Lower-level socket keeps raw buffer, ConnectionBase pulls what it needs off there
+		allows to replace low-level socket with TLS version, hopefully, without changing other stuff
 	Rate-limiting (allow bursting or not? its DDOSable.)
-	Add customizable flood protection in ADCSocket
+		Best done by having a TokenBucket instance in Client class
 
-add signal handlers for libevent so we can be usable by start-stop-daemon and other things
-		(like SIGHUP to reload config)
-	// mostly done; at least using it for SIGINT and SIGTERM
+Central data structures
+	Local users should have the same state as remote ones, except for a non-null Client*
+	abuse StringMap to store INF and any other state---INF is stuff matching [A-Z][A-Z0-9]
+		removes need for UserData---force everything to strings
+
+Configuration
+	Store settings that can be updated while hub is running in SQLite database
+	startup configuration (including location of DB) stored using Boost.Program_Options
+		not sure we can support reloading very easily... might just let ourselves die on SIGHUP
+		things like listening ports (anything requiring active setup when its value changes) should go here
 
 DNS
-	remove ugly hacks, using a better ares interface
-	fix lookups so that ares_gethostbyname() isn't called in constructor: causes call of pure virtual
-			because vtbl isn't updated until constructor exits
-	// mostly done! just needs some actual, you know, testing
+	switch to evdns if possible, just to cut down on dependencies
+	allow disabling and (maybe) choosing which DNS library to use via autoconf
 
 Protocol stuff
 	fix hubcount setting on login (need to increment one of them...)
+		is this still our responsibility? need to check ADC spec
 	Dont allow nick-collisions (made much more difficult by utf-8)
+		this might be put in a plugin, because it's not needed for proper functioning and having everyone called "Anonymous" might be cool
 	Send delta-INFs
+		clients should be doing this anyway, so we may not want to bother
 
-More work on multihub support (much has been accomplished however)
+More work on multihub support
+	not even sure if it works anymore
 	automatically try reconnecting every few minutes if an interhub connection fails
 
-re-work UserData class, possibly using just a hash_map<string,boost::any>
-	boost::any_cast causes problems with plugins; the underlying dynamic_cast requires RTTI,
-		not present if plugin not yet loaded
-	use boost::variant<int, string, void*> ?
-
 Polish plugins
+	allow starting plugin with a specific argument string to allow 
 	add operator functions plugin for bans, etc
 	what about controlling chains of plugins? Can plugins stop following plugins
 		from executing?
@@ -37,3 +45,5 @@ Polish plugins
 	What about filtering stuff on many outgoing clients? (think a modified list of users: the
 		plugin-instance for one user wants no other users to receive his INFs, this can mean work
 		if there are only hooks for incoming data?)) 
+	get rid of VirtualFs, it's kind of a silly way to do things
+		instead, just allow commands to be registered, and do that in the core
