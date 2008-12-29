@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT([qhub], [0.11-pre])
+AC_PREREQ(2.61)
+AC_INIT([qhub],[0.11-pre])
 AC_CONFIG_SRCDIR([src/qhub.cpp])
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
@@ -67,7 +67,7 @@ ipv6=no
 #IPV6 support
 AC_DEFUN([PROTO_INET6],[
   AC_CACHE_CHECK([for INET6 protocol support], [ds6_cv_proto_inet6],[
-    AC_TRY_CPP([
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -77,7 +77,7 @@ AC_DEFUN([PROTO_INET6],[
 #ifndef AF_INET6
 #error Mlssing AF_INET6
 #endif
-    ],[
+    ]])],[
       ds6_cv_proto_inet6=yes
     ],[
       ds6_cv_proto_inet6=no
