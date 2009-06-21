@@ -168,10 +168,10 @@ void ClientManager::broadcastFeature(const Command& cmd) throw()
 		Client* c = i->second;
 		bool send = true;
 		for(string::const_iterator j = feat.begin(); j != feat.end(); j += 5) {
-			if(*j == '+' && !c->getUserInfo()->hasSupport(string(j+1, j+4))
-					|| *j == '-' && c->getUserInfo()->hasSupport(string(j+1, j+4)))
+			if(*j == '+' && !c->getUserInfo()->hasSupport(string(j+1, j+5))
+					|| *j == '-' && c->getUserInfo()->hasSupport(string(j+1, j+5)))
 				Logs::line << "not sending to user " << ADC::fromSid(c->getSid())
-						<< " because of feature " << string(j+1, j+4) << endl;
+						<< " because of feature " << string(j+1, j+5) << endl;
 				send = false;
 				break;
 		}
