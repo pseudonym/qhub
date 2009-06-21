@@ -1,6 +1,6 @@
 lib_LTLIBRARIES  = qhub-accounts.la qhub-virtualfs.la qhub-fsutil.la
 lib_LTLIBRARIES += qhub-loader.la qhub-bans.la qhub-networkctl.la
-AM_CXXFLAGS = -Wall -Werror -DDEBUG -g -I$(top_srcdir)/src
+AM_CXXFLAGS = -Wall -DDEBUG -g -I$(top_srcdir)/src
 
 
 qhub_bans_la_SOURCES = Bans.h Bans.cpp
