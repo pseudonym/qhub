@@ -14,7 +14,7 @@
 namespace qhub {
 
 typedef std::vector<std::string> StringList;
-typedef fast_map<std::string,std::string>::type StringMap;
+typedef QHUB_FAST_MAP<std::string,std::string> StringMap;
 typedef void* voidPtr;
 
 class Util {

@@ -39,7 +39,7 @@ private:
 	
 	VirtualFs* virtualfs;
 	// too simple.. works for now
-	typedef fast_map<std::string, std::pair<std::string,int> >::type Users;
+	typedef QHUB_FAST_MAP<std::string, std::pair<std::string,int> > Users;
 	Users users;
 };
 

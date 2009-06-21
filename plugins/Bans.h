@@ -44,12 +44,12 @@ private:
 	};
 
 
-	typedef fast_map<std::string,BanInfo>::type BanList;
+	typedef QHUB_FAST_MAP<std::string,BanInfo> BanList;
 	BanList ipBans;
 	BanList nickBans;
 	BanList cidBans;
 };
 
-} //namespace qhub
+} // namespace qhub
 
 #endif // QHUB_PLUGIN_BANS_H

@@ -52,10 +52,10 @@ private:
 	// tables of active events
 	// (yes, there is some duplication with libevent, but
 	// we need access to this information)
-	fast_map<int, boost::tuple<event,EventListener*> >::type reads;
-	fast_map<int, boost::tuple<event,EventListener*> >::type writes;
-	fast_map<int, boost::tuple<event,EventListener*> >::type signals;
-	fast_map<EventListener*, boost::tuple<event,int> >::type timers;
+	QHUB_FAST_MAP<int, boost::tuple<event,EventListener*> > reads;
+	QHUB_FAST_MAP<int, boost::tuple<event,EventListener*> > writes;
+	QHUB_FAST_MAP<int, boost::tuple<event,EventListener*> > signals;
+	QHUB_FAST_MAP<EventListener*, boost::tuple<event,int> > timers;
 
 	// callback functions (members because they might need to
 	// access tables as part of dispatch process)

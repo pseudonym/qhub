@@ -35,8 +35,8 @@ public:
 	bool hasNick(const std::string& nick) const throw() { return nicks.count(nick); }
 	bool hasCid(const std::string& cid) const throw() { return cids.count(cid); }
 
-	typedef fast_map<sid_type, Client*>::type LocalUsers;
-	typedef fast_map<sid_type, UserInfo*>::type RemoteUsers;
+	typedef QHUB_FAST_MAP<sid_type, Client*> LocalUsers;
+	typedef QHUB_FAST_MAP<sid_type, UserInfo*> RemoteUsers;
 private:
 	friend class Singleton<ClientManager>;
 
@@ -46,8 +46,8 @@ private:
 
 	RemoteUsers remoteUsers;
 
-	fast_set<std::string>::type nicks;
-	fast_set<std::string>::type cids;
+	QHUB_FAST_SET<std::string> nicks;
+	QHUB_FAST_SET<std::string> cids;
 
 	std::vector<Command> broadcastQueue;
 

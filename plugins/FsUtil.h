@@ -35,7 +35,7 @@ private:
 	void deinitVFS() throw();
 	
 	VirtualFs* virtualfs;
-	typedef fast_map<std::string, std::string>::type Aliases;
+	typedef QHUB_FAST_MAP<std::string, std::string> Aliases;
 	Aliases aliases;
 	std::string aliasPrefix;
 };
