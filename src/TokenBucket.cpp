@@ -1,6 +1,7 @@
 // vim:ts=4:sw=4:noet
 #include "TokenBucket.h"
 
+#include <algorithm>
 #include <ctime>
 #include <numeric>
 

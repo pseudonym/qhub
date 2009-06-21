@@ -6,6 +6,7 @@
 #include "fast_map.h"
 
 #include <cerrno>
+#include <cstring>
 #include <string>
 #include <vector>
 

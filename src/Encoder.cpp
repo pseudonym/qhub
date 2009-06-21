@@ -1,6 +1,8 @@
 // vim:ts=4:sw=4:noet
 #include "Encoder.h"
 
+#include <cstring>
+
 using namespace std;
 using namespace qhub;
 

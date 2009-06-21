@@ -4,6 +4,8 @@
 #include "ADC.h"
 #include "Util.h"
 
+#include <algorithm>
+
 using namespace std;
 using namespace qhub;
 
