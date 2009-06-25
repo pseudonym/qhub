@@ -14,13 +14,19 @@ EventManager::EventManager() throw()
 				<< event_get_method() << endl;
 	} else {
 		Logs::err << "failed to initialize libevent: FATAL" << endl;
-		exit(EXIT_FAILURE);
+		abort();
 	}
 }
 
 int EventManager::run() throw()
 {
 	return event_dispatch();
+}
+
+void EventManager::exit() throw()
+{
+	timeval tv = { 0, 0 };
+	event_loopexit(&tv);
 }
 
 ////////////////

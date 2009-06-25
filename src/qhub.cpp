@@ -22,13 +22,12 @@ void SigHandler::onSignal(int sig) throw()
 	switch(sig) {
 	case SIGINT:
 	case SIGTERM:
-		PluginManager::instance()->removeAll();
-		Settings::instance()->save();
-		exit(EXIT_SUCCESS);
+		EventManager::instance()->exit();
+		break;
 	case SIGPIPE:
 	case SIGALRM:
 	case SIGCHLD:
-		//do nothing
+		// do nothing
 		break;
 	default:
 		assert(0 && "unknown signal received");
@@ -67,5 +66,12 @@ int main(int argc, char **argv)
 	EventManager::instance()->addSignal(SIGALRM, &sh);
 	EventManager::instance()->addSignal(SIGCHLD, &sh);
 
-	return EventManager::instance()->run();
+	// run main loop
+	int ret = EventManager::instance()->run();
+
+	// shutdown and save settings
+	PluginManager::instance()->removeAll();
+	Settings::instance()->save();
+
+	return ret;
 }

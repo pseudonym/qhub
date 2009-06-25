@@ -28,6 +28,7 @@ class EventListener;
 class EventManager : public Singleton<EventManager> {
 public:
 	int run() throw();
+	void exit() throw();
 
 	void enableRead(int fd, EventListener*) throw();
 	void disableRead(int fd) throw();
