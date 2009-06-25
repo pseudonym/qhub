@@ -465,13 +465,9 @@ void Client::handlePassword(Command& cmd) throw()
 {
 	// Make hash
 	TigerHash h;
-	uint8_t buf[TigerHash::HASH_SIZE];
-	Encoder::fromBase32(userInfo->get("ID").data(), buf, TigerHash::HASH_SIZE);
-	h.update(buf, TigerHash::HASH_SIZE);
 	h.update(password.data(), password.length());
 	h.update(&salt.front(), salt.size());
-	h.finalize();
-	if(Encoder::toBase32(h.getResult(), TigerHash::HASH_SIZE) != cmd[0]) {
+	if(Encoder::toBase32(h.finalize(), TigerHash::HASH_SIZE) != cmd[0]) {
 		send(Command('I', Command::STA) << "223" << "Bad username or password");
 		assert(!added);
 		doDisconnect("bad nick/pass");
@@ -492,12 +488,10 @@ void Client::handlePassword(Command& cmd) throw()
 
 void Client::handleSupports(Command& cmd) throw(command_error)
 {
-	//uncomment this once DC++ follows the spec and doesn't send +BAS0
-	/*if(find(sl.begin("AD"), sl.end("AD"), "BASE") == sl.end()) {
-		PROTOCOL_ERROR("Invalid supports");
-	}*/
 	updateSupports(cmd);
-	send(Command('I', Command::SUP) << CmdParam("AD", "BASE"));
+	if(!hasSupport("BASE") || !hasSupport("TIGR"))
+		throw command_error("Invalid supports");
+	send(Command('I', Command::SUP) << CmdParam("AD", "BASE") << CmdParam("AD", "TIGR"));
 	// use file descriptor for ID... just make sure we haven't overflowed
 	if((unsigned)getSocket()->getFd() != (ServerManager::instance()->getClientSidMask() & getSocket()->getFd()))
 		throw command_error("hub is full", 11);
