@@ -327,11 +327,10 @@ void Client::handleLogin(Command& cmd) throw(command_error)
 		throw command_error("PID missing/invalid");
 	if(cid32.size() != 39)
 		throw command_error("CID missing/invalid");
-	uint8_t* pid = new uint8_t[TigerHash::HASH_SIZE];
+	uint8_t pid[TigerHash::HASH_SIZE];
 	Encoder::fromBase32(pid32.data(), pid, TigerHash::HASH_SIZE);
 	TigerHash th;
 	th.update(pid, TigerHash::HASH_SIZE);
-	delete[] pid;
 	th.finalize();
 	if(cid32 != Encoder::toBase32(th.getResult(), TigerHash::HASH_SIZE))
 		throw command_error("CID/PID mismatch");
