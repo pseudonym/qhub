@@ -105,7 +105,7 @@ private:
 
 	std::string features;
 
-	bool dirty;
+	mutable bool dirty;
 	mutable std::string full;
 
 	Command() throw() {}

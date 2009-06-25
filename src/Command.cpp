@@ -108,9 +108,7 @@ Command::Command(const char* first, const char* last) throw(parse_error)
 		transform(sl.begin() + loc, sl.end(), params.begin(), &ADC::CSE);
 	}
 }
-//}}}
 
-//{{{
 Command::Command(char a, CmdInt c, sid_type f /*= INVALID_SID*/, const string& feat /*= Util::emptyString*/) throw()
 		: action(a), cmd(c), from(f), to(INVALID_SID), features(feat), dirty(true)
 {
@@ -249,6 +247,8 @@ const string& Command::toString() const throw()
 			full += ' ';
 		}
 		full[full.size()-1] = '\n';
+
+		dirty = false;
 	}
 	return full;
 }
