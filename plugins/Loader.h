@@ -12,7 +12,7 @@ namespace qhub {
 class Loader : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// voidPtr (Plugin*)
-	
+
 	Loader() throw() : Plugin("loader") {}
 	virtual ~Loader() throw() {};
 
@@ -25,7 +25,7 @@ public:
 
 private:
 	VirtualFs* virtualfs;
-	
+
 	int load() throw();
 	bool save() const throw();
 	void initVFS() throw();

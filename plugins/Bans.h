@@ -13,7 +13,7 @@ namespace qhub {
 class Bans : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idVirtualFs;	// void* (Plugin*)
-	
+
 	Bans() throw() : Plugin("bans"), virtualfs(NULL) {};
 	virtual ~Bans() throw() {};
 

@@ -27,9 +27,9 @@ namespace qhub {
 class Socket : public EventListener {
 public:
 	enum Domain {
-		IP4 = PF_INET, 
+		IP4 = PF_INET,
 #ifdef ENABLE_IPV6
-		IP6 = PF_INET6 
+		IP6 = PF_INET6
 #endif
 	};
 
@@ -68,7 +68,7 @@ protected:
 
 	std::string sockName, peerName;
 	bool ip4OverIp6;
-	
+
 	//output queue
 	std::queue<Buffer::Ptr> queue;
 

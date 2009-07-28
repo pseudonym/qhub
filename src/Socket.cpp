@@ -60,7 +60,7 @@ void Socket::create() throw()
 		inaddrp = &((struct sockaddr_in6*)saddrp)->sin6_addr;
 		af = AF_INET6;
 		((struct sockaddr_in6*)saddrp)->sin6_family = af;
-#endif    
+#endif
 	} else {
 		assert(0);
 	}
@@ -71,7 +71,7 @@ void Socket::destroy() throw()
 	if(domain == Socket::IP4) {
 		delete (struct sockaddr_in*)saddrp;
 	}
-#ifdef ENABLE_IPV6    
+#ifdef ENABLE_IPV6
 	else if(domain == Socket::IP6) {
 		delete (struct sockaddr_in6*)saddrp;
 	}
@@ -112,14 +112,14 @@ void Socket::bind(const string& a, uint16_t p) throw()
 				exit(EXIT_FAILURE);
 			}
 		}
-#ifdef ENABLE_IPV6        
+#ifdef ENABLE_IPV6
 		else if(domain == Socket::IP6) {
 			if(inet_pton(af, "::", inaddrp) == 0) {
 				Logs::err << "error (pton+ipv6): setBoundAddress:inet_pton:[::]\n";
 				exit(EXIT_FAILURE);
 			}
 		}
-#endif //ENABLE_IPV6       
+#endif //ENABLE_IPV6
 	}
 #else //HAVE_INET_PTON
 	if(inet_aton(a.c_str(), (struct in_addr *)inaddrp) == 0) {
@@ -129,21 +129,21 @@ void Socket::bind(const string& a, uint16_t p) throw()
 				exit(EXIT_FAILURE);
 			}
 		}
-#ifdef ENABLE_IPV6        
+#ifdef ENABLE_IPV6
 		else if(domain == Socket::IP6) {
 			if(inet_aton("::", (struct in_addr *)inaddrp) == 0) {
 				Logs::err << "error (aton+ipv6): setBoundAddress:inet_aton:[::]\n";
 				exit(EXIT_FAILURE);
 			}
 		}
-#endif //ENABLE_IPV6       
+#endif //ENABLE_IPV6
 	}
 #endif //HAVE_INET_PTON
 
 	if(domain == Socket::IP4) {
 		((struct sockaddr_in*)saddrp)->sin_port = htons(p);
 	}
-#ifdef ENABLE_IPV6    
+#ifdef ENABLE_IPV6
 	else if(domain == Socket::IP6) {
 		((struct sockaddr_in6*)saddrp)->sin6_port = htons(p);
 	}
@@ -246,7 +246,7 @@ void Socket::initSocketNames() throw()
 		memset(&sa, '\0', n); // necessary?
 #ifdef __CYGWIN__
 		getsockname(fd, (struct sockaddr*)&sa, &n);
-#else        
+#else
 		assert(getsockname(fd, (struct sockaddr*)&sa, &n) == 0);
 #endif
 #ifdef HAVE_INET_NTOP
@@ -269,7 +269,7 @@ void Socket::initSocketNames() throw()
 		}
 
 	}
-#ifdef ENABLE_IPV6    
+#ifdef ENABLE_IPV6
 	else if(domain == Socket::IP6) {
 		struct sockaddr_in6 sa;
 		socklen_t n = sizeof(struct sockaddr_in6);

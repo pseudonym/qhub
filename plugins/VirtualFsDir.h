@@ -46,7 +46,7 @@ public:
 		}
 		ret.erase(ret.end()-1);
 		return ret;
-	}	
+	}
 	std::string toPath() const throw() {
 		SubDirs::const_iterator i = subDirs.find("..");
 		if(i == subDirs.end())
@@ -130,7 +130,7 @@ public:
 	VirtualFsListener* getData() const throw() {
 		return data;
 	}
-	
+
 	Dir* splitPath(std::string& name) {
 		std::string::size_type i = name.rfind('/');
 		if(i == std::string::npos) { // no preceding path
@@ -163,7 +163,7 @@ public:
 				return true;
 			}
 		}
-		return false;	
+		return false;
 	}
 	VirtualFsListener* getNode(std::string& name) throw() {
 		std::string tmp = name;
@@ -196,7 +196,7 @@ public:
 	}
 
 	void setPartialMatch(bool b) throw() { partial = b; };
-	
+
 private:
 	std::string name;
 	bool partial;

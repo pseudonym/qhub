@@ -33,7 +33,7 @@ private:
 	bool save() const throw();
 	void initVFS() throw();
 	void deinitVFS() throw();
-	
+
 	VirtualFs* virtualfs;
 	typedef QHUB_FAST_MAP<std::string, std::string> Aliases;
 	Aliases aliases;

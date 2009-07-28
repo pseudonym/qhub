@@ -40,13 +40,13 @@ public: \
 private: \
 	typedef std::map<key_type, type> Type##Map; \
 	Type##Map type##Map;
-			 
+
 	GET_AND_SET(int, Int)
 	GET_AND_SET(string, String)
 	GET_AND_SET(voidPtr, VoidPtr)
 
 #undef GET_AND_SET
-};	
+};
 
 } //namespace qhub
 

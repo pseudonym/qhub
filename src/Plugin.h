@@ -73,14 +73,14 @@ public:
 		int can;
 		int does;
 	};
-	
+
 	typedef ActionType<PLUGIN_STARTED, NOTHING>
 			PluginStarted;
 	typedef ActionType<PLUGIN_STOPPED, NOTHING>
 			PluginStopped;
 	typedef ActionType<PLUGIN_MESSAGE, HANDLE>
 			PluginMessage;
-	
+
 	typedef ActionType<CLIENT_CONNECTED, HANDLE | DISCONNECT>
 			ClientConnected;
 	typedef ActionType<CLIENT_DISCONNECTED, HANDLE>
@@ -91,7 +91,7 @@ public:
 			ClientLogin;
 	typedef ActionType<CLIENT_INFO, HANDLE | DISCONNECT | MODIFY>
 			ClientInfo;
-	
+
 	typedef ActionType<USER_CONNECTED, HANDLE | DISCONNECT>
 			UserConnected;
 	typedef ActionType<USER_DISCONNECTED, HANDLE>

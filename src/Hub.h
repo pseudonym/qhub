@@ -36,7 +36,7 @@ private:
 	std::string name;
 	std::string description;
 	std::string interPass;
-	
+
 	Hub() throw();
 	~Hub() throw() {}
 };

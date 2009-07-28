@@ -8,9 +8,9 @@ liboop: works if I edit the Makefile.am slightly:
 
 
 -lib_LTLIBRARIES = liboop.la @LIBOOP_LIBS@
-+lib_LTLIBRARIES = @LIBOOP_LIBS@ liboop.la 
++lib_LTLIBRARIES = @LIBOOP_LIBS@ liboop.la
 
-then autoreconf, configure and make and make install. specify a prefix to configure (/usr?) 
+then autoreconf, configure and make and make install. specify a prefix to configure (/usr?)
 
 
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * Base32 Encoder stolen from GPL'd DC++:
  * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
  *

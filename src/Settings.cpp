@@ -19,7 +19,7 @@ XmlTok* Settings::getConfig(const string& name) throw()
 {
 	if(root->findChild(name))
 		return root->getNextChild();
-	else 
+	else
 		return root->addChild(name);
 }
 

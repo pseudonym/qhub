@@ -5,17 +5,17 @@ Goal
 A distributed hub for the ADC-protocol, which
 aims to scale well above all. Only moderately
 performance-tweaked code, simplicity will be
-regarded as more important than efficiency, 
+regarded as more important than efficiency,
 unless it conflicts with the goal of
 maximizing the total amount of users in the
 logical hub. The physical hubs arent
 considered as important from a performance
-viewpoint. 
+viewpoint.
 
 
-Not made with multiple protocols in mind, 
+Not made with multiple protocols in mind,
 although its a possible future area of
-enhancement. 
+enhancement.
 
 As a secondary goal will be producing a
 simple and accurate model for the

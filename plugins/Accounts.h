@@ -17,7 +17,7 @@ class Accounts : public Plugin, public VirtualFsListener {
 public:
 	static UserData::key_type idUserLevel;	// int
 	static UserData::key_type idVirtualFs;	// void* (Plugin*)
-	
+
 	Accounts() throw() : Plugin("accounts"), virtualfs(NULL) {};
 	virtual ~Accounts() throw() {};
 
@@ -36,7 +36,7 @@ private:
 	bool save() const throw();
 	void initVFS() throw();
 	void deinitVFS() throw();
-	
+
 	VirtualFs* virtualfs;
 	// too simple.. works for now
 	typedef QHUB_FAST_MAP<std::string, std::pair<std::string,int> > Users;

@@ -26,7 +26,7 @@ public:
 	UserInfo(const Command& c) throw() : cmd(c) {
 		fromADC(cmd);
 	}
-	
+
 	// ADC
 	void fromADC(const Command& c) throw() {
 		modified = true;

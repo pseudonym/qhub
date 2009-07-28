@@ -37,13 +37,13 @@ More work on multihub support
 	automatically try reconnecting every few minutes if an interhub connection fails
 
 Polish plugins
-	allow starting plugin with a specific argument string to allow 
+	allow starting plugin with a specific argument string to allow
 	add operator functions plugin for bans, etc
 	what about controlling chains of plugins? Can plugins stop following plugins
 		from executing?
 	Are plugins able to filter/suppress output from the non-plugin hubcore?
 	What about filtering stuff on many outgoing clients? (think a modified list of users: the
 		plugin-instance for one user wants no other users to receive his INFs, this can mean work
-		if there are only hooks for incoming data?)) 
+		if there are only hooks for incoming data?))
 	get rid of VirtualFs, it's kind of a silly way to do things
 		instead, just allow commands to be registered, and do that in the core

@@ -54,7 +54,7 @@ generally pointless
 * interhubs are now stored in a much more useful way
 * moved plugins to separate directory
 * started use of exceptions (error.h)
-* log(<qerr|qstat>,<msg>) in "error.h" can be used to log messages (fprintf 
+* log(<qerr|qstat>,<msg>) in "error.h" can be used to log messages (fprintf
 use almost totally removed) (yes, I know we have std::log in <cmath>, but
 overloads should take care of that
 * added command line arguments. Use qhub --help to view

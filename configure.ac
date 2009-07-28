@@ -116,7 +116,7 @@ if test "$ac_xmllib" = "expat"; then
   AC_CHECK_HEADERS([expat.h],, [AC_MSG_ERROR(libexpat header missing)])
 else if test "$ac_xmllib" = "xmltok"; then
   AC_CHECK_HEADERS([xmltok/xmlparse.h],, [AC_MSG_ERROR(libxmltok header missing)])
-fi fi	
+fi fi
 
 AC_CHECK_HEADERS([event.h])
 AC_CHECK_HEADERS([ares.h])
@@ -124,13 +124,13 @@ AC_CHECK_HEADERS([boost/shared_ptr.hpp boost/format.hpp],
 		,[AC_MSG_ERROR([Boost library required - http://boost.org/])])
 ##AC_CHECK_LIB(boost_program_options,,,[AC_MSG_ERROR([boost::program_options needed])])
 
-AC_CHECK_HEADERS([dlfcn.h]) 
+AC_CHECK_HEADERS([dlfcn.h])
 AC_CHECK_HEADERS([arpa/inet.h])
-AC_CHECK_HEADERS([fcntl.h]) 
+AC_CHECK_HEADERS([fcntl.h])
 AC_CHECK_HEADERS([netdb.h])
 AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([stdlib.h])
-AC_CHECK_HEADERS([string.h]) 
+AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([sys/socket.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([unistd.h])

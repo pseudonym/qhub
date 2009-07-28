@@ -26,7 +26,7 @@ ConnectionManager::ConnectionManager() throw()
 		const string& pass = pp->getAttr("password");
 		if(host.empty() || port <= 0 || port > 65535)
 			continue;
-		Logs::stat << "Connecting to " << host << ':' << port << endl; 
+		Logs::stat << "Connecting to " << host << ':' << port << endl;
 		openInterConnection(host, port, pass);
 	}
 	load();
