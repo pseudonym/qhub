@@ -23,6 +23,7 @@ public:
 
 	typedef boost::shared_ptr<ZBuffer> MutablePtr;
 protected:
+	enum { BUFFER_SIZE = 1024 };
 	void init();
 
 	bool finalized;

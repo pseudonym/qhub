@@ -39,6 +39,7 @@ public:
 	uint8_t* getResult() { return reinterpret_cast<uint8_t*>(res); };
 private:
 	enum { BLOCK_SIZE = 512/8 };
+	enum { BLOCK_SIZE_MASK = BLOCK_SIZE-1 };
 	/** 512 bit blocks for the compress function */
 	uint8_t tmp[BLOCK_SIZE];
 	/** State / final hash value */

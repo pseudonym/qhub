@@ -42,7 +42,7 @@ void ZBuffer::init()
 
 void ZBuffer::append(const Command& cmd)
 {
-	boost::scoped_array<uint8_t> zbuf(new uint8_t[BUFSIZ]); // probably doesn't need to be very big
+	boost::scoped_array<uint8_t> zbuf(new uint8_t[BUFFER_SIZE]); // probably doesn't need to be very big
 	const string& str = cmd.toString();
 	boost::scoped_array<uint8_t> readbuf(new uint8_t[str.size()]);
 	copy(str.begin(), str.end(), readbuf.get());
@@ -51,7 +51,7 @@ void ZBuffer::append(const Command& cmd)
 
 	while(zcontext->avail_in) {
 		zcontext->next_out = zbuf.get();
-		zcontext->avail_out = BUFSIZ;
+		zcontext->avail_out = BUFFER_SIZE;
 		int ret = deflate(zcontext, Z_NO_FLUSH); // compress
 		if(ret == Z_STREAM_ERROR || ret == Z_BUF_ERROR)
 			throw runtime_error("compression failure");
@@ -66,12 +66,12 @@ void ZBuffer::finalize()
 	append(Command('I', Command::ZOF)); // really shouldn't be necessary, but
 	                                    // the ADC standard says so...
 	finalized = true;
-	boost::scoped_array<uint8_t> zbuf(new uint8_t[BUFSIZ]);
+	boost::scoped_array<uint8_t> zbuf(new uint8_t[BUFFER_SIZE]);
 	int retval = Z_OK;
 
 	while(retval != Z_STREAM_END) {
 		zcontext->next_out = zbuf.get();
-		zcontext->avail_out = BUFSIZ;
+		zcontext->avail_out = BUFFER_SIZE;
 		retval = deflate(zcontext, Z_FINISH);
 		if(retval == Z_STREAM_ERROR)
 			throw runtime_error("compression failure");

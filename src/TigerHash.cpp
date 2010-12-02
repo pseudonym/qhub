@@ -39,7 +39,7 @@ TigerHash::TigerHash() : pos(0)
 }
 
 void TigerHash::update(const void* data, uint32_t length) {
-	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE-1);
+	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE_MASK);
 	const uint8_t* str = (const uint8_t*)data;
 	// First empty tmp buffer if possible
 	if(tmppos > 0) {
@@ -69,7 +69,7 @@ void TigerHash::update(const void* data, uint32_t length) {
 }
 
 uint8_t* TigerHash::finalize() {
-	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE-1);
+	uint32_t tmppos = (uint32_t)(pos & BLOCK_SIZE_MASK);
 	// Tmp buffer always has at least one pos, otherwise it would have
 	// been processed in update()
 
@@ -83,8 +83,9 @@ uint8_t* TigerHash::finalize() {
 		memset(tmp + tmppos, 0, BLOCK_SIZE - tmppos - sizeof(uint64_t));
 	}
 
-	((uint64_t*)(&(tmp[56])))[0] = pos<<3;
-	tigerCompress((uint64_t*)tmp, res);
+	uint64_t* tmp64 = reinterpret_cast<uint64_t*>(tmp);
+	tmp64[7] = pos<<3;
+	tigerCompress(tmp64, res);
 	return getResult();
 }
 

@@ -87,26 +87,20 @@ Command::Command(const char* first, const char* last) throw(parse_error)
 		throw parse_error(string("invalid action type '") + action + '\'');
 	}
 
-	if(numPosParams.count(cmd)) {
-		// known command
-		if(loc + numPosParams[cmd] > sl.size())
+	if (loc >= sl.size())
+		throw parse_error("not enough tokens for message type");
+	if (numPosParams.count(cmd)) {
+		// known command -- check that positional and named params are correct
+		if (loc + numPosParams[cmd] > sl.size())
 			throw parse_error("missing parameters");
-		params.resize(numPosParams[cmd]);
-		copy(sl.begin() + loc, sl.begin() + loc + numPosParams[cmd], params.begin());
-		for(StringList::iterator i = sl.begin() + loc + numPosParams[cmd]; i != sl.end(); ++i) {
+		for (StringList::iterator i = sl.begin() + loc + numPosParams[cmd]; i != sl.end(); ++i) {
 			// param name parts can't be escaped chars
-			if(i->size() < 2 || ADC::CSE(i->substr(0, 2)).size() != 2)
+			if (i->size() < 2 || ADC::CSE(i->substr(0, 2)).size() != 2)
 				throw parse_error("invalid named parameter: " + *i);
-			else
-				*this << *i;
 		}
-		transform(params.begin(), params.end(), params.begin(), &ADC::CSE);
-	} else {
-		// unknown command
-		// assume all are positional
-		params.resize(sl.size() - loc);
-		transform(sl.begin() + loc, sl.end(), params.begin(), &ADC::CSE);
 	}
+	params.resize(sl.size() - loc);
+	transform(sl.begin() + loc, sl.end(), params.begin(), &ADC::CSE);
 }
 
 Command::Command(char a, CmdInt c, sid_type f /*= INVALID_SID*/, const string& feat /*= Util::emptyString*/) throw()

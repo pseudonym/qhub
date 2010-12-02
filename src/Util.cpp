@@ -40,11 +40,11 @@ void Util::daemonize() throw()
 	}
 
 	umask(0);
-	chdir("/");
+	if (chdir("/") < 0)
+		Logs::err << "error with chdir():" << errnoToString(errno) << endl;
 
-	if(setsid() < 0) {
+	if(setsid() < 0)
 		Logs::err << "error with setsid(): " << errnoToString(errno) << endl;
-	}
 
 	switch(fork()) {
 	case -1:
@@ -64,8 +64,8 @@ void Util::daemonize() throw()
 		Logs::err << "error opening /dev/null:" << errnoToString(errno) << endl;
 		exit(EXIT_FAILURE);
 	}
-	dup(0);
-	dup(0);
+	dup2(0, 1);
+	dup2(0, 2);
 }
 
 StringList Util::stringTokenize(string const& msg, char token /*= ' '*/) throw()
