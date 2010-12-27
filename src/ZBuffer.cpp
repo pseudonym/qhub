@@ -1,6 +1,8 @@
 // vim:ts=4:sw=4:noet
 #include "ZBuffer.h"
 
+#include <cstdio>
+
 #include <boost/scoped_array.hpp>
 
 #include <zlib.h>
